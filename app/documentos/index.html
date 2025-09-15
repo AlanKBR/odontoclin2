@@ -1,0 +1,35 @@
+{% extends 'core/base.html' %}
+{% block title %}Documentos{% endblock %}
+{% block content %}
+<h1>Documentos</h1>
+<div class="d-flex gap-2">
+    <a href="{{ url_for('documentos.novo') }}" class="btn btn-primary btn-sm">Novo Documento</a>
+    <a href="{{ url_for('documentos.historico') }}" class="btn btn-outline-secondary btn-sm">Histórico</a>
+</div>
+
+<h2 class="h6 mt-4">Últimos Gerados (completos)</h2>
+<table class="table table-sm">
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>Título</th>
+            <th>Tipo</th>
+            <th>Data</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for d in ultimos %}
+        <tr>
+            <td>{{ d.id }}</td>
+            <td>{{ d.titulo_documento }}</td>
+            <td>{{ d.tipo_documento }}</td>
+            <td>{{ d.data_emissao.strftime('%d/%m/%Y') }}</td>
+        </tr>
+        {% else %}
+        <tr>
+            <td colspan="4">Nenhum documento completo.</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}

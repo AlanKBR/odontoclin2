@@ -1,0 +1,104 @@
+{% extends "base.html" %}
+{% block title %}
+    Modelo de Receita | OdontoClinic
+{% endblock title %}
+{% block content %}
+    <div class="container-fluid">
+        <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+            <h1 class="h2">
+                <i class="bi bi-save"></i> Modelo de Receita
+            </h1>
+            <div class="btn-toolbar mb-2 mb-md-0">
+                <div class="btn-group me-2">
+                    <a href="{{ url_for("receitas.listar_modelos") }}"
+                       class="btn btn-sm btn-outline-secondary">
+                        <i class="bi bi-arrow-left"></i> Voltar para Modelos
+                    </a>
+                    <button id="btn-usar-modelo" class="btn btn-sm btn-primary">
+                        <i class="bi bi-check-circle"></i> Usar este Modelo
+                    </button>
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-lg-8 mx-auto">
+                <div class="card mb-4">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="card-title mb-0">{{ modelo.titulo }}</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="alert alert-info mb-4">
+                            <p>
+                                <i class="bi bi-info-circle-fill me-2"></i> Este é o conteúdo do seu modelo. Para criar uma receita com este modelo, clique em "Usar este Modelo".
+                            </p>
+                        </div>
+                        <div class="card">
+                            <div class="card-body">
+                                <div id="conteudo-modelo">{{ modelo.conteudo|safe }}</div>
+                            </div>
+                        </div>
+                        <div class="row mt-4">
+                            <div class="col-12 text-end">
+                                <button id="btn-usar-modelo-footer" class="btn btn-primary">
+                                    <i class="bi bi-check-circle"></i> Usar este Modelo
+                                </button>
+                                <button type="button"
+                                        class="btn btn-danger"
+                                        data-bs-toggle="modal"
+                                        data-bs-target="#modalExcluir">
+                                    <i class="bi bi-trash"></i> Excluir Modelo
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Modal de Exclusão -->
+    <div class="modal fade"
+         id="modalExcluir"
+         tabindex="-1"
+         aria-labelledby="modalExcluirLabel"
+         aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalExcluirLabel">Confirmar Exclusão</h5>
+                    <button type="button"
+                            class="btn-close"
+                            data-bs-dismiss="modal"
+                            aria-label="Fechar"></button>
+                </div>
+                <div class="modal-body">
+                    <p>
+                        Tem certeza que deseja excluir o modelo <strong>{{ modelo.titulo }}</strong>?
+                    </p>
+                    <p class="text-danger">Esta ação não pode ser desfeita.</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <form action="{{ url_for('receitas.excluir_modelo', modelo_id=modelo.id) }}"
+                          method="post">
+                        <button type="submit" class="btn btn-danger">Excluir</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock content %}
+{% block extra_js %}
+    <script nonce="{{ csp_nonce() }}">
+document.addEventListener('DOMContentLoaded', function() {
+    const btnUsarModelo = document.getElementById('btn-usar-modelo');
+    const btnUsarModeloFooter = document.getElementById('btn-usar-modelo-footer');
+
+    function usarModelo() {
+        window.location.href = "{{ url_for('receitas.nova_receita') }}?modelo_id={{ modelo.id }}";
+    }
+
+    btnUsarModelo.addEventListener('click', usarModelo);
+    btnUsarModeloFooter.addEventListener('click', usarModelo);
+});
+    </script>
+{% endblock extra_js %}

@@ -1,0 +1,135 @@
+{% extends "base.html" %}
+{% block title %}
+    OdontoClinic - Usuários
+{% endblock title %}
+{% block content %}
+    <div class="container-fluid">
+        {% set is_admin = current_user.cargo == 'admin' %}
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1>
+                <i class="bi bi-person-badge"></i> Usuários
+            </h1>
+            {% if is_admin %}
+                <a href="{{ url_for("users.novo_usuario") }}" class="btn btn-primary">
+                    <i class="bi bi-person-plus"></i> Novo Usuário
+                </a>
+            {% else %}
+                <a class="btn btn-primary disabled greyed-out"
+                   tabindex="-1"
+                   aria-disabled="true"
+                   data-bs-toggle="tooltip"
+                   title="Somente administradores podem criar usuários">
+                    <i class="bi bi-person-plus"></i> Novo Usuário
+                </a>
+            {% endif %}
+        </div>
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Nome de Usuário</th>
+                                <th>Nome Completo</th>
+                                <th>CRO</th>
+                                <th>Nome Profissional</th>
+                                <th>Cargo</th>
+                                <th>Status</th>
+                                <th>Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for usuario in usuarios %}
+                                <tr class="{% if not usuario.is_active %}table-light opacity-75{% endif %}">
+                                    <td>{{ usuario.username }}</td>
+                                    <td>{{ usuario.nome_completo }}</td>
+                                    <td>{{ usuario.cro or '-' }}</td>
+                                    <td>{{ usuario.nome_profissional }}</td>
+                                    <td>
+                                        {% if usuario.cargo == "admin" %}
+                                            <span class="badge bg-danger">Administrador</span>
+                                        {% elif usuario.cargo == "secretaria" %}
+                                            <span class="badge bg-success">Secretária</span>
+                                        {% else %}
+                                            <span class="badge bg-primary">Dentista</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if usuario.is_active %}
+                                            <span class="badge bg-success">Ativo</span>
+                                        {% else %}
+                                            <span class="badge bg-secondary">Inativo</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <div class="btn-group" role="group">
+                                            {% if is_admin %}
+                                                <a href="{{ url_for('users.editar_usuario', id=usuario.id) }}"
+                                                   class="btn btn-sm btn-warning">
+                                                    <i class="bi bi-pencil"></i>
+                                                </a>
+                                                <form action="{{ url_for('users.toggle_user', user_id=usuario.id) }}"
+                                                      method="post"
+                                                      class="d-inline">
+                                                    <button type="submit"
+                                                            class="btn btn-sm {{ 'btn-outline-secondary' if usuario.is_active else 'btn-outline-success' }}"
+                                                            data-bs-toggle="tooltip"
+                                                            title="{{ 'Desativar' if usuario.is_active else 'Ativar' }}">
+                                                        <i class="bi {{ 'bi-toggle2-off' if usuario.is_active else 'bi-toggle2-on' }}"></i>
+                                                    </button>
+                                                </form>
+                                                <form action="{{ url_for('users.delete_user', user_id=usuario.id) }}"
+                                                      method="post"
+                                                      class="d-inline">
+                                                    <button type="submit"
+                                                            class="btn btn-sm btn-danger"
+                                                            onclick="return confirm('Tem certeza que deseja excluir este usuário?');">
+                                                        <i class="bi bi-trash"></i>
+                                                    </button>
+                                                </form>
+                                            {% else %}
+                                                <a class="btn btn-sm btn-warning disabled greyed-out"
+                                                   tabindex="-1"
+                                                   aria-disabled="true"
+                                                   data-bs-toggle="tooltip"
+                                                   title="Somente administradores podem editar usuários">
+                                                    <i class="bi bi-pencil"></i>
+                                                </a>
+                                                <button class="btn btn-sm btn-outline-secondary disabled greyed-out"
+                                                        tabindex="-1"
+                                                        aria-disabled="true"
+                                                        data-bs-toggle="tooltip"
+                                                        title="Somente administradores podem ativar/desativar usuários">
+                                                    <i class="bi bi-toggle2-off"></i>
+                                                </button>
+                                                <button class="btn btn-sm btn-danger disabled greyed-out"
+                                                        tabindex="-1"
+                                                        aria-disabled="true"
+                                                        data-bs-toggle="tooltip"
+                                                        title="Somente administradores podem excluir usuários">
+                                                    <i class="bi bi-trash"></i>
+                                                </button>
+                                            {% endif %}
+                                        </div>
+                                    </td>
+                                </tr>
+                            {% else %}
+                                <tr>
+                                    <td colspan="7" class="text-center">Nenhum usuário cadastrado.</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+        tooltipTriggerList.forEach(function (tooltipTriggerEl) {
+            new bootstrap.Tooltip(tooltipTriggerEl);
+        });
+    });
+    </script>
+{% endblock content %}

@@ -1,0 +1,14 @@
+{% extends 'core/base.html' %}
+{% block title %}Relatórios{% endblock %}
+{% block content %}
+<h1>Relatórios</h1>
+<p>Resumo rápido:</p>
+<div id="resume" class="mb-3 small text-muted">Carregando...</div>
+<script>
+    fetch('/reports/api/resumo').then(r => r.json()).then(d => {
+        const el = document.getElementById('resume');
+        el.textContent = `Pacientes: ${d.pacientes} | Modelos Receita: ${d.modelos_receita} | Documentos: ${d.documentos}`;
+    });
+</script>
+<p>Listagem e geração de relatórios (placeholder).</p>
+{% endblock %}

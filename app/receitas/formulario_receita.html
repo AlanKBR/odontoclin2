@@ -1,0 +1,33 @@
+{% extends 'core/base.html' %}
+{% block title %}Nova Receita{% endblock %}
+{% block content %}
+<h1>Nova Receita</h1>
+<form method="post" action="#" onsubmit="return false;">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <div class="row g-2">
+        <div class="col-md-4">
+            <label class="form-label">Paciente</label>
+            <select class="form-select form-select-sm" id="paciente_sel">
+                <option value="">-- selecione --</option>
+                {% for p in pacientes %}<option value="{{ p.id }}">{{ p.nome }}</option>{% endfor %}
+            </select>
+        </div>
+        <div class="col-md-4">
+            <label class="form-label">Dentista</label>
+            <select class="form-select form-select-sm" id="dentista_sel">
+                <option value="">-- selecione --</option>
+                {% for d in dentistas %}<option value="{{ d.id }}">{{ d.nome_completo }}</option>{% endfor %}
+            </select>
+        </div>
+        <div class="col-md-4">
+            <label class="form-label">Data</label>
+            <input class="form-control form-control-sm" value="{{ clinica.cidade or '' }}" />
+        </div>
+    </div>
+    <div class="mt-3">
+        <label class="form-label">Conteúdo (livre / futuro template)</label>
+        <textarea class="form-control" rows="6" placeholder="Conteúdo da receita"></textarea>
+    </div>
+    <p class="text-muted mt-2">Funcionalidade de salvar/imprimir será adicionada em próxima etapa.</p>
+</form>
+{% endblock %}

@@ -1,0 +1,27 @@
+{% extends 'core/base.html' %}
+{% block title %}Pacientes - OdontoClin{% endblock %}
+{% block content %}
+<h1>Pacientes</h1>
+<form method="get" action="{{ url_for('pacientes.listar') }}" class="form-inline">
+    <label for="busca">Buscar:</label>
+    <input id="busca" name="busca" value="{{ busca }}" />
+    <button type="submit">Filtrar</button>
+    <a href="{{ url_for('pacientes.novo') }}">Novo</a>
+</form>
+{% if pacientes.items %}
+<ul>
+    {% for p in pacientes.items %}
+    <li><a href="{{ url_for('pacientes.visualizar', paciente_id=p.id) }}">{{ p.nome }}</a></li>
+    {% endfor %}
+</ul>
+<nav aria-label="Paginação">
+    {% if pacientes.has_prev %}<a
+        href="{{ url_for('pacientes.listar', page=pacientes.prev_num, busca=busca) }}">Anterior</a>{% endif %}
+    <span>Página {{ pacientes.page }} / {{ pacientes.pages }}</span>
+    {% if pacientes.has_next %}<a
+        href="{{ url_for('pacientes.listar', page=pacientes.next_num, busca=busca) }}">Próxima</a>{% endif %}
+</nav>
+{% else %}
+<p>Nenhum paciente encontrado.</p>
+{% endif %}
+{% endblock %}

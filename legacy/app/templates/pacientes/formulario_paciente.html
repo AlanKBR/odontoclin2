@@ -1,0 +1,243 @@
+{% extends "base.html" %}
+{% block title %}
+    {{ titulo }}
+{% endblock title %}
+{% block content %}
+    <div class="container-fluid py-4">
+        <div class="row">
+            <div class="col-md-12">
+                <div class="card shadow">
+                    <div class="card-header">
+                        <h5 class="mb-0">{{ titulo }}</h5>
+                    </div>
+                    <div class="card-body">
+                        <form method="post" class="needs-validation" novalidate>
+                            {{ form.hidden_tag() }}
+                            <div class="row mb-3">
+                                <div class="col-md-8">
+                                    <label for="nome" class="form-label">Nome Completo *</label>
+                                    {{ form.nome(class="form-control", id="nome", placeholder="Nome completo do paciente") 
+                                    }}
+                                    {% if form.nome.errors %}
+                                        <div class="text-danger">
+                                            {% for error in form.nome.errors %}<small>{{ error }}</small>{% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                                <div class="col-md-4">
+                                    <label for="data_nascimento" class="form-label">Data de Nascimento *</label>
+                                    <input type="text"
+                                           class="form-control"
+                                           id="data_nascimento"
+                                           name="data_nascimento"
+                                           placeholder="dd/mm/aaaa"
+                                           maxlength="10"
+                                           value="{{ form.data_nascimento.data }}">
+                                    {% if form.data_nascimento.errors %}
+                                        <div class="text-danger">
+                                            {% for error in form.data_nascimento.errors %}<small>{{ error }}</small>{% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="row mb-3">
+                                <div class="col-md-4">
+                                    <label for="cpf" class="form-label">CPF *</label>
+                                    {{ form.cpf(class="form-control", id="cpf", placeholder="000.000.000-00") }}
+                                    {% if form.cpf.errors %}
+                                        <div class="text-danger">
+                                            {% for error in form.cpf.errors %}<small>{{ error }}</small>{% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                                <div class="col-md-4">
+                                    <label for="sexo" class="form-label">Sexo *</label>
+                                    {{ form.sexo(class="form-select", id="sexo") }}
+                                    {% if form.sexo.errors %}
+                                        <div class="text-danger">
+                                            {% for error in form.sexo.errors %}<small>{{ error }}</small>{% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <label for="celular" class="form-label">Telefone *</label>
+                                    {{ form.celular(class="form-control", id="celular", placeholder="(00) 00000-0000") }}
+                                    {% if form.celular.errors %}
+                                        <div class="text-danger">
+                                            {% for error in form.celular.errors %}<small>{{ error }}</small>{% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <label for="endereco" class="form-label">Endereço</label>
+                                    {{ form.endereco(class="form-control", id="endereco") }}
+                                    {% if form.endereco.errors %}
+                                        <div class="text-danger">
+                                            {% for error in form.endereco.errors %}<small>{{ error }}</small>{% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                                <div class="col-md-3">
+                                    <label for="bairro" class="form-label">Bairro</label>
+                                    {{ form.bairro(class="form-control", id="bairro") }}
+                                    {% if form.bairro.errors %}
+                                        <div class="text-danger">
+                                            {% for error in form.bairro.errors %}<small>{{ error }}</small>{% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                                <div class="col-md-3">
+                                    <label for="cep" class="form-label">CEP</label>
+                                    {{ form.cep(class="form-control", id="cep", placeholder="00000-000") }}
+                                    {% if form.cep.errors %}
+                                        <div class="text-danger">
+                                            {% for error in form.cep.errors %}<small>{{ error }}</small>{% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <label for="cidade" class="form-label">Cidade</label>
+                                    {{ form.cidade(class="form-control", id="cidade") }}
+                                    {% if form.cidade.errors %}
+                                        <div class="text-danger">
+                                            {% for error in form.cidade.errors %}<small>{{ error }}</small>{% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                                <div class="col-md-3">
+                                    <label for="estado" class="form-label">Estado</label>
+                                    {{ form.estado(class="form-select", id="estado") }}
+                                    {% if form.estado.errors %}
+                                        <div class="text-danger">
+                                            {% for error in form.estado.errors %}<small>{{ error }}</small>{% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                                <div class="col-md-3">
+                                    <label for="profissao" class="form-label">Profissão</label>
+                                    {{ form.profissao(class="form-control", id="profissao") }}
+                                    {% if form.profissao.errors %}
+                                        <div class="text-danger">
+                                            {% for error in form.profissao.errors %}<small>{{ error }}</small>{% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="d-flex justify-content-between mt-4">
+                                <a href="{{ url_for("pacientes.listar_pacientes") }}"
+                                   class="btn btn-secondary">
+                                    <i class="bi bi-arrow-left"></i> Voltar
+                                </a>
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="bi bi-save"></i> Salvar
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock content %}
+{% block extra_js %}
+    <script nonce="{{ csp_nonce() }}">
+    document.addEventListener('DOMContentLoaded', function () {
+        // Máscaras para os campos
+        const cpfInput = document.getElementById('cpf');
+        if (cpfInput) {
+            cpfInput.addEventListener('input', function (e) {
+                let value = e.target.value.replace(/\D/g, '');
+                if (value.length > 11) value = value.substr(0, 11);
+
+                if (value.length > 9) {
+                    value = value.replace(/^(\d{3})(\d{3})(\d{3})(\d{2}).*/, '$1.$2.$3-$4');
+                } else if (value.length > 6) {
+                    value = value.replace(/^(\d{3})(\d{3})(\d{0,3}).*/, '$1.$2.$3');
+                } else if (value.length > 3) {
+                    value = value.replace(/^(\d{3})(\d{0,3}).*/, '$1.$2');
+                }
+
+                e.target.value = value;
+            });
+        }
+
+        const celularInput = document.getElementById('celular');
+
+        if (celularInput) {
+            celularInput.addEventListener('input', function (e) {
+                let value = e.target.value.replace(/\D/g, '');
+                if (value.length > 11) {
+                    value = value.substring(0, 11);
+                }
+                if (value.length > 6) {
+                    value = value.replace(/^(\d{2})(\d{5})(\d{0,4}).*/, '($1) $2-$3');
+                } else if (value.length > 2) {
+                    value = value.replace(/^(\d{2})(\d{0,5}).*/, '($1) $2');
+                } else if (value.length > 0) {
+                    value = value.replace(/^(\d*)/, '($1');
+                }
+                e.target.value = value;
+            });
+        }
+
+        const cepInput = document.getElementById('cep');
+        if (cepInput) {
+            cepInput.addEventListener('input', function (e) {
+                let value = e.target.value.replace(/\D/g, '');
+                if (value.length > 8) value = value.substr(0, 8);
+
+                if (value.length > 5) {
+                    value = value.replace(/^(\d{5})(\d{0,3}).*/, '$1-$2');
+                }
+
+                e.target.value = value;
+            });
+            // Busca automática de endereço via ViaCEP
+            cepInput.addEventListener('blur', function (e) {
+                let cep = e.target.value.replace(/\D/g, '');
+                if (cep.length === 8) {
+                    fetch(`https://viacep.com.br/ws/${cep}/json/`)
+                        .then(response => response.json())
+                        .then(data => {
+                            if (!data.erro) {
+                                document.getElementById('endereco').value = data.logradouro || '';
+                                document.getElementById('bairro').value = data.bairro || '';
+                                document.getElementById('cidade').value = data.localidade || '';
+                                document.getElementById('estado').value = data.uf || '';
+                            }
+                        });
+                }
+            });
+        }
+
+        // Máscara para data de nascimento (dd/mm/aaaa)
+        const dataNascimentoInput = document.getElementById('data_nascimento');
+        if (dataNascimentoInput) {
+            // Flatpickr para calendário e formato brasileiro
+            flatpickr(dataNascimentoInput, {
+                dateFormat: 'd/m/Y',
+                locale: 'pt',
+                allowInput: true,
+                maxDate: 'today',
+                altInput: false
+            });
+            dataNascimentoInput.addEventListener('input', function (e) {
+                let value = e.target.value.replace(/\D/g, '');
+                if (value.length > 8) value = value.substr(0, 8);
+                if (value.length > 4) {
+                    value = value.replace(/^(\d{2})(\d{2})(\d{0,4}).*/, '$1/$2/$3');
+                } else if (value.length > 2) {
+                    value = value.replace(/^(\d{2})(\d{0,2}).*/, '$1/$2');
+                }
+                e.target.value = value;
+            });
+        }
+    });
+    </script>
+{% endblock extra_js %}

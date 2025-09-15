@@ -1,0 +1,115 @@
+{% extends "base.html" %}
+{% block title %}
+    {{ categoria.nome }} - Tratamentos
+{% endblock title %}
+{% block content %}
+    <div class="container-fluid py-4">
+        <nav aria-label="breadcrumb" class="mb-3">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item">
+                    <a href="{{ url_for("tratamentos.lista_categorias") }}">Categorias</a>
+                </li>
+                <li class="breadcrumb-item active">{{ categoria.nome }}</li>
+            </ol>
+        </nav>
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h2 class="h3">{{ categoria.nome }}</h2>
+                {% if categoria.descricao %}<p class="text-muted">{{ categoria.descricao }}</p>{% endif %}
+            </div>
+            <div>
+                <a href="{{ url_for("tratamentos.novo_tratamento") }}"
+                   class="btn btn-primary">
+                    <i class="bi bi-plus-circle"></i> Novo Tratamento
+                </a>            <a href="{{ url_for('tratamentos.editar_categoria', categoria_id=categoria.id) }}"
+               class="btn btn-outline-secondary ms-2">
+                <i class="bi bi-pencil"></i> Editar Categoria
+            </a>
+        </div>
+    </div>
+    <!-- Lista de tratamentos -->
+    <div class="card shadow">
+        <div class="card-body">
+            {% if tratamentos %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Nome do Procedimento</th>
+                                <th>Preço</th>
+                                <th>Duração Estimada</th>
+                                <th>Status</th>
+                                <th>Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for tratamento in tratamentos %}
+                                <tr>
+                                    <td>{{ tratamento.nome }}</td>
+                                    <td>R$ {{ "%.2f"|format(tratamento.preco) }}</td>
+                                    <td>{{ tratamento.duracao_estimada or '-' }}</td>
+                                    <td>
+                                        {% if tratamento.ativo %}
+                                            <span class="badge bg-success">Ativo</span>
+                                        {% else %}
+                                            <span class="badge bg-secondary">Inativo</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <a href="{{ url_for('tratamentos.editar_tratamento', tratamento_id=tratamento.id) }}"
+                                           class="btn btn-sm btn-outline-primary">
+                                            <i class="bi bi-pencil"></i>
+                                        </a>
+                                        <button type="button"
+                                                class="btn btn-sm btn-outline-danger"
+                                                data-bs-toggle="modal"
+                                                data-bs-target="#excluirTratamento{{ tratamento.id }}">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                        <!-- Modal de exclusão -->
+                                        <div class="modal fade"
+                                             id="excluirTratamento{{ tratamento.id }}"
+                                             tabindex="-1"
+                                             aria-labelledby="excluirTratamentoLabel{{ tratamento.id }}"
+                                             aria-hidden="true">
+                                            <div class="modal-dialog">
+                                                <div class="modal-content">
+                                                    <div class="modal-header">
+                                                        <h5 class="modal-title" id="excluirTratamentoLabel{{ tratamento.id }}">Confirmar Exclusão</h5>
+                                                        <button type="button"
+                                                                class="btn-close"
+                                                                data-bs-dismiss="modal"
+                                                                aria-label="Close"></button>
+                                                    </div>
+                                                    <div class="modal-body">
+                                                        Tem certeza que deseja excluir o tratamento <strong>{{ tratamento.nome
+                                                        }}</strong>?
+                                                    </div>
+                                                    <div class="modal-footer">
+                                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                                                        <form action="{{ url_for('tratamentos.excluir_tratamento', tratamento_id=tratamento.id) }}"
+                                                              method="post">
+                                                            <button type="submit" class="btn btn-danger">Excluir</button>
+                                                        </form>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div class="alert alert-info">
+                    <i class="bi bi-info-circle"></i> Nenhum tratamento cadastrado nesta categoria.
+                    <a href="{{ url_for("tratamentos.novo_tratamento") }}"
+                       class="alert-link">Adicione um novo
+                        tratamento</a>.
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+{% endblock content %}

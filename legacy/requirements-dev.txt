@@ -1,0 +1,5 @@
+flake8   # Linter para código Python
+black   # Formatador automático de código Python
+isort   # Organizador de imports Python
+ruff    # Linter e formatador rápido para Python
+djlint  # Linter para templates Django/Jinja/HTML

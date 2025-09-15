@@ -1,0 +1,10 @@
+{# Shared flash messages partial #}
+{% with msgs = get_flashed_messages(with_categories=true) %}
+{% if msgs %}
+<div class="flash-container" aria-live="polite">
+    {% for category, message in msgs %}
+    <div class="flash flash-{{ category|e }}">{{ message }}</div>
+    {% endfor %}
+</div>
+{% endif %}
+{% endwith %}

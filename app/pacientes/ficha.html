@@ -1,0 +1,16 @@
+{% extends 'core/base.html' %}
+{% block title %}Ficha - {{ paciente.nome }}{% endblock %}
+{% block content %}
+<h1>Ficha de Cadastro - {{ paciente.nome }}</h1>
+<form method="post">
+    {{ form.hidden_tag() }}
+    <div>{{ form.responsavel.label }} {{ form.responsavel(size=40) }}</div>
+    <div>{{ form.contato_emergencia.label }} {{ form.contato_emergencia(size=40) }}</div>
+    <div>{{ form.convenio.label }} {{ form.convenio(size=40) }}</div>
+    <div>{{ form.numero_convenio.label }} {{ form.numero_convenio(size=30) }}</div>
+    <div>{{ form.alergias.label }} {{ form.alergias(rows=3) }}</div>
+    <div>{{ form.observacoes.label }} {{ form.observacoes(rows=3) }}</div>
+    <button type="submit">Salvar</button>
+    <a href="{{ url_for('pacientes.visualizar', paciente_id=paciente.id) }}">Voltar</a>
+</form>
+{% endblock %}

@@ -1,0 +1,30 @@
+<!doctype html>
+<title>Usuários</title>
+<h1>Usuários</h1>
+<a href="{{ url_for('users.novo') }}">Novo</a>
+<table>
+    <tr>
+        <th>ID</th>
+        <th>Username</th>
+        <th>Cargo</th>
+        <th>Ativo</th>
+        <th>Ações</th>
+    </tr>
+    {% for u in usuarios %}
+    <tr>
+        <td>{{u.id}}</td>
+        <td>{{u.username}}</td>
+        <td>{{u.cargo}}</td>
+        <td>{{'Sim' if u.ativo else 'Não'}}</td>
+        <td>
+            <form method="post" action="{{ url_for('users.toggle', uid=u.id) }}" style="display:inline">
+                <button type="submit">Toggle</button>
+            </form>
+            <a href="{{ url_for('users.editar', uid=u.id) }}">Editar</a>
+            <form method="post" action="{{ url_for('users.excluir', uid=u.id) }}" style="display:inline">
+                <button type="submit">Del</button>
+            </form>
+        </td>
+    </tr>
+    {% endfor %}
+</table>

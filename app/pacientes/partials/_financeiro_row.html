@@ -1,0 +1,16 @@
+<tr id="fin-{{ f.id }}">
+    <td>{{ f.data_lancamento.strftime('%d/%m/%Y') }}</td>
+    <td>{{ f.descricao }}</td>
+    <td>R$ {{ '%.2f'|format(f.valor) }}</td>
+    <td>{{ f.tipo }}</td>
+    <td>{{ f.status }}</td>
+    <td>
+        <form method="post"
+            hx-post="{{ url_for('pacientes.excluir_financeiro_htmx', paciente_id=paciente.id, fin_id=f.id) }}"
+            hx-target="#fin-{{ f.id }}" hx-swap="outerHTML" hx-confirm="Remover lançamento?" style="display:inline">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button type="submit" class="btn btn-sm btn-outline-danger"
+                aria-label="Excluir lançamento {{ f.id }}">Excluir</button>
+        </form>
+    </td>
+</tr>

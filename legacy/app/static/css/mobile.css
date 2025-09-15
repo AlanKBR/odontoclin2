@@ -1,0 +1,233 @@
+/* Estilos para dispositivos móveis */
+
+body {
+    font-size: 16px;
+    padding-top: 55px;
+    overflow-x: hidden;
+}
+
+/* Estilo para o botão de alternar modo mobile */
+#mobile-mode-toggle {
+    transition: background-color 0.3s, transform 0.3s;
+}
+
+#mobile-mode-toggle:hover {
+    transform: scale(1.1);
+}
+
+/* Quando o modo mobile está ativado */
+.mobile-mode-active #mobile-mode-toggle {
+    background-color: rgba(255, 255, 255, 0.2);
+}
+
+/* Menu estilizado para mobile */
+.navbar-dark .navbar-nav .nav-link {
+    color: rgba(255, 255, 255, 0.85);
+    padding: 0.7rem 1rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    font-size: 1rem;
+    white-space: nowrap;
+}
+
+.navbar-dark .navbar-nav .nav-link:hover {
+    color: #ffffff;
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+.navbar-dark .navbar-nav .nav-link i {
+    margin-right: 10px;
+    width: 20px;
+    text-align: center;
+    font-size: 1.1rem;
+}
+
+/* Destaque para cabeçalhos de seção no menu mobile */
+.navbar-dark .navbar-nav .nav-link.fw-bold {
+    background-color: rgba(0, 0, 0, 0.2);
+    margin-top: 10px;
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* Ajustes para o botão de toggle do menu */
+.navbar-toggler {
+    border: none;
+    padding: 0.5rem;
+}
+
+.navbar-toggler:focus {
+    box-shadow: none;
+    outline: none;
+}
+
+/* Quando o menu está aberto */
+.navbar-collapse {
+    padding-bottom: 15px;
+    max-height: calc(100vh - 56px);
+    overflow-y: auto;
+}
+
+/* Menu ativo */
+.navbar-dark .navbar-nav .nav-link.active {
+    background-color: rgba(255, 255, 255, 0.2);
+    color: #ffffff;
+    font-weight: 500;
+}
+
+/* Para separar seções do menu */
+.navbar-nav .nav-section-separator {
+    height: 1px;
+    background-color: rgba(255, 255, 255, 0.2);
+    margin: 8px 15px;
+}
+
+.sidebar {
+    display: none;
+}
+
+.main-content {
+    margin-left: 0;
+    padding: 15px;
+}
+
+/* Estilos para dropdown no mobile */
+.dropdown-menu {
+    background-color: #f8f9fa;
+    border-radius: 0.25rem;
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+    width: 100%;
+    margin-top: 0;
+}
+
+.dropdown-item {
+    padding: 0.5rem 1rem;
+}
+
+.dropdown-item i {
+    margin-right: 8px;
+    width: 18px;
+    text-align: center;
+}
+
+/* Tipografia */
+.navbar-brand {
+    font-size: 1.2rem;
+}
+
+h1,
+.h1 {
+    font-size: 1.8rem;
+}
+
+h2,
+.h2 {
+    font-size: 1.6rem;
+}
+
+h3,
+.h3 {
+    font-size: 1.4rem;
+}
+
+/* Responsividade para imagens e elementos de mídia */
+img,
+embed,
+object,
+video {
+    max-width: 100%;
+    height: auto;
+}
+
+/* Tabelas responsivas */
+.table-responsive {
+    display: block;
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+/* Ajustes para mensagens flash */
+.flash-messages-container {
+    margin-top: 55px;
+    width: 100%;
+    left: 0;
+    padding-left: 10px;
+    padding-right: 10px;
+    z-index: 1030;
+}
+
+/* Forçar o menu a ser exibido corretamente em mobile */
+/* Removida a media query para forçar o modo mobile em qualquer resolução */
+.navbar-collapse {
+    position: absolute;
+    top: 56px;
+    left: 0;
+    right: 0;
+    background-color: #0d6efd;
+    /* Mesma cor da navbar */
+    z-index: 1000;
+    padding: 0.5rem 1rem;
+    box-shadow: 0 5px 10px rgba(0, 0, 0, 0.2);
+    overflow-x: auto;
+    white-space: nowrap;
+}
+
+/* Menu horizontal em mobile */
+.mobile-menu-horizontal {
+    display: flex;
+    flex-direction: row;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    margin: 0 -1rem;
+    padding: 0.5rem 1rem;
+    width: auto;
+}
+
+.mobile-menu-horizontal .nav-link {
+    white-space: nowrap;
+    padding: 0.5rem 0.75rem;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 4px;
+    margin-right: 0.5rem;
+    text-align: center;
+    min-width: 80px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    height: auto;
+    font-size: 0.8rem;
+}
+
+.mobile-menu-horizontal .nav-link i {
+    font-size: 1.2rem;
+    margin-right: 0;
+    margin-bottom: 5px;
+    width: auto;
+}
+
+/* Cabeçalhos de seção no modo horizontal */
+.mobile-menu-section-header {
+    flex: 0 0 100%;
+    margin: 0.5rem 0;
+    padding: 0.25rem 0;
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: #fff;
+    background-color: rgba(0, 0, 0, 0.2);
+    border-radius: 4px;
+    text-align: center;
+}
+
+/* Fundo mais escuro para cabeçalhos de seções */
+.bg-primary-dark {
+    background-color: rgba(0, 0, 0, 0.2);
+}
+
+/* Botões desativados (greyed-out) */
+.greyed-out {
+    opacity: 0.6 !important;
+    pointer-events: none !important;
+    cursor: not-allowed !important;
+}

@@ -1,0 +1,479 @@
+{% extends "base.html" %}
+{% block title %}
+    Calculadora de Anestésico
+{% endblock title %}
+{% block content %}
+    <div class="container py-4">
+        <h1 class="mb-4">
+            <i class="bi bi-calculator"></i> Calculadora de Anestésico
+        </h1>
+        <div class="alert alert-info">
+            Esta é uma calculadora de anestésico local para uso odontológico. Preencha os campos abaixo para calcular a dose máxima recomendada.
+        </div>
+        <form id="anestesico-form" class="row g-3" autocomplete="off">
+            <div class="col-md-3">
+                <label for="peso" class="form-label">Peso do paciente (kg)</label>
+                <input type="range"
+                       class="form-range"
+                       id="peso-slider"
+                       min="0"
+                       max="150"
+                       step="0.1"
+                       value="70"
+                       oninput="document.getElementById('peso').value = this.value">
+                <input type="number"
+                       class="form-control mt-1"
+                       id="peso"
+                       name="peso"
+                       min="0"
+                       max="150"
+                       step="0.1"
+                       value="70"
+                       required
+                       oninput="document.getElementById('peso-slider').value = this.value">
+            </div>
+            <div class="col-md-3">
+                <label for="anestesico" class="form-label">Tipo de anestésico</label>
+                <select class="form-select"
+                        id="anestesico"
+                        name="anestesico"
+                        required
+                        onchange="ajustarConcentracaoAnestesico()">
+                    <option value="lidocaina">Lidocaína</option>
+                    <option value="mepivacaina">Mepivacaína</option>
+                    <option value="articaina">Articaína</option>
+                    <option value="prilocaina">Prilocaína</option>
+                    <option value="bupivacaina">Bupivacaína</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label for="concentracao" class="form-label">Concentração do anestésico (%)</label>
+                <input type="number"
+                       class="form-control"
+                       id="concentracao"
+                       name="concentracao"
+                       min="0.1"
+                       step="0.1"
+                       placeholder="Ex: 2"
+                       required>
+            </div>
+            <div class="col-md-3">
+                <label for="vaso" class="form-label">Vasoconstrictor</label>
+                <select class="form-select"
+                        id="vaso"
+                        name="vaso"
+                        required
+                        onchange="ajustarConcentracoes()">
+                    <option value="nenhum">Sem vasoconstritor</option>
+                    <option value="epinefrina">Epinefrina / Adrenalina</option>
+                    <option value="norepinefrina">Norepinefrina / Noradrenalina</option>
+                    <option value="fenilefrina">Fenilefrina</option>
+                    <option value="felypressina">Felipressina</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label for="conc_vaso" class="form-label">Concentração do vasoconstrictor</label>
+                <select class="form-select" id="conc_vaso" name="conc_vaso">
+                    <!-- Opções serão preenchidas dinamicamente -->
+                </select>
+            </div>
+            <div class="col-12">
+                <button type="button" class="btn btn-primary" onclick="calcularDose()">
+                    <i class="bi bi-calculator"></i> Calcular
+                </button>
+            </div>
+        </form>
+        <div id="resultado" class="mt-4 hidden">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Resultado</h5>
+                    <p id="tubetes-maximos" class="tubetes-maximos"></p>
+                    <p id="detalhes-tubetes"></p>
+                    <div id="explicacao-calculo" class="mt-3"></div>
+                </div>
+            </div>
+        </div>
+        <style>
+    .hidden { display: none; }
+    .tubetes-maximos {
+        font-size: 1.5rem;
+        font-weight: bold;
+        color: #007bff;
+    }
+    .outline-red {
+        border: 2px solid #dc3545;
+        border-radius: 0.3em;
+        padding: 0 0.3em;
+        color: #dc3545;
+        font-weight: bold;
+        background: #fff0f0;
+        display: inline-block;
+    }
+    .outline-green {
+        border: 2px solid #198754;
+        border-radius: 0.3em;
+        padding: 0 0.3em;
+        color: #198754;
+        font-weight: bold;
+        background: #f0fff0;
+        display: inline-block;
+    }
+    .outline-blue {
+        border: 2px solid #0d6efd;
+        border-radius: 0.3em;
+        padding: 0 0.3em;
+        color: #0d6efd;
+        font-weight: bold;
+        background: #eaf4ff;
+        display: inline-block;
+    }
+    .outline-yellow {
+        border: 2px solid #ffc107;
+        border-radius: 0.3em;
+        padding: 0 0.3em;
+        color: #856404;
+        font-weight: bold;
+        background: #fffbe6;
+        display: inline-block;
+    }
+    .outline-purple {
+        border: 2px solid #8000ff;
+        border-radius: 0.3em;
+        padding: 0 0.3em;
+        color: #8000ff;
+        font-weight: bold;
+        background: #f7eaff;
+        display: inline-block;
+    }
+    .outline-orange {
+        border: 2px solid #fd7e14;
+        border-radius: 0.3em;
+        padding: 0 0.3em;
+        color: #fd7e14;
+        font-weight: bold;
+        background: #fff5eb;
+        display: inline-block;
+    }
+    .outline-pink {
+        border: 2px solid #e83e8c;
+        border-radius: 0.3em;
+        padding: 0 0.3em;
+        color: #e83e8c;
+        font-weight: bold;
+        background: #ffeaf6;
+        display: inline-block;
+    }
+    .result-box {
+        display: inline-block;
+        background: #f3f3f3;
+        border-radius: 0.4em;
+        padding: 0.3em 0.7em;
+        font-weight: bold;
+        font-size: 1.1em;
+        margin-top: 0.2em;
+        margin-bottom: 0.2em;
+    }
+        </style>
+        <div class="mt-4">
+            <h5>Tabela de Doses Máximas de Anestésicos Locais</h5>
+            <div class="table-responsive">
+                <table class="table table-bordered table-sm align-middle text-center">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Anestésico</th>
+                            <th>Dose Máxima Absoluta (mg)</th>
+                            <th>Dose Máxima (mg/kg)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Lidocaína (com ou sem vasoconstrictor)</td>
+                            <td>300</td>
+                            <td>4,4</td>
+                        </tr>
+                        <tr>
+                            <td>Prilocaína (com ou sem vasoconstrictor)</td>
+                            <td>400</td>
+                            <td>6,0</td>
+                        </tr>
+                        <tr>
+                            <td>Mepivacaína (com ou sem vasoconstrictor)</td>
+                            <td>300</td>
+                            <td>4,4</td>
+                        </tr>
+                        <tr>
+                            <td>Articaína (com vasoconstritor)</td>
+                            <td>500</td>
+                            <td>7,0</td>
+                        </tr>
+                        <tr>
+                            <td>Bupivacaína (com vasoconstritor)</td>
+                            <td>90</td>
+                            <td>1,3</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <div class="mt-4">
+            <h5>Tabela de Vasoconstritores em Anestésicos Locais</h5>
+            <div class="table-responsive">
+                <table class="table table-bordered table-sm align-middle text-center">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Vasoconstrictor</th>
+                            <th>Concentração</th>
+                            <th>Dose Máxima</th>
+                            <th>Indicações</th>
+                            <th>Contraindicações</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Epinefrina / Adrenalina</td>
+                            <td>1:100.000 ou 1:200.000</td>
+                            <td>
+                                0,2 mg (adulto saudável)
+                                <br>
+                                0,04 mg (cardiopata)
+                            </td>
+                            <td>Procedimentos rotineiros, maior duração e menor sangramento</td>
+                            <td>Cardiopatias graves, hipertireoidismo, uso de antidepressivos tricíclicos</td>
+                        </tr>
+                        <tr>
+                            <td>Norepinefrina / Noradrenalina</td>
+                            <td>1:30.000</td>
+                            <td>0,34 mg</td>
+                            <td>Procedimentos que exigem maior vasoconstrição</td>
+                            <td>Hipertensão, doenças cardiovasculares, uso de antidepressivos tricíclicos</td>
+                        </tr>
+                        <tr>
+                            <td>Fenilefrina</td>
+                            <td>1:2.500</td>
+                            <td>5 mg</td>
+                            <td>Raramente utilizada, alternativa em casos específicos</td>
+                            <td>Hipertensão, arritmias, doenças cardíacas</td>
+                        </tr>
+                        <tr>
+                            <td>Felipressina</td>
+                            <td>0,03 UI/ml</td>
+                            <td>0,27 UI/kg (máx. 5,4 UI)</td>
+                            <td>Alternativa em cardiopatas leves/moderados</td>
+                            <td>Gestantes (risco de contração uterina), insuficiência vascular periférica</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    <div class="mt-5">
+        <h5>Condição sistêmica e anestesia local em odontologia</h5>
+        <ul>
+            <li>
+                <strong>Gestantes:</strong> Articaína e prilocaína devem ser evitadas pela ocorrência de metemoglobinemia e indução das contrações, respectivamente. Lidocaína a 2% com epinefrina 1:100.000 é a opção mais segura de acordo a literatura, não exceder 2 tubetes por atendimento.
+            </li>
+            <li>
+                <strong>Hipertensos controlados e descontrolados:</strong> O atendimento pode ocorrer normalmente para aqueles que têm a pressão arterial sob controle, porém, algumas literaturas indicam o emprego da prilocaína como AL indicado para esses casos. Já para os descontrolados, o uso da mepivacaína 3% sem vaso ou lidocaína com adrenalina de 1:100.000 até 2 tubetes é o mais indicado.
+            </li>
+            <li>
+                <strong>Diabéticos:</strong> O uso da prilocaína é indicado nesses casos, justamente pela rápida metabolização, a lidocaína é mencionada também como uma boa opção, desde que respeite o número máximo de 3 tubetes.
+            </li>
+            <li>
+                <strong>Hipertireoidismo:</strong> Uso da epinefrina a 1:100.000 ou 1:200.000 é seguro até 2 tubetes. A prilocaína é mencionada na literatura para essa condição.
+            </li>
+        </ul>
+    </div>
+{% endblock content %}
+{% block extra_js %}
+    <script nonce="{{ csp_nonce() }}">
+function ajustarConcentracaoAnestesico() {
+    const anestesico = document.getElementById('anestesico').value;
+    if (anestesico === 'lidocaina') {
+        document.getElementById('concentracao').value = 2;
+    } else if (anestesico === 'mepivacaina') {
+        document.getElementById('concentracao').value = 2;
+    } else if (anestesico === 'articaina') {
+        document.getElementById('concentracao').value = 4;
+    } else if (anestesico === 'prilocaina') {
+        document.getElementById('concentracao').value = 3;
+    } else if (anestesico === 'bupivacaina') {
+        document.getElementById('concentracao').value = 0.5;
+    }
+}
+
+function ajustarConcentracoes() {
+    const vaso = document.getElementById('vaso').value;
+    const concVaso = document.getElementById('conc_vaso');
+    concVaso.innerHTML = '';
+    if (vaso === 'epinefrina') {
+        concVaso.innerHTML = '<option value="0.01" selected>1:100.000 (0,01 mg/ml)</option><option value="0.005">1:200.000 (0,005 mg/ml)</option>';
+    } else if (vaso === 'norepinefrina') {
+        concVaso.innerHTML = '<option value="0.033" selected>1:30.000 (0,033 mg/ml)</option>';
+    } else if (vaso === 'fenilefrina') {
+        concVaso.innerHTML = '<option value="0.4" selected>1:2.500 (0,4 mg/ml)</option>';
+    } else if (vaso === 'felypressina') {
+        concVaso.innerHTML = '<option value="0.03" selected>0,03 UI/ml</option>';
+    } else {
+        concVaso.innerHTML = '<option value="">-</option>';
+    }
+}
+
+function wrapRed(text) {
+    return `<span class='outline-red'>${text}</span>`;
+}
+function wrapGreen(text) {
+    return `<span class='outline-green'>${text}</span>`;
+}
+function wrapBlue(text) {
+    return `<span class='outline-blue'>${text}</span>`;
+}
+function wrapYellow(text) {
+    return `<span class='outline-yellow'>${text}</span>`;
+}
+function wrapPurple(text) {
+    return `<span class='outline-purple'>${text}</span>`;
+}
+function wrapOrange(text) {
+    return `<span class='outline-orange'>${text}</span>`;
+}
+window.onload = function() {
+    document.getElementById('peso').value = 70;
+    document.getElementById('anestesico').value = 'lidocaina';
+    ajustarConcentracaoAnestesico();
+    document.getElementById('vaso').value = 'epinefrina';
+    ajustarConcentracoes();
+    document.getElementById('conc_vaso').value = '0.01'; // 1:100.000
+};
+function calcularDose() {
+    const peso = parseFloat(document.getElementById('peso').value);
+    const anestesico = document.getElementById('anestesico').value;
+    const concentracao = parseFloat(document.getElementById('concentracao').value);
+    const vaso = document.getElementById('vaso').value;
+    const conc_vaso = parseFloat(document.getElementById('conc_vaso').value);
+    if (!peso || !anestesico || !concentracao || !vaso) {
+        alert('Preencha o peso, tipo, concentração do anestésico e vasoconstrictor.');
+        return;
+    }
+    // Parâmetros de cálculo conforme tabela
+    const parametros = {
+        'epinefrina': {dose_max_mg: 0.2, dose_max_mg_cardiopata: 0.04},
+        'norepinefrina': {dose_max_mg: 0.34},
+        'fenilefrina': {dose_max_mg: 5},
+        'felypressina': {dose_max_ui: 0.27, dose_max_ui_total: 5.4},
+    };
+    let tubetes_max_vaso = null;
+    const ml_tubete = 1.8;
+    if (vaso === 'epinefrina') {
+        const mg_por_ml = conc_vaso;
+        const mg_por_tubete = mg_por_ml * ml_tubete;
+        tubetes_max_vaso = parametros.epinefrina.dose_max_mg / mg_por_tubete;
+    } else if (vaso === 'norepinefrina') {
+        const mg_por_ml = conc_vaso;
+        const mg_por_tubete = mg_por_ml * ml_tubete;
+        tubetes_max_vaso = parametros.norepinefrina.dose_max_mg / mg_por_tubete;
+    } else if (vaso === 'fenilefrina') {
+        const mg_por_ml = conc_vaso;
+        const mg_por_tubete = mg_por_ml * ml_tubete;
+        tubetes_max_vaso = parametros.fenilefrina.dose_max_mg / mg_por_tubete;
+    } else if (vaso === 'felypressina') {
+        // Correção: dose máxima é 0,27 UI/kg (máx. 5,4 UI)
+        const ui_max = Math.min(parametros.felypressina.dose_max_ui * peso, parametros.felypressina.dose_max_ui_total);
+        const ui_por_ml = conc_vaso;
+        const ui_por_tubete = ui_por_ml * ml_tubete;
+        tubetes_max_vaso = ui_max / ui_por_tubete;
+    }
+    // Cálculo do anestésico local (mantém campos para referência)
+    const anestesicos = {
+        'lidocaina': {mg_kg: 4.4, mg_max: 300},
+        'mepivacaina': {mg_kg: 4.4, mg_max: 300},
+        'articaina': {mg_kg: 7, mg_max: 500},
+        'prilocaina': {mg_kg: 6, mg_max: 400},
+        'bupivacaina': {mg_kg: 1.3, mg_max: 90},
+    };
+    // Seleciona os parâmetros corretos do anestésico
+    const param_anest = anestesicos[anestesico];
+    let dose_max = peso * param_anest.mg_kg;
+    if (dose_max > param_anest.mg_max) dose_max = param_anest.mg_max;
+    const mg_por_ml_anest = concentracao * 10;
+    const mg_por_tubete_anest = mg_por_ml_anest * ml_tubete;
+    const tubetes_max_anest = dose_max / mg_por_tubete_anest;
+    // O menor valor entre anestésico e vasoconstrictor
+    let tubetes_max = tubetes_max_anest;
+    let criterio = 'anestésico local';
+    if (tubetes_max_vaso !== null && tubetes_max_vaso < tubetes_max_anest) {
+        tubetes_max = tubetes_max_vaso;
+        criterio = 'vasoconstrictor';
+    }
+    const tubetes_max_int = Math.round(tubetes_max);
+    document.getElementById('tubetes-maximos').innerHTML = `Número máximo de tubetes: <span style="font-size:2rem;font-weight:bold;">${tubetes_max_int}</span>`;
+    document.getElementById('detalhes-tubetes').innerHTML = `<strong>Número máximo de tubetes pelo vasoconstrictor:</strong> ${tubetes_max_vaso ? tubetes_max_vaso.toFixed(2) : '-'}<br><strong>Número máximo de tubetes pelo anestésico:</strong> ${tubetes_max_anest.toFixed(2)}`;
+
+    // Adiciona botão de explicação
+    let explicacaoBtn = document.getElementById('btn-explicacao');
+    if (!explicacaoBtn) {
+        explicacaoBtn = document.createElement('button');
+        explicacaoBtn.id = 'btn-explicacao';
+        explicacaoBtn.className = 'btn btn-secondary mt-2';
+        explicacaoBtn.innerText = 'Explicação';
+        explicacaoBtn.type = 'button';
+        explicacaoBtn.onclick = function() {
+            document.getElementById('explicacao-calculo').style.display = 'block';
+            explicacaoBtn.style.display = 'none';
+        };
+        document.getElementById('detalhes-tubetes').insertAdjacentElement('afterend', explicacaoBtn);
+    } else {
+        explicacaoBtn.style.display = 'inline-block';
+    }
+
+    // Explicação detalhada dos cálculos
+    let explicacao = `<h6>Como o cálculo foi feito:</h6><ul>`;
+    // 1. Valores absolutos
+    explicacao += `<li><strong>Peso do paciente:</strong> ${peso} kg</li>`;
+    explicacao += `<li><strong>Tipo de vasoconstrictor:</strong> ${document.getElementById('vaso').options[document.getElementById('vaso').selectedIndex].text}</li>`;
+    explicacao += `<li><strong>${wrapRed('Volume de cada tubete')}:</strong> ${wrapRed('1,8 ml')}</li>`;
+    explicacao += `<li><strong><span class='outline-green'>Concentração do anestésico</span>:</strong> <span class='outline-green'>${concentracao}%</span> (<span class='outline-green'>${(concentracao*10).toFixed(1)} mg/ml</span>)</li>`;
+    if (!isNaN(conc_vaso) && conc_vaso > 0) {
+        explicacao += `<li><strong>${wrapPurple('Concentração do vasoconstrictor')}:</strong> <span class='outline-purple'>${document.getElementById('conc_vaso').options[document.getElementById('conc_vaso').selectedIndex].text}</span></li>`;
+    }
+    // 2. Cálculos intermediários
+    explicacao += `<li><strong>${wrapYellow('Dose máxima do anestésico local')}:</strong> ${peso} kg x ${param_anest.mg_kg} mg/kg = ${wrapYellow((peso * param_anest.mg_kg).toFixed(1) + ' mg')}`;
+    if ((peso * param_anest.mg_kg) > param_anest.mg_max) {
+        explicacao += ` (excede o máximo absoluto de ${wrapYellow(param_anest.mg_max + ' mg')}, portanto será considerado ${wrapYellow(param_anest.mg_max + ' mg')})`;
+    }
+    explicacao += `</li>`;
+    explicacao += `<li><strong>${wrapBlue('Quantidade de anestésico por tubete')}:</strong> (<span class='outline-green'>${(concentracao*10).toFixed(1)} mg/ml</span>) x ${wrapRed('1,8 ml')} = ${wrapBlue((concentracao*10*1.8).toFixed(1) + ' mg/tubete')}</li>`;
+    if (tubetes_max_vaso !== null) {
+        if (vaso === 'felypressina') {
+            explicacao += `<li><strong>Quantidade de felipressina por tubete:</strong> <span class='outline-purple'>0,03 UI/ml</span> x ${wrapRed('1,8 ml')} = ${(0.03*1.8).toFixed(3)} UI/tubete</li>`;
+            explicacao += `<li><strong>${wrapOrange('Limite do vasoconstrictor')}:</strong> ${wrapOrange('0,27 UI/kg (máx. 5,4 UI)')}</li>`;
+        } else {
+            explicacao += `<li><strong>${wrapOrange('Limite do vasoconstrictor')}:</strong> ${wrapOrange(
+                vaso === 'epinefrina' ? '0,2 mg' :
+                vaso === 'norepinefrina' ? '0,34 mg' :
+                vaso === 'fenilefrina' ? '5 mg' :
+                '-')}</li>`;
+            explicacao += `<li><strong><span class='outline-pink'>Quantidade de vasoconstrictor por tubete</span>:</strong> <span class='outline-purple'>${conc_vaso} mg/ml</span> x ${wrapRed('1,8 ml')} = <span class='outline-pink'>${(conc_vaso*1.8).toFixed(3)} mg/tubete</span></li>`;
+        }
+    }
+    // 3. Resultados finais
+    if (tubetes_max_vaso !== null) {
+        if (vaso === 'felypressina') {
+            explicacao += `<li><strong>Número máximo de tubetes pelo vasoconstrictor:</strong> <span class='result-box'>${Math.min(0.27*peso,5.4).toFixed(2)} UI / ${(0.03*1.8).toFixed(3)} UI/tubete = ${tubetes_max_vaso.toFixed(2)}</span></li>`;
+        } else {
+            explicacao += `<li><strong>Número máximo de tubetes pelo vasoconstrictor:</strong> <span class='result-box'><span class='outline-orange'>${
+                (vaso === 'epinefrina') ? '0,2 mg' :
+                (vaso === 'norepinefrina') ? '0,34 mg' :
+                (vaso === 'fenilefrina') ? '5 mg' :
+                '-'
+            }</span> / <span class='outline-pink'>${(conc_vaso*1.8).toFixed(3)} mg/tubete</span> = ${tubetes_max_vaso.toFixed(2)}</span></li>`;
+        }
+    }
+    explicacao += `<li><strong>Número máximo de tubetes pelo anestésico:</strong> <span class='result-box'>${wrapYellow(dose_max.toFixed(1) + ' mg')} / ${wrapBlue((concentracao*10*1.8).toFixed(1) + ' mg/tubete')} = ${tubetes_max_anest.toFixed(2)}</span></li>`;
+    explicacao += `<li><strong>Critério limitante:</strong> ${criterio === 'vasoconstrictor' ? 'vasoconstrictor' : 'anestésico local'} (menor valor)</li>`;
+    explicacao += `</ul>`;
+    document.getElementById('explicacao-calculo').innerHTML = explicacao;
+    document.getElementById('explicacao-calculo').style.display = 'none';
+    document.getElementById('resultado').style.display = 'block';
+}
+    </script>
+{% endblock extra_js %}

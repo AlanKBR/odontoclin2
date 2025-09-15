@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <meta name="description"
+              content="Documento odontológico gerado pelo sistema - {{ config_documento.titulo }}">
+        <meta name="keywords"
+              content="odontologia, documento, {{ config_documento.titulo }}, clínica">
+        <title>{{ config_documento.titulo }} - {{ paciente.nome }}</title>
+        <style>
+        /* CSS otimizado para impressão */
+        @media print {
+            body { margin: 0; }
+            .no-print { display: none !important; }
+            .page-break { page-break-before: always; }
+        }
+        
+        body {
+            font-family: 'Times New Roman', serif;
+            font-size: 14px;
+            line-height: 1.6;
+            color: #333;
+            max-width: 21cm;
+            margin: 0 auto;
+            padding: 2cm;
+            background: white;
+        }
+        
+        .document-header {
+            text-align: center;
+            margin-bottom: 3cm;
+            border-bottom: 2px solid #333;
+            padding-bottom: 1cm;
+        }
+        
+        .clinic-name {
+            font-size: 20px;
+            font-weight: bold;
+            margin-bottom: 0.5cm;
+            text-transform: uppercase;
+        }
+        
+        .clinic-info {
+            font-size: 12px;
+            color: #666;
+            margin-bottom: 0.3cm;
+        }
+        
+        .document-title {
+            font-size: 18px;
+            font-weight: bold;
+            text-align: center;
+            margin: 2cm 0;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .document-content {
+            text-align: justify;
+            margin: 2cm 0;
+            font-size: 14px;
+            line-height: 1.8;
+        }
+        
+        .document-footer {
+            margin-top: 3cm;
+            text-align: right;
+        }
+        
+        .signature-area {
+            margin-top: 3cm;
+            text-align: center;
+        }
+        
+        .signature-line {
+            border-bottom: 1px solid #333;
+            width: 300px;
+            margin: 2cm auto 0.5cm auto;
+        }
+        
+        .signature-name {
+            font-weight: bold;
+            margin-bottom: 0.3cm;
+        }
+        
+        .signature-info {
+            font-size: 12px;
+            color: #666;
+        }
+        
+        .observations {
+            margin-top: 2cm;
+            padding-top: 1cm;
+            border-top: 1px solid #ccc;
+        }
+        
+        .observations-title {
+            font-weight: bold;
+            margin-bottom: 0.5cm;
+        }
+        
+        /* Controles de impressão */
+        .print-controls {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #fff;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            z-index: 1000;
+        }
+        
+        .btn {
+            display: inline-block;
+            padding: 8px 16px;
+            margin: 0 5px;
+            background: #007bff;
+            color: white;
+            text-decoration: none;
+            border-radius: 4px;
+            font-size: 12px;
+            border: none;
+            cursor: pointer;
+        }
+        
+        .btn:hover {
+            background: #0056b3;
+        }
+        
+        .btn-secondary {
+            background: #6c757d;
+        }
+        
+        .btn-secondary:hover {
+            background: #545b62;
+        }
+        
+        .document-meta {
+            font-size: 10px;
+            color: #888;
+            text-align: center;
+            margin-top: 1cm;
+            border-top: 1px dotted #ccc;
+            padding-top: 0.5cm;
+        }
+        </style>
+    </head>
+    <body>
+        <!-- Controles de impressão -->
+        <div class="print-controls no-print">
+            <button onclick="window.print()" class="btn">
+                <i class="fas fa-print"></i> Imprimir
+            </button>
+            <a href="{{ url_for('documentos.gerar_pdf', documento_id=documento.id) }}"
+               class="btn btn-secondary">
+                <i class="fas fa-file-pdf"></i> Baixar PDF
+            </a>
+            <a href="{{ url_for("documentos.historico") }}"
+               class="btn btn-secondary">
+                <i class="fas fa-arrow-left"></i> Voltar
+            </a>
+        </div>
+        <!-- Cabeçalho da clínica -->
+        <div class="document-header">
+            {% if clinica %}
+                <div class="clinic-name">{{ clinica.nome or 'Clínica Odontológica' }}</div>
+                {% if clinica.endereco %}<div class="clinic-info">{{ clinica.endereco }}</div>{% endif %}
+                {% if clinica.telefone %}<div class="clinic-info">Telefone: {{ clinica.telefone }}</div>{% endif %}
+                {% if clinica.email %}<div class="clinic-info">E-mail: {{ clinica.email }}</div>{% endif %}
+                {% if clinica.cnpj %}<div class="clinic-info">CNPJ: {{ clinica.cnpj }}</div>{% endif %}
+            {% else %}
+                <div class="clinic-name">Clínica Odontológica</div>
+            {% endif %}
+        </div>
+        <!-- Título do documento -->
+        <div class="document-title">{{ config_documento.titulo }}</div>
+        <!-- Conteúdo do documento -->
+        <div class="document-content">{{ conteudo_final }}</div>
+        <!-- Local e data -->
+        <div class="document-footer">
+            {% if documento.local_emissao %}
+                {{ documento.local_emissao }}, {{ documento.data_emissao.strftime("%d de %B de %Y") }}
+            {% else %}
+                {{ documento.data_emissao.strftime("%d de %B de %Y") }}
+            {% endif %}
+        </div>
+        <!-- Área de assinatura -->
+        <div class="signature-area">
+            <div class="signature-line"></div>
+            {% if assinatura_tipo == "dentista" and dentista %}
+                <div class="signature-name">Dr(a). {{ dentista.nome_completo }}</div>
+                {% if dentista.cro %}<div class="signature-info">CRO: {{ dentista.cro }}</div>{% endif %}
+            {% else %}
+                <div class="signature-name">{{ clinica.nome if clinica and clinica.nome else 'Clínica Odontológica' }}</div>
+                {% if clinica and clinica.cnpj %}<div class="signature-info">CNPJ: {{ clinica.cnpj }}</div>{% endif %}
+            {% endif %}
+        </div>
+        <!-- Observações -->
+        {% if documento.observacoes %}
+            <div class="observations">
+                <div class="observations-title">Observações:</div>
+                <div>{{ documento.observacoes }}</div>
+            </div>
+        {% endif %}
+        <!-- Metadados do documento -->
+        <div class="document-meta no-print">
+            Documento gerado em {{ documento.data_emissao.strftime("%d/%m/%Y às %H:%M") }} |
+            ID: {{ documento.id }} |
+            Tipo: {{ documento.tipo_documento }}
+        </div>
+        <script>
+        // Auto-foco para impressão em alguns navegadores
+        document.addEventListener('DOMContentLoaded', function() {
+            // Verificar se foi aberto para impressão direta
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.get('print') === 'true') {
+                setTimeout(() => {
+                    window.print();
+                }, 500);
+            }
+        });
+        
+        // Atalho de teclado para impressão
+        document.addEventListener('keydown', function(e) {
+            if (e.ctrlKey && e.key === 'p') {
+                e.preventDefault();
+                window.print();
+            }
+        });
+        </script>
+    </body>
+</html>

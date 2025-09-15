@@ -1,0 +1,204 @@
+{% extends "base.html" %}
+{% block title %}
+    Consulta Conselho Profissional - OdontoClinic
+{% endblock title %}
+{% block content %}
+    <div class="container mt-4">
+        <h2>
+            <i class="bi bi-card-list"></i> Consulta Conselho Profissional
+        </h2>
+        <p>Integração com o serviço de consulta para verificar informações de profissionais.</p>
+        <div class="row">
+            <div class="col-md-7">
+                <h4>Configurar Chave de API</h4>
+                <p class="text-muted small">
+                    Para obter sua chave de API, acesse o site
+                    <a href="https://www.consultacro.com.br/index/sis_api"
+                       target="_blank"
+                       rel="noopener noreferrer">ConsultaCRO API</a>.
+                </p>
+                <form method="post"
+                      action="{{ url_for('cro.index', api_type=(api_type_selected if api_type_selected else 'cro') , uf=(uf_selected if uf_selected else 'todos')) }}">
+                    {{ csrf_token }}
+                    <div class="mb-3">
+                        <input type="password"
+                               class="form-control"
+                               id="api_key"
+                               name="api_key"
+                               value="{{ current_api_key if current_api_key else '' }}"
+                               placeholder="Insira sua chave de API">
+                        {% if api_key_configured %}
+                            <div class="form-text text-success">Chave de API configurada.</div>
+                        {% else %}
+                            <div class="form-text text-warning">Chave de API ainda não configurada.</div>
+                        {% endif %}
+                    </div>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-key-fill"></i> Salvar Chave
+                    </button>
+                </form>
+            </div>
+        </div>
+        <hr class="my-4">
+        {% if api_key_configured %}
+            <h4>Consultar Profissional</h4>
+            <form method="post" action="{{ url_for("cro.index") }}" class="mb-4">
+                {{ csrf_token }}
+                <div class="row g-3 align-items-end">
+                    <div class="col-md-4">
+                        <label for="search_term" class="form-label">Termo de Busca:</label>
+                        <input type="text"
+                               class="form-control"
+                               id="search_term"
+                               name="search_term"
+                               value="{{ search_term if search_term else '' }}"
+                               required>
+                    </div>
+                    <div class="col-md-3">
+                        <label for="api_type" class="form-label">Tipo de Conselho:</label>
+                        <select class="form-select" id="api_type" name="api_type">
+                            {% set api_types = ["CRO", "CRM", "OAB", "CRP", "CREA", "CAU", "CRN"] %}
+                            {% for type_option in api_types %}
+                                <option value="{{ type_option.lower() }}"
+                                        {% if api_type_selected == type_option.lower() %}selected{% endif %}>
+                                    {{ type_option }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label for="uf" class="form-label">Estado (UF):</label>
+                        <select class="form-select" id="uf" name="uf">
+                            <option value="todos"
+                                    {% if uf_selected == 'todos' or not uf_selected %}selected{% endif %}>
+                                Todos
+                            </option>
+                            {% set ufs = [
+                                "AC",
+                                "AL",
+                                "AP",
+                                "AM",
+                                "BA",
+                                "CE",
+                                "DF",
+                                "ES",
+                                "GO",
+                                "MA",
+                                "MT",
+                                "MS",
+                                "MG",
+                                "PA",
+                                "PB",
+                                "PR",
+                                "PE",
+                                "PI",
+                                "RJ",
+                                "RN",
+                                "RS",
+                                "RO",
+                                "RR",
+                                "SC",
+                                "SP",
+                                "SE",
+                                "TO"
+                            ] %}
+                            {% for state_uf in ufs %}
+                                <option value="{{ state_uf }}"
+                                        {% if uf_selected == state_uf %}selected{% endif %}>{{ state_uf }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <button type="submit" class="btn btn-success w-100">
+                            <i class="bi bi-search"></i> Consultar
+                        </button>
+                    </div>
+                </div>
+            </form>
+            {% if api_key_configured and remaining_queries is not none %}
+                <div class="alert alert-info mt-3" role="alert">
+                    <i class="bi bi-info-circle-fill"></i> Consultas restantes este mês: <strong>{{ remaining_queries }}</strong> ({{ api_consultas }} de {{ api_limite }} utilizadas).
+                </div>
+            {% elif api_key_configured and api_limite is none and search_term %}
+                {# This case might occur if the API response structure changes or if these fields are not always present #}
+                <div class="alert alert-warning mt-3" role="alert">
+                    <i class="bi bi-exclamation-triangle-fill"></i> Não foi possível obter informações sobre o limite de consultas da API.
+                </div>
+            {% endif %}
+            {% if results is defined %}
+                {% if results %}
+                    <h5>
+                        Resultados da Consulta ({{ (api_type_selected.upper() if api_type_selected else 'CRO') }}
+                        {% if uf_selected and uf_selected != 'todos' %}- {{ uf_selected.upper() }}{% endif %}
+                        ):
+                        {% if total_results_api is not none and total_results_api != results|length %}
+                            <span class="badge bg-secondary">{{ results|length }} exibido(s) de {{ total_results_api }} encontrado(s) pela API</span>
+                            {% if total_results_api == 30 %}
+                                <small class="text-muted ms-2">(Limite máximo de resultados atingido pela API; alguns profissionais podem não estar listados.)</small>
+                            {% endif %}
+                        {% else %}
+                            <span class="badge bg-secondary">{{ results|length }} encontrado(s)</span>
+                            {% if total_results_api == 30 and results|length < 30 %}
+                                {# This case is unlikely if API always returns up to 30 items when total is 30, but added for completeness #}
+                                <small class="text-muted ms-2">(API indica um total de 30, mas menos foram retornados. Pode haver um limite.)</small>
+                            {% elif total_results_api == 30 and results|length == 30 %}
+                                <small class="text-muted ms-2">(Limite máximo de resultados atingido; alguns profissionais podem não estar listados.)</small>
+                            {% endif %}
+                        {% endif %}
+                    </h5>
+                    <div class="table-responsive">
+                        <table class="table table-striped table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Nome</th>
+                                    <th>Número</th>
+                                    <th>UF</th>
+                                    <th>Situação</th>
+                                    <th>Profissão</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for item in results %}
+                                    <tr>
+                                        <td>{{ item.nome }}</td>
+                                        <td>{{ item.numero }}</td>
+                                        <td>{{ item.uf }}</td>
+                                        <td>
+                                            {% if item.situacao %}
+                                                <span class="badge bg-{% if item.situacao == 'Ativo' or item.situacao == 'ATIVO' %}success{% elif item.situacao == 'Cancelado' or item.situacao == 'Falecido' %}danger{% else %}warning{% endif %}">
+                                                    {{ item.situacao }}
+                                                </span>
+                                            {% else %}
+                                                🤷‍♂️
+                                            {% endif %}
+                                        </td>
+                                        <td>{{ item.profissao if item.profissao else '-' }}</td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% elif search_term %}
+                    {# Flash messages will handle 'No results found' or other API messages #}
+                {% endif %}
+            {% endif %}
+        {% else %}
+            <div class="alert alert-info" role="alert">
+                <i class="bi bi-info-circle-fill"></i> Por favor, configure sua <strong>Chave de API</strong> acima para habilitar a funcionalidade de consulta.
+            </div>
+        {% endif %}
+    </div>
+{% endblock content %}
+{% block extra_js %}
+    <script>
+document.addEventListener('DOMContentLoaded', function () {
+    const apiKeyInput = document.getElementById('api_key');
+    // Check if the API key is configured by checking the text of the warning message element
+    // This avoids complex Jinja to JS variable passing for this simple case.
+    const apiKeyWarningText = document.querySelector('.form-text.text-warning');
+    if (apiKeyWarningText && apiKeyWarningText.innerText.includes("Chave de API ainda não configurada") && apiKeyInput) {
+        apiKeyInput.focus();
+    }
+});
+    </script>
+{% endblock extra_js %}

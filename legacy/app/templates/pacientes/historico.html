@@ -1,0 +1,65 @@
+{% extends "pacientes/visualizar_paciente.html" %}
+{% block conteudo_aba %}
+    <div class="tab-pane fade show active">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h4>Histórico de Atendimentos</h4>
+            <a href="{{ url_for('pacientes.novo_historico', paciente_id=paciente.id) }}"
+               class="btn btn-sm btn-primary">
+                <i class="bi bi-plus-circle"></i> Novo Registro
+            </a>
+        </div>
+        {% if historicos %}
+            <div class="timeline">
+                {% for historico in historicos %}
+                    <div class="card shadow mb-4">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <div>
+                                <h5 class="mb-0">{{ historico.data|date }} {{ historico.data.strftime("%H:%M") }}</h5>
+                                {% if historico.dentista %}
+                                    <small class="text-muted">Dentista: {{ historico.dentista.nome_completo }}</small>
+                                {% endif %}
+                            </div>
+                            <div class="dropdown">
+                                <button class="btn btn-sm btn-outline-secondary dropdown-toggle"
+                                        type="button"
+                                        id="dropdownMenuButton{{ historico.id }}"
+                                        data-bs-toggle="dropdown"
+                                        aria-expanded="false">
+                                    <i class="bi bi-three-dots-vertical"></i>
+                                </button>
+                                <ul class="dropdown-menu"
+                                    aria-labelledby="dropdownMenuButton{{ historico.id }}">
+                                    <li>
+                                        <a class="dropdown-item" href="#"><i class="bi bi-pencil"></i> Editar</a>
+                                    </li>
+                                    <li>
+                                        <hr class="dropdown-divider">
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item text-danger" href="#"><i class="bi bi-trash"></i> Excluir</a>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <h6 class="card-subtitle mb-2 fw-bold">Descrição</h6>
+                            <p class="card-text">{{ historico.descricao|nl2br }}</p>
+                            {% if historico.procedimentos_realizados %}
+                                <h6 class="card-subtitle mb-2 mt-4 fw-bold">Procedimentos Realizados</h6>
+                                <p class="card-text">{{ historico.procedimentos_realizados|nl2br }}</p>
+                            {% endif %}
+                            {% if historico.observacoes %}
+                                <h6 class="card-subtitle mb-2 mt-4 fw-bold">Observações</h6>
+                                <p class="card-text">{{ historico.observacoes|nl2br }}</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="alert alert-info">
+                <i class="bi bi-info-circle"></i> Nenhum histórico de atendimento registrado para este paciente.
+            </div>
+        {% endif %}
+    </div>
+{% endblock conteudo_aba %}

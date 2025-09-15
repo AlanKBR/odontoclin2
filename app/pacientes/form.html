@@ -1,0 +1,22 @@
+{% extends 'core/base.html' %}
+{% block title %}{{ titulo }} - Pacientes{% endblock %}
+{% block content %}
+<h1>{{ titulo }}</h1>
+<form method="post" novalidate>
+    {{ form.hidden_tag() }}
+    <div>
+        {{ form.nome.label }} {{ form.nome(size=40) }}
+        {% for e in form.nome.errors %}<span class="error">{{ e }}</span>{% endfor %}
+    </div>
+    <div>
+        {{ form.data_nascimento.label }} {{ form.data_nascimento(size=12, placeholder='dd/mm/aaaa') }}
+    </div>
+    <div>{{ form.sexo.label }} {{ form.sexo() }}</div>
+    <div>{{ form.cpf.label }} {{ form.cpf(size=14) }}</div>
+    <div>{{ form.telefone.label }} {{ form.telefone(size=20) }}</div>
+    <div>{{ form.celular.label }} {{ form.celular(size=20) }}</div>
+    <div>{{ form.email.label }} {{ form.email(size=40) }}</div>
+    <div>{{ form.submit() }}</div>
+</form>
+<a href="{{ url_for('pacientes.listar') }}">Voltar</a>
+{% endblock %}

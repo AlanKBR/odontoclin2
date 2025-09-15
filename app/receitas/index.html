@@ -1,0 +1,66 @@
+{% extends 'core/base.html' %}
+{% block title %}Modelos de Receitas{% endblock %}
+{% block content %}
+<h1>Receitas</h1>
+<div class="d-flex gap-2">
+    <a href="{{ url_for('receitas.novo_modelo') }}" class="btn btn-primary btn-sm">Novo Modelo</a>
+    <a href="{{ url_for('receitas.listar_medicamentos') }}" class="btn btn-outline-secondary btn-sm">Todos
+        Medicamentos</a>
+</div>
+
+<h2 class="h5 mt-4">Modelos Salvos</h2>
+<table class="table table-sm">
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>Título</th>
+            <th>Ações</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for m in modelos %}
+        <tr>
+            <td>{{ m.id }}</td>
+            <td>{{ m.titulo }}</td>
+            <td class="d-flex gap-1">
+                <a class="btn btn-sm btn-outline-primary"
+                    href="{{ url_for('receitas.editar_modelo', modelo_id=m.id) }}">Editar</a>
+                <form method="post" action="{{ url_for('receitas.excluir_modelo', modelo_id=m.id) }}"
+                    onsubmit="return confirm('Excluir modelo?');">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button class="btn btn-sm btn-outline-danger">Excluir</button>
+                </form>
+            </td>
+        </tr>
+        {% else %}
+        <tr>
+            <td colspan="3">Nenhum modelo.</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+<h2 class="h5 mt-4">Medicamentos (amostra)</h2>
+<table class="table table-sm">
+    <thead>
+        <tr>
+            <th>Princípio Ativo</th>
+            <th>Apresentação</th>
+            <th>Categoria</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for med in medicamentos %}
+        <tr>
+            <td><a href="{{ url_for('receitas.ver_medicamento', med_id=med.id) }}">{{ med.principio_ativo }}</a></td>
+            <td>{{ med.apresentacao }}</td>
+            <td>{{ med.categoria }}</td>
+        </tr>
+        {% else %}
+        <tr>
+            <td colspan="3">Nenhum medicamento cadastrado.</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}

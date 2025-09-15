@@ -1,0 +1,23 @@
+<tr id="proc-{{ p.id }}">
+    <td>{{ p.id }}</td>
+    <td>{{ p.descricao }}</td>
+    <td>{{ p.dente or '' }}</td>
+    <td>R$ {{ '%.2f'|format(p.valor or 0) }}</td>
+    <td>{{ p.status }}</td>
+    <td>
+        {% if p.status != 'Realizado' %}
+        <form
+            hx-post="{{ url_for('pacientes.realizar_procedimento_htmx', paciente_id=paciente.id, plano_id=plano.id, proc_id=p.id) }}"
+            hx-target="#proc-{{ p.id }}" hx-swap="outerHTML" style="display:inline">
+            <button type="submit">Realizar</button>
+        </form>
+        {% endif %}
+        <form method="post"
+            action="{{ url_for('pacientes.excluir_procedimento', paciente_id=paciente.id, plano_id=plano.id, proc_id=p.id) }}"
+            style="display:inline" hx-confirm="Remover?"
+            hx-post="{{ url_for('pacientes.excluir_procedimento_htmx', paciente_id=paciente.id, plano_id=plano.id, proc_id=p.id) }}"
+            hx-target="#proc-{{ p.id }}" hx-swap="outerHTML">
+            <button type="submit">Excluir</button>
+        </form>
+    </td>
+</tr>

@@ -1,0 +1,131 @@
+{% extends "base.html" %}
+{% block page_title %}
+    Demonstração da Nova Sidebar
+{% endblock page_title %}
+{% block content %}
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-12">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-header bg-primary text-white">
+                        <h4 class="mb-0">
+                            <i class="bi bi-layout-sidebar-inset me-2"></i>
+                            Nova Sidebar Moderna - Características
+                        </h4>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h5 class="text-primary">🎨 Design Moderno</h5>
+                                <ul class="list-unstyled">
+                                    <li>
+                                        <i class="bi bi-check-circle text-success me-2"></i>Interface limpa e minimalista
+                                    </li>
+                                    <li>
+                                        <i class="bi bi-check-circle text-success me-2"></i>Ícones Bootstrap Icons
+                                    </li>
+                                    <li>
+                                        <i class="bi bi-check-circle text-success me-2"></i>Animações suaves
+                                    </li>
+                                    <li>
+                                        <i class="bi bi-check-circle text-success me-2"></i>Esquema de cores moderno
+                                    </li>
+                                </ul>
+                            </div>
+                            <div class="col-md-6">
+                                <h5 class="text-primary">📱 Responsividade</h5>
+                                <ul class="list-unstyled">
+                                    <li>
+                                        <i class="bi bi-check-circle text-success me-2"></i>Adaptação automática para mobile
+                                    </li>
+                                    <li>
+                                        <i class="bi bi-check-circle text-success me-2"></i>Overlay para telas pequenas
+                                    </li>
+                                    <li>
+                                        <i class="bi bi-check-circle text-success me-2"></i>Touch-friendly
+                                    </li>
+                                    <li>
+                                        <i class="bi bi-check-circle text-success me-2"></i>Breakpoints otimizados
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                        <hr class="my-4">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h5 class="text-primary">⚡ Funcionalidades</h5>
+                                <ul class="list-unstyled">
+                                    <li>
+                                        <i class="bi bi-check-circle text-success me-2"></i>Sidebar colapsável
+                                    </li>
+                                    <li>
+                                        <i class="bi bi-check-circle text-success me-2"></i>Menus dropdown
+                                    </li>
+                                    <li>
+                                        <i class="bi bi-check-circle text-success me-2"></i>Estado persistente
+                                    </li>
+                                    <li>
+                                        <i class="bi bi-check-circle text-success me-2"></i>Tooltips no modo colapsado
+                                    </li>
+                                    <li>
+                                        <i class="bi bi-check-circle text-success me-2"></i>Navegação por teclado
+                                    </li>
+                                </ul>
+                            </div>
+                            <div class="col-md-6">
+                                <h5 class="text-primary">🔧 Personalização</h5>
+                                <ul class="list-unstyled">
+                                    <li>
+                                        <i class="bi bi-check-circle text-success me-2"></i>CSS Variables para temas
+                                    </li>
+                                    <li>
+                                        <i class="bi bi-check-circle text-success me-2"></i>Suporte ao modo escuro
+                                    </li>
+                                    <li>
+                                        <i class="bi bi-check-circle text-success me-2"></i>Badges/notificações
+                                    </li>
+                                    <li>
+                                        <i class="bi bi-check-circle text-success me-2"></i>API JavaScript
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                        <div class="mt-4">
+                            <h5 class="text-primary">🎯 Ações de Teste</h5>
+                            <div class="d-flex flex-wrap gap-2">
+                                <button class="btn btn-outline-primary"
+                                        onclick="window.modernSidebar.collapse()">
+                                    <i class="bi bi-arrow-left-square me-1"></i>Colapsar Sidebar
+                                </button>
+                                <button class="btn btn-outline-primary"
+                                        onclick="window.modernSidebar.expand()">
+                                    <i class="bi bi-arrow-right-square me-1"></i>Expandir Sidebar
+                                </button>
+                                <button class="btn btn-outline-success"
+                                        onclick="SidebarUtils.addBadge('.menu-link[href*=dashboard]', '3', 'warning')">
+                                    <i class="bi bi-plus-circle me-1"></i>Adicionar Badge
+                                </button>
+                                <button class="btn btn-outline-info"
+                                        onclick="SidebarUtils.highlightMenuItem('.menu-link[href*=dashboard]')">
+                                    <i class="bi bi-star me-1"></i>Destacar Item
+                                </button>
+                            </div>
+                        </div>
+                        <div class="mt-4 p-3 bg-light rounded">
+                            <h6 class="text-muted mb-2">💡 Dicas de Uso:</h6>
+                            <small class="text-muted">
+                                • Use <kbd>Alt + S</kbd> para toggle da sidebar
+                                <br>
+                                • No mobile, toque fora da sidebar para fechar
+                                <br>
+                                • Os estados de dropdown são salvos automaticamente
+                                <br>
+                                • Hover sobre ícones no modo colapsado mostra tooltips
+                            </small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock content %}

@@ -1,0 +1,45 @@
+[tool.black]
+line-length = 100
+target-version = ['py311']
+
+[tool.isort]
+profile = "black"
+line_length = 100
+float_to_top = true
+
+[tool.flake8]
+max-line-length = 100
+extend-ignore = [
+  # Allow missing docstrings for now
+  "D100","D101","D102","D103","D104","D105","D106","D107",
+]
+per-file-ignores = [
+  # file: codes
+  "inspect_tables.py:F401",
+]
+
+[tool.pylint.main]
+# Keep default, we may add pylintrc later
+
+[tool.pylint.messages_control]
+disable = [
+  "C0114","C0115","C0116",  # docstrings
+  "C0413",  # import position (blueprint pattern)
+  "R0903"   # too-few-public-methods for simple models/forms
+]
+
+[tool.pylint.format]
+max-line-length = 100
+
+[tool.mypy]
+ignore_missing_imports = true
+no_color_output = true
+plugins = ["sqlalchemy.ext.mypy.plugin"]
+# Temporary suppression of name-defined errors for dynamic Flask-SQLAlchemy db.Model
+disable_error_code = ["name-defined"]
+
+[tool.ruff]
+# Ensure Ruff (if enabled in VS Code) aligns with 100-char lines
+line-length = 100
+target-version = "py311"
+

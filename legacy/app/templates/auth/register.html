@@ -1,0 +1,109 @@
+{% extends "base.html" %}
+{% block title %}
+    Cadastrar Usuário | OdontoClinic
+{% endblock title %}
+{% block content %}
+    <div class="container py-4">
+        <div class="row">
+            <div class="col-12">
+                <h2>Cadastrar Novo Usuário</h2>
+                <hr>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-8">
+                <div class="card shadow-sm">
+                    <div class="card-body">
+                        <form method="post">
+                            {{ form.hidden_tag() }}
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <label for="username" class="form-label">Nome de usuário</label>
+                                    {{ form.username(class="form-control", id="username", placeholder="Nome de usuário") }}
+                                    {% if form.username.errors %}
+                                        <div class="text-danger">
+                                            {% for error in form.username.errors %}<small>{{ error }}</small>{% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="email" class="form-label">Email</label>
+                                    {{ form.email(class="form-control", id="email", placeholder="email@exemplo.com") }}
+                                    {% if form.email.errors %}
+                                        <div class="text-danger">
+                                            {% for error in form.email.errors %}<small>{{ error }}</small>{% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <label for="nome_completo" class="form-label">Nome Completo</label>
+                                    {{ form.nome_completo(class="form-control", id="nome_completo", placeholder="Nome completo") }}
+                                    {% if form.nome_completo.errors %}
+                                        <div class="text-danger">
+                                            {% for error in form.nome_completo.errors %}<small>{{ error }}</small>{% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="cro" class="form-label">CRO</label>
+                                    {{ form.cro(class="form-control", id="cro", placeholder="CRO do profissional") }}
+                                    {% if form.cro.errors %}
+                                        <div class="text-danger">
+                                            {% for error in form.cro.errors %}<small>{{ error }}</small>{% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <label for="password" class="form-label">Senha</label>
+                                    {{ form.password(class="form-control", id="password") }}
+                                    {% if form.password.errors %}
+                                        <div class="text-danger">
+                                            {% for error in form.password.errors %}<small>{{ error }}</small>{% endfor %}
+                                        </div>
+                                    {% endif %}
+                                    <div class="form-text">A senha deve ter pelo menos 8 caracteres</div>
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="confirm_password" class="form-label">Confirmar Senha</label>
+                                    {{ form.confirm_password(class="form-control", id="confirm_password") }}
+                                    {% if form.confirm_password.errors %}
+                                        <div class="text-danger">
+                                            {% for error in form.confirm_password.errors %}<small>{{ error }}</small>{% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="d-flex justify-content-end">
+                                <a href="{{ url_for("main.dashboard") }}" class="btn btn-secondary me-2">Cancelar</a>
+                                {{ form.submit(class="btn btn-primary") }}
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card bg-light">
+                    <div class="card-body">
+                        <h5 class="card-title">Informações</h5>
+                        <p>Utilize este formulário para cadastrar novos usuários no sistema.</p>
+                        <ul>
+                            <li>
+                                <strong>Dentista:</strong> Tem acesso aos dados dos pacientes e pode registrar atendimentos.
+                            </li>
+                            <li>
+                                <strong>Secretária/Recepcionista:</strong> Pode gerenciar pacientes e agenda.
+                            </li>
+                            <li>
+                                <strong>Administrador:</strong> Tem acesso completo ao sistema.
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock content %}

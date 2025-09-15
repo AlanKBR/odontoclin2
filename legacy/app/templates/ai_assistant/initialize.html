@@ -1,0 +1,136 @@
+{% extends "base.html" %}
+
+{% block title %}Inicializar Assistente de IA - OdontoClin{% endblock title %}
+
+{% block extra_css %}
+{{ super() }}
+<style nonce="{{ csp_nonce() }}">
+.ai-init-container {
+    max-width: 800px;
+    margin: 2rem auto;
+    padding: 2rem;
+}
+
+.ai-init-card {
+    background: var(--bs-card-bg);
+    border: 1px solid var(--bs-border-color);
+    border-radius: 12px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    padding: 2rem;
+    text-align: center;
+}
+
+.ai-init-icon {
+    font-size: 4rem;
+    color: var(--bs-primary);
+    margin-bottom: 1rem;
+}
+
+.btn-initialize {
+    padding: 0.75rem 2rem;
+    font-size: 1.1rem;
+    font-weight: 600;
+    background: linear-gradient(135deg, var(--bs-primary), var(--bs-info));
+    border: none;
+    border-radius: 8px;
+    color: white;
+    transition: all 0.3s ease;
+}
+
+.btn-initialize:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 15px rgba(0, 0, 0, 0.2);
+    color: white;
+}
+
+.loading-spinner {
+    display: none;
+    margin-top: 1rem;
+}
+</style>
+{% endblock extra_css %}
+
+{% block content %}
+<div class="ai-init-container">
+    <div class="ai-init-card">
+        <div class="ai-init-icon">
+            <i class="bi bi-robot"></i>
+        </div>
+        
+        <h2 class="mb-3">Assistente de IA Odontológica</h2>
+        
+        <p class="mb-4 text-muted">
+            O Assistente de IA não está inicializado. Clique no botão abaixo para carregar e inicializar 
+            o sistema de inteligência artificial para auxiliar em diagnósticos e tratamentos odontológicos.
+        </p>
+        
+        <div class="mb-4">
+            <div class="alert alert-info">
+                <i class="bi bi-info-circle me-2"></i>
+                <strong>Primeira inicialização:</strong> O carregamento pode levar alguns minutos dependendo do modelo selecionado.
+            </div>
+        </div>
+        
+        <button id="initializeBtn" class="btn btn-initialize" onclick="initializeAI()">
+            <i class="bi bi-power me-2"></i>
+            Inicializar Assistente de IA
+        </button>
+        
+        <div id="loadingSpinner" class="loading-spinner">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Carregando...</span>
+            </div>
+            <p class="mt-2 text-muted">Inicializando assistente de IA...</p>
+        </div>
+        
+        <div class="mt-4">
+            <a href="{{ url_for('main.dashboard') }}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left me-2"></i>
+                Voltar ao Dashboard
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock content %}
+
+{% block extra_js %}
+{{ super() }}
+<script nonce="{{ csp_nonce() }}">
+async function initializeAI() {
+    const btn = document.getElementById('initializeBtn');
+    const spinner = document.getElementById('loadingSpinner');
+    
+    // Show loading state
+    btn.disabled = true;
+    btn.innerHTML = '<i class="bi bi-hourglass-split me-2"></i>Inicializando...';
+    spinner.style.display = 'block';
+    
+    try {
+        const response = await fetch('{{ url_for("ai_assistant.initialize") }}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            // Success - redirect to AI assistant
+            window.location.href = '{{ url_for("ai_assistant.index") }}';
+        } else {
+            // Error
+            throw new Error(result.error || 'Erro desconhecido');
+        }
+    } catch (error) {
+        // Reset button state
+        btn.disabled = false;
+        btn.innerHTML = '<i class="bi bi-power me-2"></i>Inicializar Assistente de IA';
+        spinner.style.display = 'none';
+        
+        // Show error
+        alert('Erro ao inicializar o Assistente de IA: ' + error.message);
+    }
+}
+</script>
+{% endblock extra_js %}

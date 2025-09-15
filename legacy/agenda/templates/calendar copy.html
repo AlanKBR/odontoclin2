@@ -1,0 +1,1844 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="description" content="Agenda odontológica moderna com FullCalendar e Flask.">
+    <meta name="keywords" content="agenda, odontologia, calendário, fullcalendar, flask, consulta, clínica">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OdontoClin - Agenda</title>
+    <!-- Bootstrap 5 CSS local -->
+    <link href="/static/bootstrap.min.css" rel="stylesheet">
+    <!-- Removido: Bootstrap Icons via CDN (operaremos sem ícones remotos) -->
+    <!-- FullCalendar local bundle (já inclui e registra plugins comuns) -->
+    <script src="/static/fullcalendar/fullcalendar.global.min.js"></script>
+    <!-- Bootstrap 5 JS local -->
+    <script src="/static/bootstrap.bundle.min.js"></script>
+    <!-- flatpickr local (leve, sem jQuery) para controle 24h consistente -->
+    <link rel="stylesheet" href="/static/vendor/flatpickr/flatpickr.min.css">
+    <script src="/static/vendor/flatpickr/flatpickr.min.js"></script>
+    <script src="/static/vendor/flatpickr/l10n/pt.js"></script>
+    <!-- CSS customizado -->
+    <link href="/static/calendar-theme.css" rel="stylesheet">
+    <!-- Tema dinâmico (override) -->
+    <link id="theme-override" rel="stylesheet">
+    <style>
+        /* holiday highlight */
+        .fc-day-holiday,
+        .fc-holiday-bg {
+            background: #ffe8e8 !important;
+        }
+
+        .fc-daygrid-day.fc-day-holiday .fc-daygrid-day-number::after {
+            content: '★';
+            color: #dc2626;
+            font-size: 0.7rem;
+            margin-left: 4px;
+        }
+    </style>
+    <style>
+        /* Sidebar de dentistas */
+        #dentistsSidebar {
+            position: fixed;
+            left: 12px;
+            top: 12px;
+            width: 260px;
+            max-height: calc(100vh - 24px);
+            overflow: auto;
+            background: var(--bs-card-bg);
+            border: 1px solid var(--bs-border-color);
+            border-radius: .5rem;
+            box-shadow: var(--bs-box-shadow-sm);
+            z-index: 1200;
+        }
+        #dentistsSidebar h6 { margin: 0 0 8px 0; }
+        .dentist-item { display: flex; align-items: center; gap: 8px; padding: 4px 0; }
+        .dentist-color {
+            width: 14px; height: 14px; border-radius: 50%;
+            border: 1px solid rgba(0,0,0,.25);
+            flex: 0 0 14px;
+        }
+        .dentist-list { margin: 0; padding: 0; list-style: none; }
+        .dentist-list label { cursor: pointer; user-select: none; }
+        /* Botões de duplicação compactos no popover */
+        .dup-group { display: flex; flex-wrap: wrap; gap: 4px; }
+        .dup-group .btn-compact { padding: .15rem .35rem; line-height: 1.1; font-size: .8rem; }
+    /* deslocar o calendário/aviso um pouco para a direita para não ficar sob a sidebar */
+    #calendar { margin-left: 288px; }
+    #filterNotice { margin-left: 288px; margin-top: 8px; margin-bottom: 0; }
+    /* Marca de dentista por borda: direita espessa + esquerda fina */
+    .dentist-rightbar { border-right: 6px solid transparent; }
+    .dentist-leftbar { border-left: 2px solid transparent; }
+        @media (max-width: 992px) {
+            #dentistsSidebar { position: static; width: auto; max-height: none; margin: 8px; }
+            #calendar { margin-left: 0; }
+            #filterNotice { margin-left: 0; }
+        }
+    </style>
+</head>
+
+<body>
+    <aside id="dentistsSidebar" class="card shadow-sm small">
+        <div class="card-header py-2">
+            <span class="fw-semibold">Dentistas</span>
+        </div>
+        <div class="card-body p-2">
+            <div class="form-check mb-2">
+                <input type="checkbox" class="form-check-input" id="dent_all">
+                <label for="dent_all" class="form-check-label">Todos (sem dentista)</label>
+            </div>
+            <div id="dentistsContainer" class="small">
+                <div class="text-muted">Carregando...</div>
+            </div>
+        </div>
+    </aside>
+    <div id="filterNotice" class="alert alert-warning py-1 px-2 small" >
+        Selecione ao menos um dentista ou "Todos (sem dentista)" para exibir eventos.
+    </div>
+    <div id="calendar"></div>
+    <div id="popover-container"></div>
+    <div id="contextmenu-container"></div>
+    <div id="settingsmenu-container"></div>
+
+    <!-- Script principal do calendário (corrigido e único) -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            Promise.all([
+                fetch('/static/event-popover.html').then(res => res.text()),
+                fetch('/static/event-contextmenu.html').then(res => res.text()),
+                fetch('/static/event-detail-popover.html').then(res => res.text()),
+                fetch('/static/settings-menu.html').then(res => res.text()),
+                fetch('/static/search-menu.html').then(res => res.text())
+            ]).then(([popoverHtml, contextHtml, detailPopoverHtml, settingsMenuHtml, searchMenuHtml]) => {
+                document.getElementById('popover-container').innerHTML = popoverHtml;
+                document.getElementById('contextmenu-container').innerHTML = contextHtml;
+                document.body.insertAdjacentHTML('beforeend', detailPopoverHtml);
+                document.getElementById('settingsmenu-container').innerHTML = settingsMenuHtml;
+                // inserir menu de busca
+                let searchContainer = document.getElementById('searchmenu-container');
+                if (!searchContainer) {
+                    searchContainer = document.createElement('div');
+                    searchContainer.id = 'searchmenu-container';
+                    document.body.appendChild(searchContainer);
+                }
+                searchContainer.innerHTML = searchMenuHtml;
+
+                // Inicialização global dos pickers para garantir formato BR mesmo antes da seleção
+                try {
+                    const s1 = document.getElementById('popoverEventStart');
+                    const e1 = document.getElementById('popoverEventEnd');
+                    const sD = document.getElementById('popoverEventStartDate');
+                    const eD = document.getElementById('popoverEventEndDate');
+                    if (window.flatpickr && s1 && e1 && sD && eD) {
+                        const fpDateOpts = {
+                            enableTime: false,
+                            allowInput: true,
+                            locale: (window.flatpickr && window.flatpickr.l10ns && window.flatpickr.l10ns.pt) ? window.flatpickr.l10ns.pt : 'pt',
+                            dateFormat: 'Y-m-d',
+                            altInput: true,
+                            altFormat: 'd/m/Y'
+                        };
+                        const fpDateTimeOpts = {
+                            enableTime: true,
+                            time_24hr: true,
+                            allowInput: true,
+                            minuteIncrement: 5,
+                            locale: (window.flatpickr && window.flatpickr.l10ns && window.flatpickr.l10ns.pt) ? window.flatpickr.l10ns.pt : 'pt',
+                            dateFormat: 'Y-m-d\\TH:i',
+                            altInput: true,
+                            altFormat: 'd/m/Y H:i'
+                        };
+                        // Pickers são destruídos/recriados quando o modo muda (allDay vs time)
+                        flatpickr(s1, fpDateTimeOpts);
+                        flatpickr(e1, fpDateTimeOpts);
+                        flatpickr(sD, fpDateOpts);
+                        flatpickr(eD, fpDateOpts);
+                    }
+                } catch (e) {
+                    /* noop */ }
+
+                // Aplicar tema salvo (se houver)
+                const savedTheme = localStorage.getItem('calendarTheme') || 'default';
+                applyTheme(savedTheme, false);
+
+                const plugins = [];
+                if (window.FullCalendar) {
+                    if (FullCalendar.timeGridPlugin) plugins.push(FullCalendar.timeGridPlugin);
+                    if (FullCalendar.listPlugin) plugins.push(FullCalendar.listPlugin);
+                    if (FullCalendar.interactionPlugin) plugins.push(FullCalendar.interactionPlugin);
+                    if (FullCalendar.multiMonthPlugin) plugins.push(FullCalendar.multiMonthPlugin);
+                    if (FullCalendar.scrollGridPlugin) plugins.push(FullCalendar.scrollGridPlugin);
+                    if (FullCalendar.adaptivePlugin) plugins.push(FullCalendar.adaptivePlugin);
+                }
+                const calendarEl = document.getElementById('calendar');
+                // Aviso quando nenhum filtro ativo
+                function updateEmptyFilterNotice() {
+                    try {
+                        const el = document.getElementById('filterNotice');
+                        if (!el) return;
+                        const ids = loadSelectedDentists();
+                        const includeUn = loadIncludeUnassigned();
+                        const show = (!ids || ids.length === 0) && !includeUn;
+                        el.style.display = show ? 'block' : 'none';
+                    } catch (e) {}
+                }
+                // Helper: detect a Brazilian phone number within free text (first match)
+                function extractPhoneFromText(text) {
+                    if (!text) return null;
+                    try {
+                        // Supports formats like: +55 11 91234-5678, (11) 91234-5678, 112345-6789, 1234-5678, 9 1234-5678
+                        const re = /(?:\+?55[\s\-.]?)?(?:\(?\d{2}\)?[\s\-.]?)?(?:9\d{4}|\d{4})[\s\-.]?\d{4}\b/;
+                        const m = String(text).match(re);
+                        return m ? m[0].trim() : null;
+                    } catch (e) {
+                        return null;
+                    }
+                }
+                // Helper: format Date to local 'YYYY-MM-DDTHH:MM' string
+                function formatLocalYmdHm(d) {
+                    const pad = (n) => String(n).padStart(2, '0');
+                    const y = d.getFullYear();
+                    const m = pad(d.getMonth() + 1);
+                    const day = pad(d.getDate());
+                    const h = pad(d.getHours());
+                    const min = pad(d.getMinutes());
+                    return `${y}-${m}-${day}T${h}:${min}`;
+                }
+
+                // Weekends setting (for week view)
+                function getWeekendsSetting() {
+                    const v = localStorage.getItem('timeGridWeek_weekends');
+                    return v === null ? true : v === 'true';
+                }
+
+                function setWeekendsSetting(val) {
+                    try {
+                        localStorage.setItem('timeGridWeek_weekends', String(!!val));
+                    } catch (e) {}
+                }
+
+                // Client-side holiday cache
+                let holidayDates = new Set(); // visible set 'YYYY-MM-DD'
+                let holidayMeta = {}; // visible map date -> meta
+                const dayCellEls = {}; // date -> [elements]
+                // Session in-memory cache by year to avoid repeated GETs
+                const holidaysYearCache = {}; // { [year]: { dates:Set, meta:{[date]:meta} } }
+                const holidaysYearPending = {}; // { [year]: Promise }
+
+                function toLocalISO(date) {
+                    const pad = (n) => String(n).padStart(2, '0');
+                    return [
+                        date.getFullYear(),
+                        pad(date.getMonth() + 1),
+                        pad(date.getDate())
+                    ].join('-');
+                }
+
+                function syncHolidayHighlight() {
+                    Object.keys(dayCellEls).forEach(d => {
+                        (dayCellEls[d] || []).forEach(el => {
+                            if (!el || !el.classList) return;
+                            if (holidayDates.has(d)) {
+                                el.classList.add('fc-day-holiday');
+                                const meta = holidayMeta[d];
+                                if (meta && el.setAttribute) {
+                                    el.setAttribute('title', meta.name);
+                                }
+                            } else {
+                                el.classList.remove('fc-day-holiday');
+                                if (el.getAttribute && el.getAttribute('title')) {
+                                    el.removeAttribute('title');
+                                }
+                            }
+                        });
+                    });
+                }
+
+                function ymdFromDate(d) {
+                    const pad = n => String(n).padStart(2, '0');
+                    return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+                }
+                function yearsInRangeInclusive(startDate, endDateInclusive) {
+                    const ys = [];
+                    const y1 = startDate.getFullYear();
+                    const y2 = endDateInclusive.getFullYear();
+                    for (let y = y1; y <= y2; y++) ys.push(y);
+                    return ys;
+                }
+                function ensureYearCached(year) {
+                    if (holidaysYearCache[year]) return Promise.resolve();
+                    if (holidaysYearPending[year]) return holidaysYearPending[year];
+                    const p = fetch(`/holidays/year?year=${year}`)
+                        .then(r => r.json())
+                        .then(list => {
+                            const dates = new Set(list.map(h => h.date));
+                            const meta = {};
+                            list.forEach(h => { meta[h.date] = { name: h.name, type: h.type, level: h.level }; });
+                            holidaysYearCache[year] = { dates, meta };
+                        })
+                        .catch(() => { /* swallow; leave uncached to retry later */ })
+                        .finally(() => { delete holidaysYearPending[year]; });
+                    holidaysYearPending[year] = p;
+                    return p;
+                }
+                function ensureRangeCached(startDate, endDateInclusive) {
+                    const years = yearsInRangeInclusive(startDate, endDateInclusive);
+                    return Promise.all(years.map(y => ensureYearCached(y)));
+                }
+                function buildVisibleFromCache(startDate, endDateInclusive) {
+                    const resDates = new Set();
+                    const resMeta = {};
+                    let d = new Date(startDate);
+                    while (d <= endDateInclusive) {
+                        const y = d.getFullYear();
+                        const yc = holidaysYearCache[y];
+                        const key = ymdFromDate(d);
+                        if (yc && yc.dates.has(key)) {
+                            resDates.add(key);
+                            if (yc.meta[key]) resMeta[key] = yc.meta[key];
+                        }
+                        d.setDate(d.getDate() + 1);
+                    }
+                    return { dates: resDates, meta: resMeta };
+                }
+                function updateHolidaysForCurrentView() {
+                    const view = calendar.view;
+                    if (!(view && view.currentStart && view.currentEnd)) return;
+                    const start = new Date(view.currentStart);
+                    const endInc = new Date(view.currentEnd);
+                    endInc.setDate(endInc.getDate() - 1); // end is exclusive
+                    return ensureRangeCached(start, endInc).then(() => {
+                        const built = buildVisibleFromCache(start, endInc);
+                        holidayDates = built.dates;
+                        holidayMeta = built.meta;
+                        syncHolidayHighlight();
+                    });
+                }
+
+                // Estado de filtro de dentistas (persistido no navegador)
+                const storageKey = 'selectedDentists';
+                const storageKeyUnassigned = 'includeUnassigned';
+                function saveSelectedDentists(ids) {
+                    try { localStorage.setItem(storageKey, JSON.stringify(ids)); } catch (e) {}
+                }
+                function loadSelectedDentists() {
+                    try {
+                        const v = localStorage.getItem(storageKey);
+                        if (!v) return [];
+                        const arr = JSON.parse(v);
+                        return Array.isArray(arr) ? arr : [];
+                    } catch (e) { return []; }
+                }
+                function saveIncludeUnassigned(val) {
+                    try { localStorage.setItem(storageKeyUnassigned, String(!!val)); } catch (e) {}
+                }
+                function loadIncludeUnassigned() {
+                    try { return localStorage.getItem(storageKeyUnassigned) === 'true'; } catch (e) { return false; }
+                }
+                function colorForDentist(d) {
+                    // fallback padrão se não houver cor: paleta baseada em id
+                    if (d && d.color) return d.color;
+                    const palette = ['#2563eb','#16a34a','#dc2626','#9333ea','#ea580c','#0891b2','#4f46e5','#059669'];
+                    const id = d && d.id ? Number(d.id) : 0;
+                    return palette[Math.abs(id) % palette.length];
+                }
+                // Renderizar lista lateral de dentistas
+                const dentistsCache = { list: [], map: {} };
+                function renderDentistsSidebar(list) {
+                    const cont = document.getElementById('dentistsContainer');
+                    if (!cont) return;
+                    // restaurar estado 'Todos (sem dentista)'
+                    try {
+                        const cbAll = document.getElementById('dent_all');
+                        if (cbAll) {
+                            cbAll.checked = loadIncludeUnassigned();
+                            cbAll.onchange = () => {
+                                saveIncludeUnassigned(cbAll.checked);
+                                try { calendar.refetchEvents(); } catch (e) {}
+                                updateEmptyFilterNotice();
+                            };
+                        }
+                    } catch (e) {}
+                    const selected = new Set(loadSelectedDentists());
+                    const ul = document.createElement('ul');
+                    ul.className = 'dentist-list';
+                    list.forEach(d => {
+                        const li = document.createElement('li');
+                        li.className = 'dentist-item d-flex align-items-center gap-2 py-1 border-bottom';
+                        const color = colorForDentist(d);
+                        li.innerHTML = `
+                            <input type="checkbox" class="form-check-input" id="dent_${d.id}" ${selected.has(d.id) ? 'checked' : ''} />
+                            <span class="dentist-color" style="background:${color}"></span>
+                            <label class="form-check-label" for="dent_${d.id}">${d.nome || ('Dentista ' + d.id)}</label>
+                        `;
+                        ul.appendChild(li);
+                    });
+                    // remove borda do último item
+                    ul.lastElementChild && ul.lastElementChild.classList.remove('border-bottom');
+                    cont.innerHTML = '';
+                    cont.appendChild(ul);
+                    cont.querySelectorAll('input[type="checkbox"]').forEach(cb => {
+                        cb.addEventListener('change', () => {
+                            const ids = Array.from(cont.querySelectorAll('input[type="checkbox"]'))
+                                .filter(x => x.checked)
+                                .map(x => parseInt(x.id.replace('dent_',''), 10))
+                                .filter(n => Number.isFinite(n));
+                            saveSelectedDentists(ids);
+                            try { calendar.refetchEvents(); } catch (e) {}
+                            updateEmptyFilterNotice();
+                            // Auto selecionar no popover se houver exatamente um dentista selecionado
+                            try {
+                                const sel = document.getElementById('popoverDentist');
+                                if (sel) {
+                                    if (ids.length === 1) sel.value = String(ids[0]);
+                                    else if (ids.length === 0) sel.value = '';
+                                }
+                            } catch (e) {}
+                        });
+                    });
+                }
+
+                const calendar = new FullCalendar.Calendar(calendarEl, {
+                    themeSystem: 'bootstrap5',
+                    locale: 'pt-br',
+                    initialView: 'timeGridWeek',
+                    // Garantir 24h em toda a UI do FullCalendar
+                    eventTimeFormat: {
+                        hour: '2-digit',
+                        minute: '2-digit',
+                        hour12: false
+                    },
+                    slotLabelFormat: {
+                        hour: '2-digit',
+                        minute: '2-digit',
+                        hour12: false
+                    },
+                    // Não depender de ícones externos: sobrescrever botões com texto
+                    customButtons: {
+                        prev: {
+                            text: '‹',
+                            click: () => calendar.prev()
+                        },
+                        next: {
+                            text: '›',
+                            click: () => calendar.next()
+                        },
+                        prevYear: {
+                            text: '≪',
+                            click: () => {
+                                const d = calendar.getDate();
+                                calendar.gotoDate(new Date(
+                                    d.getFullYear(), d.getMonth() - 1, d.getDate()
+                                ));
+                            }
+                        },
+                        nextYear: {
+                            text: '≫',
+                            click: () => {
+                                const d = calendar.getDate();
+                                calendar.gotoDate(new Date(
+                                    d.getFullYear(), d.getMonth() + 1, d.getDate()
+                                ));
+                            }
+                        },
+                        settings: {
+                            text: 'Configurações',
+                            click: function(ev) {
+                                const btn = calendarEl.querySelector('.fc-settings-button');
+                                if (!btn) return;
+                                toggleSettingsMenu(btn);
+                            }
+                        },
+                        search: {
+                            text: 'Buscar',
+                            click: function() {
+                                const btn = calendarEl.querySelector('.fc-search-button');
+                                if (!btn) return;
+                                toggleSearchMenu(btn);
+                            }
+                        }
+                    },
+                    headerToolbar: {
+                        left: 'prev,next today settings search',
+                        center: 'title',
+                        right: 'prevYear,nextYear dayGridMonth,timeGridWeek,timeGridDay,listWeek,multiMonthYear'
+                    },
+                    buttonText: {
+                        today: 'Hoje',
+                        month: 'Mês',
+                        week: 'Semana',
+                        day: 'Dia',
+                        list: 'Lista',
+                        listWeek: 'Lista',
+                        listMonth: 'Lista mês',
+                        listYear: 'Lista ano',
+                        dayGridMonth: 'Mês',
+                        timeGridWeek: 'Semana',
+                        timeGridDay: 'Dia',
+                        multiMonthYear: 'Ano'
+                    },
+                    moreLinkText: function(n) { return `+${n} mais`; },
+                    views: {
+                        dayGridMonth: {
+                            eventDisplay: 'block'
+                        },
+                        multiMonthYear: {
+                            type: 'multiMonth',
+                            duration: {
+                                years: 1
+                            },
+                            // boas colunas para layout 12 meses (3 col x 4 linhas)
+                            multiMonthMaxColumns: 3,
+                            eventDisplay: 'block',
+                            buttonText: 'Ano'
+                        }
+                    },
+                    plugins: plugins,
+                    dayCellClassNames: function(arg) {
+                        const iso = toLocalISO(arg.date);
+                        return holidayDates.has(iso) ? ['fc-day-holiday'] : [];
+                    },
+                    dayCellDidMount: function(arg) {
+                        const iso = toLocalISO(arg.date);
+                        if (!dayCellEls[iso]) dayCellEls[iso] = [];
+                        dayCellEls[iso].push(arg.el);
+                        // apply immediately if data already loaded
+                        if (holidayDates.has(iso)) {
+                            arg.el.classList.add('fc-day-holiday');
+                            const meta = holidayMeta[iso];
+                            if (meta && arg.el && arg.el.setAttribute) {
+                                arg.el.setAttribute('title', meta.name);
+                            }
+                        }
+                    },
+                    selectable: true,
+                    editable: true,
+                    nowIndicator: true,
+                    navLinks: true,
+                    weekends: getWeekendsSetting(),
+                    eventContent: function(arg) {
+                        // Semana: mostrar apenas hora inicial + título em uma linha
+            if (arg.view.type === 'timeGridWeek') {
+                            const isAllDay = arg.event.allDay;
+                            let timeStr = '';
+                            if (!isAllDay && arg.event.start) {
+                                try {
+                                    timeStr = new Intl.DateTimeFormat('pt-BR', {
+                                        hour: '2-digit',
+                                        minute: '2-digit',
+                                        hour12: false
+                                    }).format(arg.event.start);
+                                } catch (e) {
+                                    /* fallback */
+                                    const d = arg.event.start;
+                                    const hh = String(d.getHours()).padStart(2, '0');
+                                    const mm = String(d.getMinutes()).padStart(2, '0');
+                                    timeStr = `${hh}:${mm}`;
+                                }
+                            }
+                            const title = arg.event.title || '';
+                            // calcular duração em minutos
+                            let durationMin = 0;
+                            if (!isAllDay && arg.event.start && arg.event.end) {
+                                durationMin = Math.max(0, Math.round((arg.event.end.getTime() - arg.event.start.getTime()) / 60000));
+                            } else if (!isAllDay && arg.event.start && !arg.event.end) {
+                                // sem fim explícito: assumir 60min, comum em consultas
+                                durationMin = 60;
+                            }
+                            let html;
+                            if (durationMin > 30) {
+                                // duas linhas: título em cima (negrito), hora embaixo (normal)
+                                const timeLine = timeStr ? `<div class=\"fc-event-time-start\">${timeStr}</div>` : '';
+                html = `<div class=\"fc-event-main-custom two-line\"><div class=\"fc-event-title\">${title}</div>${timeLine}</div>`;
+                            } else {
+                                // linha única: Título + hora
+                                const timeInline = timeStr ? `<span class=\"fc-event-time-start\"> ${timeStr}</span>` : '';
+                html = `<div class=\"fc-event-main-custom\"><span class=\"fc-event-title\">${title}</span>${timeInline}</div>`;
+                            }
+
+                            return {
+                                html
+                            };
+                        }
+                        // Dia: Nome (negrito) - descrição do evento
+                        if (arg.view.type === 'timeGridDay') {
+                            const title = arg.event.title || '';
+                            const notes = (arg.event.extendedProps && arg.event.extendedProps.notes) ? arg.event.extendedProps.notes : '';
+                            // calcular duração em minutos (para escalar fonte)
+                            let durationMin = 0;
+                            if (!arg.event.allDay && arg.event.start) {
+                                if (arg.event.end) {
+                                    durationMin = Math.max(0, Math.round((arg.event.end.getTime() - arg.event.start.getTime()) / 60000));
+                                } else {
+                                    durationMin = 60; // padrão quando sem fim explícito
+                                }
+                            }
+                            let sizeClass = '';
+                            if (durationMin >= 120) sizeClass = ' size-large';
+                            else if (durationMin >= 60) sizeClass = ' size-medium';
+                            const sep = notes ? ' - ' : '';
+                            const html = `<div class="fc-event-main-custom${sizeClass}"><span class="fc-event-title fw-bold">${title}</span>${sep}<span class="fc-event-notes">${notes}</span></div>`;
+                            return {
+                                html
+                            };
+                        }
+                        // Lista: Nome (negrito) - descrição
+                        if (arg.view.type && arg.view.type.startsWith('list')) {
+                            const title = arg.event.title || '';
+                            const notes = (arg.event.extendedProps && arg.event.extendedProps.notes) ? arg.event.extendedProps.notes : '';
+                            const sep = notes ? ' - ' : '';
+                            const html = `<span class="fc-event-title fw-bold">${title}</span>${sep}<span class="fc-event-notes">${notes}</span>`;
+                            return {
+                                html
+                            };
+                        }
+                        // Mês: título primeiro e horário em seguida numa única linha (mantém fundo colorido padrão)
+                        if (arg.view.type === 'dayGridMonth') {
+                            const isAllDay = arg.event.allDay;
+                            let timeStr = '';
+                            if (!isAllDay && arg.event.start) {
+                                try {
+                                    timeStr = new Intl.DateTimeFormat('pt-BR', {
+                                        hour: '2-digit',
+                                        minute: '2-digit',
+                                        hour12: false
+                                    }).format(arg.event.start);
+                                } catch (e) {
+                                    const d = arg.event.start;
+                                    const hh = String(d.getHours()).padStart(2, '0');
+                                    const mm = String(d.getMinutes()).padStart(2, '0');
+                                    timeStr = `${hh}:${mm}`;
+                                }
+                            }
+                            const title = arg.event.title || '';
+                            const timeInline = timeStr ? `<span class=\"fc-event-time-start\"> ${timeStr}</span>` : '';
+                            const html = `<div class=\"fc-event-main-custom fc-month-line\"><span class=\"fc-event-title\">${title}</span>${timeInline}</div>`;
+                            return {
+                                html
+                            };
+                        }
+                        // Visualização Anual (multiMonth): mesmo layout do mês
+                        if (arg.view.type && arg.view.type.startsWith('multiMonth')) {
+                            const isAllDay = arg.event.allDay;
+                            let timeStr = '';
+                            if (!isAllDay && arg.event.start) {
+                                try {
+                                    timeStr = new Intl.DateTimeFormat('pt-BR', {
+                                        hour: '2-digit', minute: '2-digit', hour12: false
+                                    }).format(arg.event.start);
+                                } catch (e) {
+                                    const d = arg.event.start;
+                                    const hh = String(d.getHours()).padStart(2, '0');
+                                    const mm = String(d.getMinutes()).padStart(2, '0');
+                                    timeStr = `${hh}:${mm}`;
+                                }
+                            }
+                            const title = arg.event.title || '';
+                            const timeInline = timeStr ? `<span class=\"fc-event-time-start\"> ${timeStr}</span>` : '';
+                            const html = `<div class=\"fc-event-main-custom fc-month-line\"><span class=\"fc-event-title\">${title}</span>${timeInline}</div>`;
+                            return { html };
+                        }
+                        // Outras visões: padrão
+                        return undefined;
+                    },
+                    eventSources: [{
+                        url: '/events',
+                        method: 'GET',
+                        extraParams: function() {
+                            const ids = loadSelectedDentists();
+                            const includeUn = loadIncludeUnassigned();
+                            const q = loadSearchQuery();
+                            return {
+                                dentists: (ids && ids.length ? ids.join(',') : ''),
+                                include_unassigned: includeUn ? '1' : '',
+                                q: q || ''
+                            };
+                        },
+                        failure: () => {
+                            alert('Falha ao carregar eventos!');
+                        }
+                    }],
+                    select: function(info) {
+                        const popover = document.getElementById('eventPopover');
+                        popover.style.display = 'block';
+                        popover.classList.remove('visually-hidden');
+                        // garantir que fica acima do popover do dia/ano
+                        try { popover.style.zIndex = '4000'; } catch (e) {}
+                        let x = 0,
+                            y = 0;
+                        if (info.jsEvent) {
+                            x = info.jsEvent.clientX;
+                            y = info.jsEvent.clientY;
+                        } else {
+                            const rect = calendarEl.getBoundingClientRect();
+                            x = rect.left + rect.width / 2;
+                            y = rect.top + rect.height / 2;
+                        }
+                        setTimeout(() => {
+                            const popRect = popover.getBoundingClientRect();
+                            let left = x;
+                            let top = y;
+                            if (left + popRect.width > window.innerWidth) left = window.innerWidth - popRect.width - 10;
+                            if (left < 10) left = 10;
+                            if (top + popRect.height > window.innerHeight) top = window.innerHeight - popRect.height - 10;
+                            if (top < 10) top = 10;
+                            popover.style.position = 'fixed';
+                            popover.style.left = left + 'px';
+                            popover.style.top = top + 'px';
+                            popover.style.zIndex = '1060';
+                        }, 10);
+                        // Preencher campos do popover
+                        document.getElementById('popoverEventTitle').value = '';
+                        // Pré-selecionar dentista se exatamente um estiver marcado na sidebar
+                        try {
+                            const sel = document.getElementById('popoverDentist');
+                            if (sel) {
+                                const ids = loadSelectedDentists();
+                                if (ids && ids.length === 1) sel.value = String(ids[0]);
+                                else sel.value = '';
+                            }
+                        } catch (e) {}
+                        // Alterna inputs conforme allDay
+                        const startInput = document.getElementById('popoverEventStart');
+                        const endInput = document.getElementById('popoverEventEnd');
+                        const startDateInput = document.getElementById('popoverEventStartDate');
+                        const endDateInput = document.getElementById('popoverEventEndDate');
+                        if (info.allDay) {
+                            startInput.classList.add('visually-hidden');
+                            endInput.classList.add('visually-hidden');
+                            startDateInput.classList.remove('visually-hidden');
+                            endDateInput.classList.remove('visually-hidden');
+                            startDateInput.value = info.startStr;
+                            if (info.endStr) {
+                                const endDate = new Date(info.endStr);
+                                endDate.setDate(endDate.getDate() - 1);
+                                endDateInput.value = endDate.toISOString().slice(0, 10);
+                            } else {
+                                endDateInput.value = '';
+                            }
+                            // Se for dia inteiro, não usar datetime picker
+                            try {
+                                if (startInput._flatpickr) startInput._flatpickr.destroy();
+                                if (endInput._flatpickr) endInput._flatpickr.destroy();
+                            } catch (e) {}
+                            // Aplicar flatpickr nos campos de data (dd/mm/yyyy)
+                            const fpDateOpts = {
+                                enableTime: false,
+                                allowInput: true,
+                                locale: (window.flatpickr && window.flatpickr.l10ns && window.flatpickr.l10ns.pt) ? window.flatpickr.l10ns.pt : 'pt',
+                                dateFormat: 'Y-m-d', // valor real do input
+                                altInput: true,
+                                altFormat: 'd/m/Y' // exibição para o usuário
+                            };
+                            if (window.flatpickr) {
+                                flatpickr(startDateInput, fpDateOpts);
+                                flatpickr(endDateInput, fpDateOpts);
+                            }
+                        } else {
+                            startInput.classList.remove('visually-hidden');
+                            endInput.classList.remove('visually-hidden');
+                            startDateInput.classList.add('visually-hidden');
+                            endDateInput.classList.add('visually-hidden');
+                            startInput.value = info.startStr.slice(0, 16);
+                            // Se a seleção não tiver fim, sugerir fim = início + duração padrão
+                            (function() {
+                                const saved = parseInt(localStorage.getItem('defaultEventDurationMin') || '60', 10);
+                                const dur = isFinite(saved) && saved > 0 ? saved : 60;
+                                try {
+                                    const startISO = info.startStr;
+                                    const startDate = new Date(startISO);
+                                    // valor sugerido pelo FullCalendar (geralmente 30min)
+                                    const selectionEndISO = info.endStr || '';
+                                    let useDefault = false;
+                                    if (selectionEndISO) {
+                                        const selEndDate = new Date(selectionEndISO);
+                                        const diffMin = Math.max(0, Math.round((selEndDate.getTime() - startDate.getTime()) / 60000));
+                                        // Se seleção for o slot padrão (30min) e default != 30, usar default
+                                        // Se usuário arrastou mais que o default, respeitar o arrasto
+                                        if (diffMin === 30 && dur !== 30) {
+                                            useDefault = true;
+                                        } else if (diffMin === 0) {
+                                            useDefault = true;
+                                        }
+                                    } else {
+                                        useDefault = true;
+                                    }
+                                    if (useDefault) {
+                                        const endDate = new Date(startDate);
+                                        endDate.setMinutes(endDate.getMinutes() + dur);
+                                        endInput.value = formatLocalYmdHm(endDate);
+                                    } else {
+                                        // selectionEndISO pode conter timezone; converter para local string HH:MM
+                                        const sel = new Date(selectionEndISO);
+                                        endInput.value = isNaN(sel.getTime()) ? selectionEndISO.slice(0, 16) : formatLocalYmdHm(sel);
+                                    }
+                                } catch (e) {
+                                    endInput.value = '';
+                                }
+                            })();
+                            // Inicializar/atualizar flatpickr 24h com valores ISO (mantém value no formato ISO; mostra formato BR ao usuário)
+                            try {
+                                if (startInput._flatpickr) startInput._flatpickr.destroy();
+                                if (endInput._flatpickr) endInput._flatpickr.destroy();
+                            } catch (e) {}
+                            const fpOpts = {
+                                enableTime: true,
+                                time_24hr: true,
+                                allowInput: true,
+                                minuteIncrement: 5,
+                                locale: (window.flatpickr && window.flatpickr.l10ns && window.flatpickr.l10ns.pt) ? window.flatpickr.l10ns.pt : 'pt',
+                                dateFormat: "Y-m-d\\TH:i", // value real enviado
+                                altInput: true,
+                                altFormat: "d/m/Y H:i" // o que o usuário vê
+                            };
+                            if (window.flatpickr) {
+                                flatpickr(startInput, fpOpts);
+                                flatpickr(endInput, fpOpts);
+                            }
+                        }
+                        document.getElementById('popoverEventDesc').value = '';
+                        setTimeout(() => {
+                            document.getElementById('popoverEventTitle').focus();
+                            // Configurar autocompletar
+                            setupAutocomplete();
+                        }, 50);
+
+                        function closePopover() {
+                            popover.style.display = 'none';
+                            document.removeEventListener('mousedown', outsideClickListener);
+                        }
+
+                        function outsideClickListener(e) {
+                            if (!popover.contains(e.target)) closePopover();
+                        }
+                        setTimeout(() => {
+                            document.addEventListener('mousedown', outsideClickListener);
+                        }, 10);
+                        document.getElementById('closePopoverBtn').onclick = closePopover;
+                        const form = document.getElementById('eventPopoverForm');
+                        form.onsubmit = function(e) {
+                            e.preventDefault();
+                            const title = document.getElementById('popoverEventTitle').value;
+                            let start, end;
+                            if (info.allDay) {
+                                start = document.getElementById('popoverEventStartDate').value;
+                                end = document.getElementById('popoverEventEndDate').value;
+                                if (!end) end = start;
+                            } else {
+                                start = document.getElementById('popoverEventStart').value;
+                                end = document.getElementById('popoverEventEnd').value;
+                                if (!end && start) {
+                                    const dt = new Date(start);
+                                    dt.setHours(dt.getHours() + 1);
+                                    end = dt.toISOString().slice(0, 16);
+                                }
+                            }
+                            const selDent = (function(){
+                                const el = document.getElementById('popoverDentist');
+                                if (!el) return null;
+                                const v = (el.value || '').trim();
+                                return v && /^\d+$/.test(v) ? parseInt(v,10) : null;
+                            })();
+                            if (title && start) {
+                                fetch('/add_event', {
+                                        method: 'POST',
+                                        headers: {
+                                            'Content-Type': 'application/json'
+                                        },
+                                        body: JSON.stringify({
+                                            title: title,
+                                            start: start,
+                                            end: (function() {
+                                                if (end) return end;
+                                                if (info.allDay) return end; // allDay já tratado com mesma data
+                                                // aplicar duração padrão ao salvar se vazio
+                                                try {
+                                                    const saved = parseInt(localStorage.getItem('defaultEventDurationMin') || '60', 10);
+                                                    const dur = isFinite(saved) && saved > 0 ? saved : 60;
+                                                    const dt = new Date(start);
+                                                    dt.setMinutes(dt.getMinutes() + dur);
+                                                    return formatLocalYmdHm(dt);
+                                                } catch (e) {
+                                                    return end;
+                                                }
+                                            })(),
+                                            notes: document.getElementById('popoverEventDesc').value || '',
+                                            profissional_id: selDent
+                                        })
+                                    })
+                                    .then(response => response.json())
+                                    .then(data => {
+                                        if (data.status === 'success') {
+                                            calendar.refetchEvents();
+                                            closePopover();
+                                        } else {
+                                            alert('Erro ao adicionar evento!');
+                                        }
+                                    });
+                            }
+                        };
+                        calendar.unselect();
+                    },
+                    eventClick: function(info) {
+                        document.getElementById('eventContextMenu').style.display = 'none';
+                        const popover = document.getElementById('eventDetailPopover');
+                        // mover para o body para evitar contextos de empilhamento e garantir topo
+                        try {
+                            if (popover && popover.parentElement !== document.body) {
+                                document.body.appendChild(popover);
+                            }
+                        } catch (e) {}
+                        // Formatação correta do horário (pt-BR)
+                        const fmtDate = new Intl.DateTimeFormat('pt-BR', {
+                            day: '2-digit',
+                            month: '2-digit',
+                            year: 'numeric'
+                        });
+                        const fmtTime = new Intl.DateTimeFormat('pt-BR', {
+                            hour: '2-digit',
+                            minute: '2-digit',
+                            hour12: false
+                        });
+
+                        function buildTimeText(ev) {
+                            const start = ev.start;
+                            const end = ev.end;
+                            if (ev.allDay) {
+                                if (!end) return `${fmtDate.format(start)} (dia inteiro)`;
+                                const last = new Date(end.getTime() - 24 * 60 * 60 * 1000);
+                                const same = start.getFullYear() === last.getFullYear() &&
+                                    start.getMonth() === last.getMonth() &&
+                                    start.getDate() === last.getDate();
+                                return same ?
+                                    `${fmtDate.format(start)} (dia inteiro)` :
+                                    `${fmtDate.format(start)} – ${fmtDate.format(last)} (dia inteiro)`;
+                            } else {
+                                if (end) {
+                                    const sameDay = start.toDateString() === end.toDateString();
+                                    return sameDay ?
+                                        `${fmtDate.format(start)} ${fmtTime.format(start)} – ${fmtTime.format(end)}` :
+                                        `${fmtDate.format(start)} ${fmtTime.format(start)} – ${fmtDate.format(end)} ${fmtTime.format(end)}`;
+                                } else {
+                                    return `${fmtDate.format(start)} ${fmtTime.format(start)}`;
+                                }
+                            }
+                        }
+                        // Preencher apenas título e horário
+                        document.getElementById('detailEventTitle').textContent = info.event.title;
+                        document.getElementById('detailEventTime').textContent = buildTimeText(info.event);
+                        // Preencher notas (descrição)
+                        const notesArea = document.getElementById('detailEventNotes');
+                        const saveNotesBtn = document.getElementById('saveDetailNotesBtn');
+                        if (notesArea) {
+                            notesArea.value = info.event.extendedProps && info.event.extendedProps.notes ? info.event.extendedProps.notes : '';
+                        }
+                        if (saveNotesBtn) {
+                            saveNotesBtn.onclick = function() {
+                                const newNotes = notesArea ? notesArea.value : '';
+                                fetch('/update_event_notes', {
+                                        method: 'POST',
+                                        headers: {
+                                            'Content-Type': 'application/json'
+                                        },
+                                        body: JSON.stringify({
+                                            id: info.event.id,
+                                            notes: newNotes
+                                        })
+                                    })
+                                    .then(r => r.json())
+                                    .then(data => {
+                                        if (data.status === 'success') {
+                                            // Atualiza dados no cliente e refaz fetch
+                                            info.event.setExtendedProp('notes', newNotes);
+                                            try {
+                                                calendar.refetchEvents();
+                                            } catch (e) {}
+                                        } else {
+                                            alert('Erro ao salvar descrição.');
+                                        }
+                                    })
+                                    .catch(() => alert('Erro ao salvar descrição.'));
+                            };
+                        }
+                        // Dentista: preencher opções e valor atual
+                        try {
+                            const sel = document.getElementById('detailEventDentist');
+                            const btn = document.getElementById('saveDetailDentistBtn');
+                            if (sel) {
+                                // Limpar e repopular mantendo 'Sem dentista'
+                                const keep = sel.querySelector('option[value=""]');
+                                sel.innerHTML = '';
+                                if (keep) sel.appendChild(keep);
+                                (dentistsCache.list || []).forEach(d => {
+                                    const opt = document.createElement('option');
+                                    opt.value = String(d.id);
+                                    opt.textContent = d.nome;
+                                    sel.appendChild(opt);
+                                });
+                                const pid = info.event.extendedProps && info.event.extendedProps.profissional_id;
+                                sel.value = (pid != null) ? String(pid) : '';
+                            }
+                            if (btn) {
+                                btn.onclick = function() {
+                                    const v = (sel && sel.value || '').trim();
+                                    const pid = v && /^\d+$/.test(v) ? parseInt(v,10) : null;
+                                    fetch('/update_event', {
+                                        method: 'POST',
+                                        headers: { 'Content-Type': 'application/json' },
+                                        body: JSON.stringify({ id: info.event.id, profissional_id: pid })
+                                    })
+                                    .then(r => r.json())
+                                    .then(j => {
+                                        if (j && j.status === 'success') {
+                                            // atualizar no cliente e refazer fetch
+                                            info.event.setExtendedProp('profissional_id', pid);
+                                            try { calendar.refetchEvents(); } catch (e) {}
+                                        } else {
+                                            alert('Erro ao salvar dentista.');
+                                        }
+                                    })
+                                    .catch(() => alert('Erro ao salvar dentista.'));
+                                };
+                            }
+                        } catch (e) {}
+                        // Buscar telefone do paciente e habilitar clique para copiar
+                        const phoneSection = document.getElementById('detailEventPhoneSection');
+                        const phoneDiv = document.getElementById('detailEventPhone');
+                        const waLink = document.getElementById('detailEventWhatsApp');
+                        function normalizePhoneForWhatsApp(raw) {
+                            if (!raw) return null;
+                            const digits = String(raw).replace(/\D+/g, '');
+                            if (!digits) return null;
+                            // Se já tem DDI e parece E.164 brasileiro (55 + 11 dígitos para celular ou 10 para fixo)
+                            if (digits.startsWith('55') && (digits.length === 12 || digits.length === 13)) {
+                                return digits;
+                            }
+                            // Se parece internacional (mais que 11 dígitos e não começa com 55), manter
+                            if (!digits.startsWith('55') && digits.length > 11) {
+                                return digits;
+                            }
+                            const DEFAULT_DDI = '55';
+                            const DEFAULT_DDD = '33'; // conforme solicitado
+                            if (digits.length === 11) {
+                                // DDD + celular (9 dígitos)
+                                return DEFAULT_DDI + digits;
+                            }
+                            if (digits.length === 10) {
+                                // DDD + fixo
+                                return DEFAULT_DDI + digits;
+                            }
+                            if (digits.length === 9 || digits.length === 8) {
+                                // sem DDD, usar padrão
+                                return DEFAULT_DDI + DEFAULT_DDD + digits;
+                            }
+                            // fallback: se muito curto, retornar null
+                            return null;
+                        }
+                        function applyWhatsAppLink(num) {
+                            if (!waLink) return;
+                            const normalized = normalizePhoneForWhatsApp(num);
+                            if (normalized) {
+                                waLink.href = `https://wa.me/${normalized}`;
+                                waLink.classList.remove('visually-hidden');
+                            } else {
+                                waLink.classList.add('visually-hidden');
+                            }
+                        }
+                        if (phoneSection && phoneDiv) {
+                            phoneSection.classList.add('hidden');
+                            phoneDiv.textContent = '';
+                            fetch(`/buscar_telefone?nome=${encodeURIComponent(info.event.title)}`)
+                                .then(response => response.json())
+                                .then(data => {
+                                    const tel = (data && data.telefone) ? String(data.telefone).trim() : '';
+                                    const fromNotes = (!tel && info.event.extendedProps) ?
+                                        extractPhoneFromText(info.event.extendedProps.notes) :
+                                        null;
+                                    const finalTel = tel || (fromNotes || '');
+                                    if (finalTel) {
+                                        phoneDiv.textContent = finalTel;
+                                        phoneDiv.classList.remove('copied');
+                                        phoneSection.classList.remove('hidden');
+                                        applyWhatsAppLink(finalTel);
+                                        phoneDiv.onclick = async () => {
+                                            try {
+                                                await navigator.clipboard.writeText(finalTel);
+                                                phoneDiv.classList.add('copied');
+                                                setTimeout(() => phoneDiv.classList.remove('copied'), 1200);
+                                            } catch (e) {
+                                                const ta = document.createElement('textarea');
+                                                ta.value = finalTel;
+                                                document.body.appendChild(ta);
+                                                ta.select();
+                                                document.execCommand('copy');
+                                                document.body.removeChild(ta);
+                                                phoneDiv.classList.add('copied');
+                                                setTimeout(() => phoneDiv.classList.remove('copied'), 1200);
+                                            }
+                                        };
+                                    }
+                                })
+                                .catch(() => {
+                                    // Fallback silencioso: tentar extrair do texto das notas
+                                    const notes = (info.event.extendedProps && info.event.extendedProps.notes) ? String(info.event.extendedProps.notes) : '';
+                                    const extracted = extractPhoneFromText(notes);
+                                    if (extracted) {
+                                        phoneDiv.textContent = extracted;
+                                        phoneDiv.classList.remove('copied');
+                                        phoneSection.classList.remove('hidden');
+                                        applyWhatsAppLink(extracted);
+                                        phoneDiv.onclick = async () => {
+                                            try {
+                                                await navigator.clipboard.writeText(extracted);
+                                                phoneDiv.classList.add('copied');
+                                                setTimeout(() => phoneDiv.classList.remove('copied'), 1200);
+                                            } catch (e) {
+                                                const ta = document.createElement('textarea');
+                                                ta.value = extracted;
+                                                document.body.appendChild(ta);
+                                                ta.select();
+                                                document.execCommand('copy');
+                                                document.body.removeChild(ta);
+                                                phoneDiv.classList.add('copied');
+                                                setTimeout(() => phoneDiv.classList.remove('copied'), 1200);
+                                            }
+                                        };
+                                    }
+                                });
+                        }
+
+                        // Exibir popover próximo ao clique
+                        let x = 0,
+                            y = 0;
+                        if (info.jsEvent) {
+                            x = info.jsEvent.clientX;
+                            y = info.jsEvent.clientY;
+                        } else {
+                            const rect = calendarEl.getBoundingClientRect();
+                            x = rect.left + rect.width / 2;
+                            y = rect.top + rect.height / 2;
+                        }
+                        popover.style.display = 'block';
+                        popover.classList.remove('visually-hidden');
+                        try { popover.style.zIndex = '10000'; } catch (e) {}
+                        setTimeout(() => {
+                            const popRect = popover.getBoundingClientRect();
+                            const calRect = calendarEl.getBoundingClientRect();
+                            let left = x;
+                            let top = y + window.scrollY;
+                            if (left + popRect.width > calRect.right) left = calRect.right - popRect.width;
+                            if (left < calRect.left) left = calRect.left;
+                            if (top + popRect.height > calRect.bottom + window.scrollY) top = calRect.bottom + window.scrollY - popRect.height;
+                            if (top < calRect.top + window.scrollY) top = calRect.top + window.scrollY;
+                            popover.style.left = left + 'px';
+                            popover.style.top = top + 'px';
+                        }, 10);
+                        // Fechar ao clicar fora ou no botão
+                        function closePopover() {
+                            popover.style.display = 'none';
+                            popover.classList.add('visually-hidden');
+                            document.removeEventListener('mousedown', outsideClickListener);
+                        }
+
+                        function outsideClickListener(e) {
+                            if (!popover.contains(e.target)) closePopover();
+                        }
+                        setTimeout(() => {
+                            document.addEventListener('mousedown', outsideClickListener);
+                        }, 10);
+                        document.getElementById('closeDetailPopoverBtn').onclick = closePopover;
+                    },
+                    eventDidMount: function(info) {
+                        // marcar elemento com id para filtros de busca
+                        try { if (info && info.el && info.event && info.event.id != null) { info.el.setAttribute('data-eid', String(info.event.id)); } } catch (e) {}
+                        info.el.addEventListener('contextmenu', function(e) {
+                            e.preventDefault();
+                            const menu = document.getElementById('eventContextMenu');
+                            let x = e.clientX,
+                                y = e.clientY;
+                            menu.style.display = 'block';
+                            setTimeout(() => {
+                                const menuRect = menu.getBoundingClientRect();
+                                const calRect = calendarEl.getBoundingClientRect();
+                                let left = x;
+                                let top = y + window.scrollY;
+                                if (left + menuRect.width > calRect.right) left = calRect.right - menuRect.width;
+                                if (left < calRect.left) left = calRect.left;
+                                if (top + menuRect.height > calRect.bottom + window.scrollY) top = calRect.bottom + window.scrollY - menuRect.height;
+                                if (top < calRect.top + window.scrollY) top = calRect.top + window.scrollY;
+                                menu.style.left = left + 'px';
+                                menu.style.top = top + 'px';
+                            }, 10);
+
+                            function closeMenu() {
+                                menu.style.display = 'none';
+                                document.removeEventListener('mousedown', outsideClickListener);
+                            }
+
+                            function outsideClickListener(ev) {
+                                if (!menu.contains(ev.target)) closeMenu();
+                            }
+                            setTimeout(() => {
+                                document.addEventListener('mousedown', outsideClickListener);
+                            }, 10);
+                            // Duplicação rápida (+1 semana, +2 semanas, +1 mês)
+                            const ORANGE = '#f59e42';
+                            function pad(n){ return String(n).padStart(2,'0'); }
+                            function fmtDate(d){ return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`; }
+                            function fmtDateTime(d){ return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`; }
+                            function addDays(d, n){ const nd = new Date(d); nd.setDate(nd.getDate()+n); return nd; }
+                            function addMonths(d, n){ const nd = new Date(d); nd.setMonth(nd.getMonth()+n); return nd; }
+                            function duplicateWith(offset){
+                                try {
+                                    const ev = info.event;
+                                    const isAllDay = !!ev.allDay;
+                                    const start = new Date(ev.start);
+                                    const end = ev.end ? new Date(ev.end) : (isAllDay ? addDays(start,1) : addDays(start,1));
+                                    const pid = ev.extendedProps && ev.extendedProps.profissional_id ? Number(ev.extendedProps.profissional_id) : null;
+                                    let newStart, newEnd;
+                                    if (offset.type === 'd') {
+                                        newStart = addDays(start, offset.value);
+                                        newEnd = addDays(end, offset.value);
+                                    } else if (offset.type === 'm') {
+                                        newStart = addMonths(start, offset.value);
+                                        newEnd = addMonths(end, offset.value);
+                                    }
+                                    const body = {
+                                        title: ev.title || '',
+                                        start: isAllDay ? fmtDate(newStart) : fmtDateTime(newStart),
+                                        end: isAllDay ? fmtDate(newEnd) : fmtDateTime(newEnd),
+                                        notes: '',
+                                        color: ORANGE,
+                                        profissional_id: pid
+                                    };
+                                    fetch('/add_event', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body) })
+                                        .then(r=>r.json()).then(j=>{
+                                            if (j && j.status === 'success') { calendar.refetchEvents(); closeMenu(); }
+                                            else { alert('Erro ao duplicar evento.'); }
+                                        }).catch(()=> alert('Erro ao duplicar evento.'));
+                                } catch (e) { /* noop */ }
+                            }
+                            const dup1w = document.getElementById('dup1wBtn');
+                            const dup2w = document.getElementById('dup2wBtn');
+                            const dup3w = document.getElementById('dup3wBtn');
+                            const dup4w = document.getElementById('dup4wBtn');
+                            const dup1m = document.getElementById('dup1mBtn');
+                            if (dup1w) dup1w.onclick = () => duplicateWith({type:'d', value:7});
+                            if (dup2w) dup2w.onclick = () => duplicateWith({type:'d', value:14});
+                            if (dup3w) dup3w.onclick = () => duplicateWith({type:'d', value:21});
+                            if (dup4w) dup4w.onclick = () => duplicateWith({type:'d', value:28});
+                            if (dup1m) dup1m.onclick = () => duplicateWith({type:'m', value:1});
+
+                            document.getElementById('deleteEventBtn').onclick = function() {
+                                fetch('/delete_event', {
+                                        method: 'POST',
+                                        headers: {
+                                            'Content-Type': 'application/json'
+                                        },
+                                        body: JSON.stringify({
+                                            id: info.event.id
+                                        })
+                                    })
+                                    .then(response => response.json())
+                                    .then(data => {
+                                        if (data.status === 'success') {
+                                            calendar.refetchEvents();
+                                            closeMenu();
+                                        } else {
+                                            alert('Erro ao deletar evento!');
+                                        }
+                                    });
+                            };
+                            document.querySelectorAll('#colorOptions .color-circle').forEach(function(circle) {
+                                circle.onclick = function() {
+                                    const color = this.getAttribute('data-color');
+                                    fetch('/update_event_color', {
+                                            method: 'POST',
+                                            headers: {
+                                                'Content-Type': 'application/json'
+                                            },
+                                            body: JSON.stringify({
+                                                id: info.event.id,
+                                                color: color
+                                            })
+                                        })
+                                        .then(response => response.json())
+                                        .then(data => {
+                                            if (data.status === 'success') {
+                                                calendar.refetchEvents();
+                                                closeMenu();
+                                            } else {
+                                                alert('Erro ao atualizar cor!');
+                                            }
+                                        });
+                                };
+                            });
+                        });
+
+            // Aplicar borda direita espessa + esquerda fina por dentista
+                        try {
+                            const pid = info.event.extendedProps && info.event.extendedProps.profissional_id;
+                            if (pid != null && dentistsCache && dentistsCache.map && dentistsCache.map[pid]) {
+                                const d = dentistsCache.map[pid];
+                                const col = colorForDentist(d);
+                                info.el.classList.add('dentist-rightbar');
+                info.el.style.borderRight = `6px solid ${col}`;
+                info.el.classList.add('dentist-leftbar');
+                info.el.style.borderLeft = `2px solid ${col}`;
+                // Reforço visual em views baseadas em tabela (list) e em elementos sem borda visível
+                try { info.el.style.boxShadow = `inset -6px 0 0 0 ${col}`; } catch (e) {}
+                            }
+                        } catch (e) {}
+
+                        // Enriquecer eventos no popover "+ mais" (multiMonth/dayGrid): título, horário e descrição
+                        // Executa após render para garantir que o elemento esteja dentro do popover
+                        setTimeout(() => {
+                            const pop = info.el.closest('.fc-more-popover');
+                            if (!pop) return; // apenas dentro do popover
+                            try {
+                                const isAllDay = info.event.allDay;
+                                let timeStr = '';
+                                if (!isAllDay && info.event.start) {
+                                    try {
+                                        timeStr = new Intl.DateTimeFormat('pt-BR', {
+                                            hour: '2-digit', minute: '2-digit', hour12: false
+                                        }).format(info.event.start);
+                                    } catch (e) {
+                                        const d = info.event.start;
+                                        const hh = String(d.getHours()).padStart(2, '0');
+                                        const mm = String(d.getMinutes()).padStart(2, '0');
+                                        timeStr = `${hh}:${mm}`;
+                                    }
+                                }
+                                const title = info.event.title || '';
+                                const notes = (info.event.extendedProps && info.event.extendedProps.notes) ? info.event.extendedProps.notes : '';
+                                const sep = timeStr ? '<span class="fc-event-time-start"> ' + timeStr + '</span>' : '';
+                                const notesLine = notes ? `<div class="fc-event-notes">${notes}</div>` : '';
+                                const html = `<div class="fc-event-main-custom fc-popover-rich">
+                                    <div class="line1"><span class="fc-event-title">${title}</span>${sep}</div>
+                                    ${notesLine}
+                                </div>`;
+                                const main = info.el.querySelector('.fc-event-main') || info.el.querySelector('.fc-event-main-frame') || info.el;
+                                if (main) main.innerHTML = html;
+                            } catch (e) { /* noop */ }
+                        }, 0);
+                        // aplicar filtro de busca para novos elementos
+                        try { if (typeof applyClientSearchFilter === 'function') applyClientSearchFilter(); } catch (e) {}
+                    },
+                    eventDrop: function(info) {
+                        let start = info.event.startStr;
+                        let end = info.event.endStr;
+                        if (info.event.allDay) {
+                            if (start && start.length > 10) start = start.slice(0, 10);
+                            if (end && end.length > 10) end = end.slice(0, 10);
+                        }
+                        fetch('/update_event', {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json'
+                                },
+                                body: JSON.stringify({
+                                    id: info.event.id,
+                                    start: start,
+                                    end: end
+                                })
+                            })
+                            .then(response => response.json())
+                            .then(data => {
+                                if (data.status !== 'success') {
+                                    alert('Erro ao atualizar evento!');
+                                    info.revert();
+                                }
+                            })
+                            .catch(() => {
+                                alert('Erro ao atualizar evento!');
+                                info.revert();
+                            });
+                    },
+                    eventResize: function(info) {
+                        let start = info.event.startStr;
+                        let end = info.event.endStr;
+                        if (info.event.allDay) {
+                            if (start && start.length > 10) start = start.slice(0, 10);
+                            if (end && end.length > 10) end = end.slice(0, 10);
+                        }
+                        fetch('/update_event', {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json'
+                                },
+                                body: JSON.stringify({
+                                    id: info.event.id,
+                                    start: start,
+                                    end: end
+                                })
+                            })
+                            .then(response => response.json())
+                            .then(data => {
+                                if (data.status !== 'success') {
+                                    alert('Erro ao atualizar evento!');
+                                    info.revert();
+                                }
+                            })
+                            .catch(() => {
+                                alert('Erro ao atualizar evento!');
+                                info.revert();
+                            });
+                    }
+                });
+                calendar.render();
+
+                // Carregar dentistas e montar sidebar
+                fetch('/dentists')
+                    .then(r => r.json())
+                    .then(list => {
+                        // normalizar ids para number
+                        const norm = Array.isArray(list) ? list.map(d => ({
+                            id: Number(d.id),
+                            nome: d.nome || String(d.id),
+                            color: d.color || null
+                        })) : [];
+                        dentistsCache.list = norm;
+                        dentistsCache.map = Object.fromEntries(norm.map(d => [d.id, d]));
+                        // Preencher o select do popover
+                        try {
+                            const sel = document.getElementById('popoverDentist');
+                            if (sel) {
+                                // mantém 'Sem dentista'
+                                norm.forEach(d => {
+                                    const opt = document.createElement('option');
+                                    opt.value = String(d.id);
+                                    opt.textContent = d.nome;
+                                    sel.appendChild(opt);
+                                });
+                                const checkedIds = loadSelectedDentists();
+                                if (checkedIds && checkedIds.length === 1) sel.value = String(checkedIds[0]);
+                            }
+                        } catch (e) {}
+                        // Se não houver seleção salva, selecionar todos por padrão
+                        const saved = loadSelectedDentists();
+                        if (!saved || saved.length === 0) {
+                            try { saveSelectedDentists(norm.map(d => d.id)); } catch (e) {}
+                        }
+                        renderDentistsSidebar(norm);
+                        // refetch para aplicar filtro inicial
+                        try { calendar.refetchEvents(); } catch (e) {}
+                        updateEmptyFilterNotice();
+                    })
+                    .catch(() => {
+                        const cont = document.getElementById('dentistsContainer');
+                        if (cont) cont.innerHTML = '<div class="text-danger">Falha ao carregar dentistas.</div>';
+                    });
+
+                // ===== Configurações / Temas =====
+                const settingsMenu = document.getElementById('settingsMenu');
+                const searchMenu = document.getElementById('searchMenu');
+
+                function toggleSettingsMenu(anchorEl) {
+                    if (!settingsMenu) return;
+                    const isVisible = settingsMenu.style.display === 'block';
+                    if (isVisible) {
+                        settingsMenu.style.display = 'none';
+                        settingsMenu.classList.add('visually-hidden');
+                        document.removeEventListener('mousedown', outsideClickListenerSettings);
+                        return;
+                    }
+                    // Posicionar próximo ao botão
+                    const rect = anchorEl.getBoundingClientRect();
+                    const top = rect.bottom + window.scrollY + 6;
+                    const left = rect.left + window.scrollX;
+                    settingsMenu.style.display = 'block';
+                    settingsMenu.classList.remove('visually-hidden');
+                    settingsMenu.style.position = 'absolute';
+                    settingsMenu.style.top = top + 'px';
+                    settingsMenu.style.left = left + 'px';
+                    // Inicializar UI de feriados somente ao abrir o menu (lazy)
+                    try { if (typeof initHolidaysUIOnce === 'function') initHolidaysUIOnce(); } catch (e) {}
+                    setActiveThemeButton(localStorage.getItem('calendarTheme') || 'default');
+                    (function() {
+                        let saved = parseInt(localStorage.getItem('defaultEventDurationMin') || '60', 10);
+                        if (!isFinite(saved) || saved <= 0 || saved === 15) {
+                            saved = 60;
+                            try {
+                                localStorage.setItem('defaultEventDurationMin', String(saved));
+                            } catch (e) {}
+                        }
+                        setActiveDurationButton(saved);
+                    })();
+                    // weekends active state
+                    (function() {
+                        const wk = getWeekendsSetting();
+                        document.querySelectorAll('#settingsMenu [data-weekends]').forEach(btn => {
+                            btn.classList.toggle('active', String(wk) === btn.getAttribute('data-weekends'));
+                        });
+                    })();
+                    // Atualizar status do token somente agora
+                    try { if (window.__fetchAndUpdateTokenBadge) window.__fetchAndUpdateTokenBadge(); } catch (e) {}
+                    setTimeout(() => document.addEventListener('mousedown', outsideClickListenerSettings), 10);
+                }
+
+                function outsideClickListenerSettings(e) {
+                    if (!settingsMenu.contains(e.target)) {
+                        settingsMenu.style.display = 'none';
+                        settingsMenu.classList.add('visually-hidden');
+                        document.removeEventListener('mousedown', outsideClickListenerSettings);
+                    }
+                }
+
+                // ===== Busca =====
+                const searchStateKey = 'calendarSearchQuery';
+                function saveSearchQuery(q) { try { localStorage.setItem(searchStateKey, q || ''); } catch (e) {} }
+                function loadSearchQuery() { try { return localStorage.getItem(searchStateKey) || ''; } catch (e) { return ''; } }
+                function toggleSearchMenu(anchorEl) {
+                    if (!searchMenu) return;
+                    const isVisible = searchMenu.style.display === 'block';
+                    if (isVisible) {
+                        searchMenu.style.display = 'none';
+                        searchMenu.classList.add('visually-hidden');
+                        document.removeEventListener('mousedown', outsideClickListenerSearch);
+                        return;
+                    }
+                    const rect = anchorEl.getBoundingClientRect();
+                    const top = rect.bottom + window.scrollY + 6;
+                    const left = rect.left + window.scrollX;
+                    searchMenu.style.display = 'block';
+                    searchMenu.classList.remove('visually-hidden');
+                    searchMenu.style.position = 'absolute';
+                    searchMenu.style.top = top + 'px';
+                    searchMenu.style.left = left + 'px';
+                    // Prefill
+                    try {
+                        const inp = document.getElementById('searchQueryInput');
+                        if (inp) { inp.value = loadSearchQuery(); inp.focus(); inp.select(); }
+                    } catch (e) {}
+                    setTimeout(() => document.addEventListener('mousedown', outsideClickListenerSearch), 10);
+                }
+                function outsideClickListenerSearch(e) {
+                    if (!searchMenu.contains(e.target)) {
+                        searchMenu.style.display = 'none';
+                        searchMenu.classList.add('visually-hidden');
+                        document.removeEventListener('mousedown', outsideClickListenerSearch);
+                    }
+                }
+                // Busca server-side: alterna para List e ajusta range para cobrir todos resultados
+                function gotoListCoveringResults(qstr){
+                    const ids = loadSelectedDentists();
+                    const includeUn = loadIncludeUnassigned();
+                    const params = new URLSearchParams({
+                        q: qstr || '',
+                        dentists: (ids && ids.length ? ids.join(',') : ''),
+                        include_unassigned: includeUn ? '1' : ''
+                    });
+                    fetch(`/events/search_range?${params.toString()}`)
+                        .then(r => r.json())
+                        .then(j => {
+                            const countEl = document.getElementById('searchResultsSummary');
+                            if (countEl) {
+                                const c = j && typeof j.count === 'number' ? j.count : 0;
+                                countEl.textContent = qstr ? `${c} resultado(s)` : '';
+                            }
+                            if (!j || !j.min || !j.max) {
+                                // sem resultados: vai para lista da semana atual e refetch com q
+                                calendar.changeView('listWeek');
+                                calendar.refetchEvents();
+                                return;
+                            }
+                            try {
+                                const start = new Date(j.min);
+                                const end = new Date(j.max);
+                                // Expandir 1 dia para garantir inclusão do fim (end é exclusivo)
+                                end.setDate(end.getDate()+1);
+                                // Goto min e trocar para listMonth ou listWeek baseado no span
+                                const diffDays = Math.max(1, Math.round((end - start)/86400000));
+                                if (diffDays > 35) {
+                                    calendar.changeView('listYear');
+                                } else if (diffDays > 28) {
+                                    calendar.changeView('listMonth');
+                                } else {
+                                    calendar.changeView('listWeek');
+                                }
+                                // O FullCalendar não permite setar range arbitrário em list sem customização,
+                                // então navegamos para a data inicial; o refetch com q garantirá somente resultados.
+                                calendar.gotoDate(start);
+                                calendar.refetchEvents();
+                            } catch (e) {
+                                calendar.changeView('listWeek');
+                                calendar.refetchEvents();
+                            }
+                        })
+                        .catch(() => { calendar.changeView('listWeek'); calendar.refetchEvents(); });
+                }
+                function wireSearchMenu(){
+                    const inp = document.getElementById('searchQueryInput');
+                    const btn = document.getElementById('btnApplySearch');
+                    const clr = document.getElementById('btnClearSearch');
+                    if (inp) {
+                        inp.addEventListener('keydown', (e) => { if (e.key === 'Enter') { const qv = inp.value.trim(); saveSearchQuery(qv); gotoListCoveringResults(qv); } });
+                    }
+                    if (btn) btn.addEventListener('click', () => { const v = (inp && inp.value || '').trim(); saveSearchQuery(v); gotoListCoveringResults(v); });
+                    if (clr) clr.addEventListener('click', () => { saveSearchQuery(''); if (inp) inp.value=''; calendar.refetchEvents(); });
+                }
+                wireSearchMenu();
+                // Incluir q nos params do event source
+                const origExtraParams = calendar.getOption('eventSources')[0].extraParams;
+                calendar.getOption('eventSources')[0].extraParams = function(){
+                    const base = origExtraParams ? origExtraParams() : {};
+                    base.q = loadSearchQuery();
+                    return base;
+                };
+
+                function setActiveThemeButton(theme) {
+                    document.querySelectorAll('#settingsMenu [data-theme]').forEach(btn => {
+                        btn.classList.toggle('active', btn.getAttribute('data-theme') === theme);
+                    });
+                }
+
+                function setActiveDurationButton(mins) {
+                    document.querySelectorAll('#settingsMenu [data-duration]').forEach(btn => {
+                        const v = parseInt(btn.getAttribute('data-duration') || '0', 10);
+                        btn.classList.toggle('active', v === mins);
+                    });
+                }
+
+                function applyTheme(theme, persist = true) {
+                    try {
+                        const link = document.getElementById('theme-override');
+                        if (theme === 'default') {
+                            link.removeAttribute('href');
+                        } else if (theme === 'dark') {
+                            link.setAttribute('href', '/static/themes/theme-dark.css');
+                        } else if (theme === 'contrast') {
+                            link.setAttribute('href', '/static/themes/theme-contrast.css');
+                        }
+                        if (persist) localStorage.setItem('calendarTheme', theme);
+                    } catch (e) {
+                        /* noop */ }
+                }
+                // Listeners dos botões do menu de configurações
+                document.querySelectorAll('#settingsMenu [data-theme]').forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        const t = btn.getAttribute('data-theme');
+                        applyTheme(t);
+                        setActiveThemeButton(t);
+                    });
+                });
+                // Duração padrão do novo evento (em minutos)
+                document.querySelectorAll('#settingsMenu [data-duration]').forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        let mins = parseInt(btn.getAttribute('data-duration') || '60', 10);
+                        if (!isFinite(mins) || mins <= 0 || mins === 15) mins = 60;
+                        try {
+                            localStorage.setItem('defaultEventDurationMin', String(mins));
+                        } catch (e) {}
+                        setActiveDurationButton(mins);
+                    });
+                });
+                // Weekends toggle (timeGridWeek)
+                document.querySelectorAll('#settingsMenu [data-weekends]').forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        const val = btn.getAttribute('data-weekends') === 'true';
+                        setWeekendsSetting(val);
+                        document.querySelectorAll('#settingsMenu [data-weekends]').forEach(b => {
+                            b.classList.toggle('active', b === btn);
+                        });
+                        const viewType = calendar.view && calendar.view.type;
+                        if (viewType && viewType.startsWith('timeGrid')) {
+                            calendar.setOption('weekends', val);
+                        }
+                    });
+                });
+
+                // Re-apply weekends per view dates change
+                calendar.on('datesSet', function() {
+                    const val = getWeekendsSetting();
+                    calendar.setOption('weekends', val);
+                    updateHolidaysForCurrentView();
+                });
+                // prime holidays on initial render
+                setTimeout(() => { updateHolidaysForCurrentView(); }, 50);
+                // aviso inicial de filtros vazios
+                setTimeout(() => { updateEmptyFilterNotice(); }, 10);
+                // ==== Invertexto token and refresh (lazy init) ====
+                let __holidaysUIInitialized = false;
+                function initHolidaysUIOnce() {
+                    if (__holidaysUIInitialized) return;
+                    __holidaysUIInitialized = true;
+                    const tokenInput = document.getElementById('invertextoToken');
+                    const yearInput = document.getElementById('holidaysYear');
+                    const ufInput = document.getElementById('holidaysState');
+                    const btn = document.getElementById('btnRefreshHolidays');
+                    const statusEl = document.getElementById('holidaysStatus');
+                    const clearBtn = document.getElementById('btnClearToken');
+                    const tokenBadge = document.getElementById('tokenStatusBadge');
+                    if (!tokenInput || !yearInput || !btn) return;
+                    // Prefill year
+                    try {
+                        yearInput.value = String(new Date().getFullYear());
+                    } catch (e) {}
+                    // Check if token configured
+                    function updateTokenBadge(has) {
+                        if (!tokenBadge) return;
+                        tokenBadge.textContent = has ? 'Token configurado' : 'Token não configurado';
+                        tokenBadge.className = has ? 'badge bg-success' : 'badge bg-secondary';
+                    }
+                    function fetchAndUpdateTokenBadge() {
+                        return fetch('/settings/invertexto_token')
+                            .then(r => r.json())
+                            .then(j => {
+                                const has = !!(j && j.hasToken);
+                                if (!has) statusEl.textContent = 'Token não configurado.';
+                                updateTokenBadge(has);
+                            })
+                            .catch(() => {});
+                    }
+                    // Expor para chamada quando abrir o menu
+                    window.__fetchAndUpdateTokenBadge = fetchAndUpdateTokenBadge;
+                    // Save token on blur
+                    function saveToken(value) {
+                        const v = (value || '').trim();
+                        if (!v) return Promise.resolve();
+                        statusEl.textContent = 'Salvando token...';
+                        return fetch('/settings/invertexto_token', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({
+                                token: v
+                            })
+                        }).then(r => r.json()).then(j => {
+                            if (j && j.status === 'success') {
+                                statusEl.textContent = 'Token salvo.';
+                                tokenInput.value = '';
+                                updateTokenBadge(true);
+                            } else {
+                                statusEl.textContent = 'Falha ao salvar token.';
+                            }
+                        }).catch(() => {
+                            statusEl.textContent = 'Erro ao salvar token.';
+                        });
+                    }
+                    if (clearBtn) {
+                        clearBtn.addEventListener('click', () => {
+                            fetch('/settings/invertexto_token', {
+                                    method: 'DELETE'
+                                })
+                                .then(r => r.json())
+                                .then(j => {
+                                    if (j && j.status === 'success') {
+                                        statusEl.textContent = 'Token removido.';
+                                        updateTokenBadge(false);
+                                    } else {
+                                        statusEl.textContent = 'Falha ao remover token.';
+                                    }
+                                })
+                                .catch(() => {
+                                    statusEl.textContent = 'Erro ao remover token.';
+                                });
+                        });
+                    }
+                    tokenInput.addEventListener('change', () => {
+                        saveToken(tokenInput.value);
+                    });
+                    // Refresh action
+                    btn.addEventListener('click', () => {
+                        const year = parseInt(yearInput.value || '0', 10);
+                        const uf = (ufInput && ufInput.value || '').toUpperCase().trim();
+                        if (!year || year < 1900) {
+                            statusEl.textContent = 'Ano inválido.';
+                            return;
+                        }
+                        statusEl.textContent = 'Atualizando feriados...';
+                        const maybeToken = (tokenInput.value || '').trim();
+                        const doRefresh = () => fetch('/holidays/refresh', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({
+                                year: year,
+                                state: uf || undefined
+                            })
+                        }).then(r => r.json()).then(j => {
+                            if (j && j.status === 'success') {
+                                statusEl.textContent = `Atualizado. ${j.count||0} registros.`;
+                                // Invalidate year cache and rebuild for current view
+                                for (const y in holidaysYearCache) delete holidaysYearCache[y];
+                                for (const y in holidaysYearPending) delete holidaysYearPending[y];
+                                try { updateHolidaysForCurrentView(); } catch (e) {}
+                            } else {
+                                const msg = (j && j.message) ? j.message : 'Falha ao atualizar.';
+                                statusEl.textContent = msg + (msg.includes('Não autorizado') ? ' Verifique o token e tente novamente.' : '');
+                            }
+                        }).catch(() => {
+                            statusEl.textContent = 'Erro ao atualizar.';
+                        });
+                        if (maybeToken) {
+                            saveToken(maybeToken).then(doRefresh);
+                        } else {
+                            doRefresh();
+                        }
+                    });
+                }
+
+                // Função para configurar autocompletar nativo
+                function setupAutocomplete() {
+                    const titleInput = document.getElementById('popoverEventTitle');
+                    const datalist = document.getElementById('namesList');
+                    let currentTimeout = null;
+                    let suggestions = [];
+                    let currentIndex = -1;
+
+                    titleInput.addEventListener('input', function() {
+                        const query = this.value.trim();
+                        // Limpar timeout anterior
+                        if (currentTimeout) {
+                            clearTimeout(currentTimeout);
+                        }
+                        if (query.length >= 1) {
+                            // Aguardar 300ms antes de fazer a busca
+                            currentTimeout = setTimeout(() => {
+                                fetch(`/buscar_nomes?q=${encodeURIComponent(query)}`)
+                                    .then(response => response.json())
+                                    .then(nomes => {
+                                        suggestions = nomes;
+                                        currentIndex = -1;
+                                        updateDatalist(nomes);
+                                    })
+                                    .catch(error => {
+                                        console.error('Erro ao buscar nomes:', error);
+                                        datalist.innerHTML = '';
+                                        suggestions = [];
+                                    });
+                            }, 300);
+                        } else {
+                            datalist.innerHTML = '';
+                            suggestions = [];
+                            currentIndex = -1;
+                        }
+                    });
+
+                    titleInput.addEventListener('keydown', function(e) {
+                        if (e.key === 'Tab' && suggestions.length > 0) {
+                            e.preventDefault();
+                            currentIndex = (currentIndex + 1) % suggestions.length;
+                            this.value = suggestions[currentIndex];
+                        }
+                    });
+
+                    function updateDatalist(nomes) {
+                        datalist.innerHTML = '';
+                        nomes.forEach(nome => {
+                            const option = document.createElement('option');
+                            option.value = nome;
+                            datalist.appendChild(option);
+                        });
+                    }
+                }
+            });
+        });
+    </script>
+
+</body>
+
+</html>

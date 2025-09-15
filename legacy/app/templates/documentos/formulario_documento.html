@@ -1,0 +1,384 @@
+{% extends "base.html" %}
+{% block title %}
+    {{ config_documento.titulo }} | OdontoClinic
+{% endblock title %}
+{% block extra_css %}
+    <style nonce="{{ csp_nonce() }}">
+    .form-floating > .form-control,
+    .form-floating > .form-select {
+        padding-top: 1.625rem;
+        padding-bottom: 0.625rem;
+    }
+    
+    .btn-group .btn {
+        margin-right: 0.5rem;
+    }
+    
+    .btn-group .btn:last-child {
+        margin-right: 0;
+    }
+    
+    .document-preview {
+        background-color: #f8f9fa;
+        border: 1px solid #dee2e6;
+        border-radius: 0.375rem;
+        padding: 1.5rem;
+        font-family: 'Times New Roman', serif;
+        line-height: 1.6;
+        min-height: 200px;
+    }
+    
+    .campo-obrigatorio::after {
+        content: " *";
+        color: #dc3545;
+    }
+    
+    .checkbox-group {
+        max-height: 200px;
+        overflow-y: auto;
+        border: 1px solid #dee2e6;
+        border-radius: 0.375rem;
+        padding: 0.5rem;
+    }
+    
+    .checkbox-group .form-check {
+        margin-bottom: 0.5rem;
+    }
+    
+    .section-header {
+        border-bottom: 3px solid #007bff;
+        padding-bottom: 0.5rem;
+        margin-bottom: 2rem;
+    }
+    
+    .section-header h1 {
+        color: #333;
+        font-weight: 600;
+    }
+    
+    .loading-spinner {
+        display: inline-block;
+        width: 1rem;
+        height: 1rem;
+        border: 0.2em solid #f3f3f3;
+        border-top: 0.2em solid #007bff;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+    }
+    
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+    
+    .card-preview {
+        position: sticky;
+        top: 20px;
+    }
+    </style>
+{% endblock extra_css %}
+{% block content %}
+    <div class="container-fluid py-4">
+        <!-- Cabeçalho da página -->
+        <div class="section-header">
+            <div class="row align-items-center">
+                <div class="col-md-8">
+                    <h1>
+                        <i class="fas fa-file-plus me-3"></i>{{ config_documento.titulo }}
+                    </h1>
+                    <p class="lead mb-0">{{ config_documento.descricao }}</p>
+                </div>
+                <div class="col-md-4 text-end">
+                    <a href="{{ url_for("documentos.index") }}"
+                       class="btn btn-outline-secondary">
+                        <i class="fas fa-arrow-left me-2"></i>Voltar
+                    </a>
+                </div>
+            </div>
+        </div>
+        <form method="post" id="formDocumento">
+            <div class="row">
+                <!-- Coluna do formulário -->
+                <div class="col-lg-8">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">
+                                <i class="fas fa-edit me-2"></i>Dados do Documento
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <!-- Seleção de Paciente -->
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <div class="form-floating">
+                                        <select class="form-select" id="paciente_id" name="paciente_id" required>
+                                            <option value="">Selecione um paciente</option>
+                                            {% for paciente in pacientes %}
+                                                <option value="{{ paciente.id }}"
+                                                        data-cpf="{{ paciente.cpf or 'Não informado' }}">
+                                                    {{ paciente.nome }}
+                                                </option>
+                                            {% endfor %}
+                                        </select>
+                                        <label for="paciente_id" class="campo-obrigatorio">Paciente</label>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-floating">
+                                        <select class="form-select" id="dentista_id" name="dentista_id" required>
+                                            <option value="">Selecione um dentista</option>
+                                            {% for dentista in dentistas %}
+                                                <option value="{{ dentista.id }}"
+                                                        data-cro="{{ dentista.cro or 'Não informado' }}"
+                                                        {% if dentista_selecionado_id == dentista.id %}selected{% endif %}>
+                                                    {{ dentista.nome_completo }}
+                                                </option>
+                                            {% endfor %}
+                                        </select>
+                                        <label for="dentista_id" class="campo-obrigatorio">Dentista</label>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- Tipo de Assinatura -->
+                            <div class="row mb-3">
+                                <div class="col-md-12">
+                                    <div class="form-floating">
+                                        <select class="form-select"
+                                                id="assinatura_tipo"
+                                                name="assinatura_tipo"
+                                                required>
+                                            <option value="dentista">Assinatura por Dentista</option>
+                                            <option value="clinica">Assinatura pela Clínica</option>
+                                        </select>
+                                        <label for="assinatura_tipo" class="campo-obrigatorio">Tipo de Assinatura</label>
+                                    </div>
+                                    <small class="text-muted">
+                                        <i class="fas fa-info-circle me-1"></i>
+                                        Escolha se o documento será assinado pelo dentista ou pela clínica
+                                    </small>
+                                </div>
+                            </div>
+                            <!-- Campos específicos do documento -->
+                            <div class="row">
+                                {% for campo in config_documento.campos %}
+                                    <div class="col-md-12 mb-3">
+                                        {% if campo.tipo == 'text' %}
+                                            <div class="form-floating">
+                                                <input type="text"
+                                                       class="form-control"
+                                                       id="{{ campo.nome }}"
+                                                       name="{{ campo.nome }}"
+                                                       {% if campo.obrigatorio %}required{% endif %}>
+                                                <label for="{{ campo.nome }}"
+                                                       {% if campo.obrigatorio %}class="campo-obrigatorio"{% endif %}>
+                                                    {{ campo.label }}
+                                                </label>
+                                            </div>
+                                        {% elif campo.tipo == 'textarea' %}
+                                            <div class="form-floating">
+                                                <textarea class="form-control"
+                                                          id="{{ campo.nome }}"
+                                                          name="{{ campo.nome }}"
+                                                          style="min-height: 100px"
+                                                          {% if campo.obrigatorio %}required{% endif %}></textarea>
+                                                <label for="{{ campo.nome }}"
+                                                       {% if campo.obrigatorio %}class="campo-obrigatorio"{% endif %}>
+                                                    {{ campo.label }}
+                                                </label>
+                                            </div>
+                                        {% elif campo.tipo == 'select' %}
+                                            <div class="form-floating">
+                                                <select class="form-select"
+                                                        id="{{ campo.nome }}"
+                                                        name="{{ campo.nome }}"
+                                                        {% if campo.obrigatorio %}required{% endif %}>
+                                                    <option value="">Selecione uma opção</option>
+                                                    {% for opcao in campo.opcoes %}<option value="{{ opcao }}">{{ opcao }}</option>{% endfor %}
+                                                </select>
+                                                <label for="{{ campo.nome }}"
+                                                       {% if campo.obrigatorio %}class="campo-obrigatorio"{% endif %}>
+                                                    {{ campo.label }}
+                                                </label>
+                                            </div>
+                                        {% elif campo.tipo == 'checkbox' %}
+                                            <label class="form-label {% if campo.obrigatorio %}campo-obrigatorio{% endif %}">{{ campo.label }}</label>
+                                            <div class="checkbox-group">
+                                                {% for opcao in campo.opcoes %}
+                                                    <div class="form-check">
+                                                        <input class="form-check-input"
+                                                               type="checkbox"
+                                                               value="{{ opcao }}"
+                                                               id="{{ campo.nome }}_{{ loop.index }}"
+                                                               name="{{ campo.nome }}">
+                                                        <label class="form-check-label" for="{{ campo.nome }}_{{ loop.index }}">{{ opcao }}</label>
+                                                    </div>
+                                                {% endfor %}
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                {% endfor %}
+                            </div>
+                            <!-- Local e Observações -->
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <div class="form-floating">
+                                        <input type="text"
+                                               class="form-control"
+                                               id="local_emissao"
+                                               name="local_emissao"
+                                               value="{{ local_padrao }}">
+                                        <label for="local_emissao">Local de emissão</label>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-floating">
+                                        <textarea class="form-control"
+                                                  id="observacoes"
+                                                  name="observacoes"
+                                                  style="min-height: 60px"></textarea>
+                                        <label for="observacoes">Observações (opcional)</label>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- Botões de ação -->
+                            <div class="btn-group w-100 mt-4">
+                                <button type="submit" class="btn btn-primary" id="btnGerar">
+                                    <i class="fas fa-file-pdf me-2"></i>Gerar Documento
+                                </button>
+                                <button type="button"
+                                        class="btn btn-outline-secondary"
+                                        onclick="limparFormulario()">
+                                    <i class="fas fa-eraser me-2"></i>Limpar
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- Coluna da pré-visualização -->
+                <div class="col-lg-4">
+                    <div class="card card-preview">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">
+                                <i class="fas fa-eye me-2"></i>Pré-visualização
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div id="previewDocumento" class="document-preview">
+                                <p class="text-muted text-center">
+                                    <i class="fas fa-info-circle me-2"></i>
+                                    Preencha os campos para ver a pré-visualização do documento
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+{% endblock content %}
+{% block extra_js %}
+    <script nonce="{{ csp_nonce() }}">
+    // Template do documento
+    const templateDocumento = `{{ config_documento.template|safe }}`;
+    
+    // Função para atualizar a pré-visualização
+    function atualizarPreview() {
+        try {
+            // Coletar dados do formulário
+            const tipoAssinatura = document.getElementById('assinatura_tipo').value;
+            
+            const dados = {
+                nome_paciente: document.getElementById('paciente_id').selectedOptions[0]?.text || '[Nome do Paciente]',
+                cpf_paciente: document.getElementById('paciente_id').selectedOptions[0]?.dataset.cpf || '[CPF]'
+            };
+            
+            // Dados baseados no tipo de assinatura
+            if (tipoAssinatura === 'dentista') {
+                dados.nome_dentista = document.getElementById('dentista_id').selectedOptions[0]?.text || '[Nome do Dentista]';
+                dados.cro_dentista = document.getElementById('dentista_id').selectedOptions[0]?.dataset.cro || '[CRO]';
+            } else {
+                // Usar dados da clínica (serão preenchidos pelo servidor)
+                dados.nome_dentista = '[Nome da Clínica]';
+                dados.cro_dentista = '[Dados da Clínica]';
+            }
+            
+            // Coletar dados específicos dos campos
+            {% for campo in config_documento.campos %}
+            {% if campo.tipo == 'checkbox' %}
+            const {{ campo.nome }}_valores = Array.from(document.querySelectorAll('input[name="{{ campo.nome }}"]:checked'))
+                .map(cb => cb.value);
+            dados.{{ campo.nome }} = {{ campo.nome }}_valores.join(', ') || '[{{ campo.label }}]';
+            dados.{{ campo.nome }}_texto = {{ campo.nome }}_valores.length > 0 ? ' ' + {{ campo.nome }}_valores.join(', ') : '';
+            {% else %}
+            const {{ campo.nome }}_valor = document.getElementById('{{ campo.nome }}')?.value || '[{{ campo.label }}]';
+            dados.{{ campo.nome }} = {{ campo.nome }}_valor;
+            {% if campo.tipo == 'textarea' %}
+            dados.{{ campo.nome }}_texto = {{ campo.nome }}_valor ? ' ' + {{ campo.nome }}_valor : '';
+            {% endif %}
+            {% endif %}
+            {% endfor %}
+            
+            // Substituir no template
+            let preview = templateDocumento;
+            for (const [key, value] of Object.entries(dados)) {
+                const regex = new RegExp(`{${key}}`, 'g');
+                preview = preview.replace(regex, value);
+            }
+            
+            // Remover chaves não substituídas
+            preview = preview.replace(/{[^}]+}/g, '[Campo não preenchido]');
+            
+            document.getElementById('previewDocumento').innerHTML = `<p>${preview}</p>`;
+            
+        } catch (error) {
+            console.error('Erro ao atualizar preview:', error);
+        }
+    }
+    
+    // Função para limpar formulário
+    function limparFormulario() {
+        document.getElementById('formDocumento').reset();
+        atualizarPreview();
+    }
+    
+    // Função para controlar visibilidade do campo dentista
+    function toggleDentistaField() {
+        const tipoAssinatura = document.getElementById('assinatura_tipo').value;
+        const dentistaField = document.getElementById('dentista_id').closest('.col-md-6');
+        
+        if (tipoAssinatura === 'clinica') {
+            dentistaField.style.display = 'none';
+            document.getElementById('dentista_id').required = false;
+        } else {
+            dentistaField.style.display = 'block';
+            document.getElementById('dentista_id').required = true;
+        }
+        
+        atualizarPreview();
+    }
+    
+    // Event listeners
+    document.addEventListener('DOMContentLoaded', function() {
+        // Listener específico para tipo de assinatura
+        document.getElementById('assinatura_tipo').addEventListener('change', toggleDentistaField);
+        
+        // Adicionar listeners para todos os campos
+        const campos = document.querySelectorAll('input, select, textarea');
+        campos.forEach(campo => {
+            campo.addEventListener('change', atualizarPreview);
+            campo.addEventListener('input', atualizarPreview);
+        });
+        
+        // Configuração inicial
+        toggleDentistaField();
+        atualizarPreview();
+        
+        // Validação do formulário
+        document.getElementById('formDocumento').addEventListener('submit', function(e) {
+            const btnGerar = document.getElementById('btnGerar');
+            btnGerar.innerHTML = '<span class="loading-spinner me-2"></span>Gerando...';
+            btnGerar.disabled = true;
+        });
+    });
+    </script>
+{% endblock extra_js %}

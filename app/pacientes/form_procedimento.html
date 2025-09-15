@@ -1,0 +1,17 @@
+{% extends 'core/base.html' %}
+{% block title %}Novo Procedimento - Plano {{ plano.id }}{% endblock %}
+{% block content %}
+<h1>Novo Procedimento - Plano {{ plano.id }}</h1>
+<form method="post">
+    {{ form.hidden_tag() }}
+    <div>{{ form.descricao.label }} {{ form.descricao(size=60) }}</div>
+    <div>{{ form.dente.label }} {{ form.dente(size=10) }}</div>
+    <div>{{ form.valor.label }} {{ form.valor() }}</div>
+    <div>{{ form.status.label }} {{ form.status() }}</div>
+    <div>{{ form.data_prevista.label }} {{ form.data_prevista() }}</div>
+    <div>{{ form.data_realizado.label }} {{ form.data_realizado() }}</div>
+    <div>{{ form.observacoes.label }} {{ form.observacoes(rows=3) }}</div>
+    <button type="submit">Salvar</button>
+    <a href="{{ url_for('pacientes.visualizar_plano', paciente_id=paciente.id, plano_id=plano.id) }}">Cancelar</a>
+</form>
+{% endblock %}

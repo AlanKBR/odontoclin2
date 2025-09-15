@@ -1,0 +1,354 @@
+/* Tema Escuro para calendário */
+:root {
+    color-scheme: dark;
+    /* Bootstrap variable overrides for dark theme */
+    --bs-body-bg: #0b1220;
+    --bs-body-color: #e5e7eb;
+    --bs-card-bg: #0f172a;
+    --bs-card-color: #e5e7eb;
+    --bs-border-color: #1f2937;
+    --bs-secondary-bg: #111827;
+    --bs-heading-color: #e2e8f0;
+}
+
+body {
+    background: #0b1220;
+    color: #e5e7eb;
+}
+
+/* General forms in dark mode */
+input[type="text"],
+input[type="search"],
+input[type="date"],
+input[type="time"],
+input[type="datetime-local"],
+textarea,
+select,
+.form-control,
+.form-select {
+    background-color: #111827 !important;
+    color: #e5e7eb !important;
+    border: 1px solid #374151 !important;
+}
+
+.form-control::placeholder,
+textarea::placeholder {
+    color: #64748b !important;
+}
+
+.form-check-input {
+    background-color: #0b1220 !important;
+    border-color: #374151 !important;
+}
+
+.form-check-input:checked {
+    background-color: #60a5fa !important;
+    border-color: #60a5fa !important;
+}
+
+/* Dentist list / sidebar tweaks */
+#dentistsContainer {
+    background: #0f172a;
+}
+
+#dentistsContainer .dentist-list .dentist-item {
+    border-bottom-color: #1f2937 !important;
+}
+
+#dentistsSidebar {
+    background-color: var(--bs-card-bg) !important;
+    border-color: var(--bs-border-color) !important;
+    color: var(--bs-card-color) !important;
+}
+
+#dentistsSidebar .card-header {
+    background-color: var(--bs-secondary-bg) !important;
+    color: var(--bs-heading-color) !important;
+}
+
+#dentistsSidebar .card-body {
+    background-color: var(--bs-card-bg) !important;
+}
+
+#dentistsSidebar .form-check-label,
+#dentistsSidebar .small,
+#dentistsSidebar label {
+    color: #cbd5e1;
+}
+
+#dentistsSidebar .text-muted {
+    color: #94a3b8 !important;
+}
+
+#dentistsSidebar .border-top {
+    border-top-color: var(--bs-border-color) !important;
+}
+
+#dentistsSidebar .border-bottom {
+    border-bottom-color: var(--bs-border-color) !important;
+}
+
+/* Ensure cards are dark regardless of defaults */
+.card {
+    background-color: var(--bs-card-bg) !important;
+    color: var(--bs-card-color) !important;
+    border-color: var(--bs-border-color) !important;
+}
+
+.card-header {
+    background-color: var(--bs-secondary-bg) !important;
+    color: var(--bs-heading-color) !important;
+    border-bottom: 1px solid var(--bs-border-color) !important;
+}
+
+.card-body {
+    background-color: var(--bs-card-bg) !important;
+    color: var(--bs-card-color) !important;
+}
+
+#dentistsContainer label,
+#dentistsContainer .dentist-item,
+#dentistsContainer .dentist-item .form-check-input {
+    color: #cbd5e1;
+}
+
+#calendar {
+    background: #0f172a;
+    border-color: #1f2937;
+    box-shadow: 0 4px 24px #0008;
+}
+
+.fc,
+.popover {
+    background: #0f172a;
+    color: #e5e7eb;
+}
+
+.fc-theme-standard td,
+.fc-theme-standard th,
+.fc-theme-bootstrap td,
+.fc-theme-bootstrap th {
+    border-color: #1f2937;
+    /* dark grid lines */
+}
+
+.fc-theme-standard .fc-scrollgrid,
+.fc-theme-standard .fc-scrollgrid table,
+.fc-theme-bootstrap .fc-scrollgrid,
+.fc-theme-bootstrap .fc-scrollgrid table {
+    border-color: #1f2937;
+}
+
+.fc-col-header,
+.fc-col-header-cell {
+    background: #111827;
+    color: #e5e7eb;
+}
+
+.fc-timegrid-axis,
+.fc-timegrid-axis-frame {
+    background: #0b1220;
+    color: #94a3b8;
+    border-color: #1f2937;
+}
+
+.fc-timegrid-slot {
+    border-bottom: 1px solid #1f2937;
+    /* time slot lines */
+}
+
+.fc-scrollgrid-shrink {
+    background: #0b1220;
+    /* gutter areas */
+}
+
+.fc-timegrid-divider {
+    border-color: #1f2937;
+}
+
+.fc-now-indicator-line {
+    border-color: #ef4444;
+    /* red now-indicator */
+}
+
+.fc-daygrid-day-number,
+.fc-col-header-cell-cushion,
+.fc-timegrid-axis-cushion {
+    color: #cbd5e1;
+}
+
+.fc-toolbar-title {
+    color: #e2e8f0;
+}
+
+.fc a,
+.fc a:hover,
+.fc a:focus {
+    color: #93c5fd;
+}
+
+.fc-button {
+    background: #334155;
+    color: #e5e7eb;
+}
+
+.fc-button:hover,
+.fc-button:focus {
+    background: #1f2937;
+}
+
+.fc-daygrid-day.fc-day-today {
+    background: #1e293b;
+}
+
+/* Mini/main holiday & empty overlays: softer in dark theme, with higher specificity to override inline */
+.fc .fc-holiday-bg {
+    background: rgba(239, 68, 68, 0.06) !important;
+    /* red-500 @ 6% */
+}
+
+.fc .fc-empty-bg {
+    background: rgba(234, 179, 8, 0.10) !important;
+    /* amber-400 @ 10% */
+    opacity: 1 !important;
+    /* prefer alpha in bg over element opacity */
+}
+
+.fc .fc-day-other .fc-empty-bg {
+    background: rgba(234, 179, 8, 0.06) !important;
+    /* softer for other months */
+}
+
+/* More link in month view */
+.fc .fc-daygrid-more-link {
+    color: #93c5fd;
+}
+
+/* Today column for timeGrid */
+.fc-timegrid-col.fc-day-today {
+    background: #132133;
+}
+
+/* Preserve event colors provided by FullCalendar/event data */
+.fc-list-event {
+    background: #0b1220;
+    color: #93c5fd;
+    border-left-color: #60a5fa;
+}
+
+/* Não sobrepor cor dos eventos no modo escuro: respeitar a cor do evento */
+/* (Sem fallback de background escuro em eventos) */
+/* Selection highlight */
+.fc .fc-highlight {
+    background: #2563eb33;
+}
+
+/* List views */
+.fc .fc-list,
+.fc .fc-list-table,
+.fc .fc-theme-standard .fc-list,
+.fc .fc-theme-standard .fc-list-table {
+    background: #0f172a;
+    color: #e5e7eb;
+    border-color: #1f2937;
+}
+
+.fc .fc-list-day-cushion {
+    background: #111827;
+    color: #e5e7eb;
+    border-bottom: 1px solid #1f2937;
+}
+
+.fc .fc-list-event:hover {
+    background: #111827;
+}
+
+.fc .fc-list-event-time,
+.fc .fc-list-event-title {
+    color: #cbd5e1;
+}
+
+/* MultiMonth */
+.fc .fc-multimonth-title {
+    background: #111827;
+    color: #e5e7eb;
+    border-bottom: 1px solid #1f2937;
+}
+
+.fc .fc-multimonth {
+    background: #0f172a;
+}
+
+.fc .fc-multimonth .fc-multimonth-month {
+    background: #0f172a;
+    border-color: #1f2937;
+}
+
+.fc .fc-multimonth .fc-daygrid-day-number {
+    color: #cbd5e1;
+}
+
+.fc .fc-multimonth .fc-daygrid-day.fc-day-today {
+    background: #1e293b;
+}
+
+.fc .fc-multimonth .fc-col-header,
+.fc .fc-multimonth .fc-col-header-cell {
+    background: #111827;
+    color: #e5e7eb;
+}
+
+.fc .fc-multimonth .fc-daygrid-day,
+.fc .fc-multimonth .fc-daygrid-day-frame {
+    background: #0f172a;
+}
+
+/* Holiday cell tint in dark mode: rely on overlay only to avoid doubling */
+.fc .fc-day-holiday,
+.fc .fc-multimonth .fc-day-holiday,
+.fc .fc-multimonth .fc-daygrid-day.fc-day-holiday,
+.fc .fc-daygrid-day.fc-day-holiday .fc-daygrid-day-frame {
+    background: transparent !important;
+}
+
+/* Popovers */
+.popover .popover-header {
+    background: #111827;
+    color: #e5e7eb;
+    border-bottom: 1px solid #1f2937;
+}
+
+.popover .popover-body {
+    background: #0f172a;
+    color: #e5e7eb;
+}
+
+/* FullCalendar overflow popover */
+.fc .fc-popover {
+    background: #0f172a;
+    color: #e5e7eb;
+    border: 1px solid #1f2937;
+}
+
+.fc .fc-popover .fc-popover-header {
+    background: #111827;
+    color: #e5e7eb;
+    border-bottom: 1px solid #1f2937;
+}
+
+.fc .fc-popover .fc-popover-body {
+    background: #0f172a;
+}
+
+/* Settings active */
+#settingsMenu .btn.active {
+    background: #1e293b;
+    color: #e5e7eb;
+    border-color: #60a5fa;
+}
+
+/* Settings headings (text-muted) no escuro */
+#settingsMenu .text-muted,
+.popover .text-muted {
+    color: #94a3b8 !important;
+}

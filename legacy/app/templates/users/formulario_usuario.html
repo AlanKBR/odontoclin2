@@ -1,0 +1,117 @@
+{% extends "base.html" %}
+{% block title %}
+    OdontoClinic - {{ titulo }}
+{% endblock title %}
+{% block content %}
+    {% set is_admin = current_user.cargo == "admin" %}
+    <div class="container-fluid">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1>
+                <i class="bi bi-person-badge"></i> {{ titulo }}
+            </h1>
+            <a href="{{ url_for("users.listar_usuarios") }}"
+               class="btn btn-secondary">
+                <i class="bi bi-arrow-left"></i> Voltar
+            </a>
+        </div>
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <form method="post" novalidate>
+                    {% if form.id.data %}{{ form.id }}{% endif %}
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="{{ form.username.id }}" class="form-label">{{ form.username.label.text }} *</label>
+                                {{ form.username(class="form-control" + (" is-invalid" if form.username.errors else "") ) }}
+                                {% for error in form.username.errors %}<div class="invalid-feedback">{{ error }}</div>{% endfor %}
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="{{ form.nome_completo.id }}" class="form-label">{{ form.nome_completo.label.text }} *</label>
+                                {{ form.nome_completo(class="form-control" + (" is-invalid" if form.nome_completo.errors else "") ) }}
+                                {% for error in form.nome_completo.errors %}<div class="invalid-feedback">{{ error }}</div>{% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="{{ form.cro.id }}" class="form-label">{{ form.cro.label.text }}</label>
+                                {{ form.cro(class="form-control" + (" is-invalid" if form.cro.errors else "") ) }}
+                                {% for error in form.cro.errors %}<div class="invalid-feedback">{{ error }}</div>{% endfor %}
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="{{ form.nome_profissional.id }}" class="form-label">{{ form.nome_profissional.label.text }} *</label>
+                                {{ form.nome_profissional(class="form-control" + (" is-invalid" if form.nome_profissional.errors else "") ) }}
+                                {% for error in form.nome_profissional.errors %}<div class="invalid-feedback">{{ error }}</div>{% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="{{ form.cargo.id }}" class="form-label">{{ form.cargo.label.text }} *</label>
+                                {{ form.cargo(class="form-control" + (" is-invalid" if form.cargo.errors else "") ) }}
+                                {% for error in form.cargo.errors %}<div class="invalid-feedback">{{ error }}</div>{% endfor %}
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="{{ form.password.id }}" class="form-label">
+                                    {{ form.password.label.text }}
+                                    {% if not form.id.data %}
+                                        *
+                                    {% else %}
+                                        (deixe em branco para manter a senha atual)
+                                    {% endif %}
+                                </label>
+                                {{ form.password(class="form-control" + (" is-invalid" if form.password.errors else "") , type="password") }}
+                                {% for error in form.password.errors %}<div class="invalid-feedback">{{ error }}</div>{% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="{{ form.confirm_password.id }}" class="form-label">{{ form.confirm_password.label.text }}</label>
+                                {{ form.confirm_password(class="form-control" + (" is-invalid" if form.confirm_password.errors else "") , type="password") }}
+                                {% for error in form.confirm_password.errors %}<div class="invalid-feedback">{{ error }}</div>{% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <a href="{{ url_for("users.listar_usuarios") }}"
+                           class="btn btn-secondary me-md-2">Cancelar</a>
+                        {% if is_admin %}
+                            {{ form.submit(class="btn btn-primary") }}
+                        {% else %}
+                            <button class="btn btn-primary disabled greyed-out"
+                                    tabindex="-1"
+                                    aria-disabled="true"
+                                    data-bs-toggle="tooltip"
+                                    title="Somente administradores podem salvar alterações">Salvar</button>
+                        {% endif %}
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    <script>
+    var isAdmin = "{{ 'true' if is_admin else 'false' }}" === 'true';
+    document.addEventListener('DOMContentLoaded', function() {
+        if (!isAdmin) {
+            document.querySelectorAll('form input, form select').forEach(function(el) {
+                el.setAttribute('disabled', 'disabled');
+            });
+        }
+        // Enable Bootstrap tooltips
+        var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+        tooltipTriggerList.forEach(function (tooltipTriggerEl) {
+            new bootstrap.Tooltip(tooltipTriggerEl);
+        });
+    });
+    </script>
+{% endblock content %}

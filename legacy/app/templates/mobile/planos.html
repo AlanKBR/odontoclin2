@@ -1,0 +1,321 @@
+{% extends "mobile/base.html" %}
+{% block title %}
+    Planos de Tratamento - {{ paciente.nome }}
+{% endblock title %}
+{% block content %}
+    <div class="mobile-plans-container">
+        <div class="mobile-header">
+            <div class="header-info">
+                <h2>{{ paciente.nome }}</h2>
+                <p class="subtitle">Planos de Tratamento</p>
+            </div>
+            <a href="{{ url_for('pacientes.visualizar_paciente', paciente_id=paciente.id) }}"
+               class="btn-back">
+                <i class="fas fa-arrow-left"></i>
+                Voltar
+            </a>
+        </div>
+        <!-- Quick Actions -->
+        <div class="quick-actions">
+            <a href="{{ url_for('pacientes.novo_plano', paciente_id=paciente.id) }}"
+               class="action-btn primary">
+                <i class="fas fa-plus"></i>
+                Novo Plano
+            </a>
+        </div>
+        <!-- Plans List -->
+        <div class="plans-section">
+            {% if planos %}
+                <div class="plans-list">
+                    {% for plano in planos %}
+                        <div class="plan-card">
+                            <div class="plan-header">
+                                <div class="plan-id">
+                                    <i class="fas fa-clipboard-list"></i>
+                                    Plano #{{ plano.id }}
+                                </div>
+                                <div class="plan-status {{ plano.status.lower().replace(' ', '-') }}">{{ plano.status }}</div>
+                            </div>
+                            <div class="plan-body">
+                                <div class="plan-description">{{ plano.descricao }}</div>
+                                <div class="plan-details">
+                                    <div class="detail-item">
+                                        <i class="fas fa-calendar"></i>
+                                        <span>{{ plano.data_criacao.strftime("%d/%m/%Y") if plano.data_criacao else 'Data não
+                                        informada' }}</span>
+                                    </div>
+                                    <div class="detail-item">
+                                        <i class="fas fa-dollar-sign"></i>
+                                        <span>R$ {{ "%.2f"|format(plano.orcamento_total) if plano.orcamento_total else '0.00'
+                                        }}</span>
+                                    </div>
+                                    {% if plano.observacoes %}
+                                        <div class="detail-item">
+                                            <i class="fas fa-sticky-note"></i>
+                                            <span>{{ plano.observacoes|truncate(100) }}</span>
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="plan-actions">
+                                <a href="{{ url_for('pacientes.visualizar_plano', paciente_id=paciente.id, plano_id=plano.id) }}"
+                                   class="action-btn primary">
+                                    <i class="fas fa-eye"></i>
+                                    Ver Detalhes
+                                </a>
+                                <button class="action-btn secondary" title="Editar">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button class="action-btn danger" title="Excluir">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="empty-state">
+                    <i class="fas fa-clipboard-list"></i>
+                    <h3>Nenhum plano de tratamento</h3>
+                    <p>Não há planos de tratamento registrados para este paciente.</p>
+                    <a href="{{ url_for('pacientes.novo_plano', paciente_id=paciente.id) }}"
+                       class="action-btn primary">
+                        <i class="fas fa-plus"></i>
+                        Criar Primeiro Plano
+                    </a>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+    <style>
+    .mobile-plans-container {
+        padding: 1rem;
+        max-width: 100%;
+    }
+
+    .mobile-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1.5rem;
+        padding-bottom: 1rem;
+        border-bottom: 2px solid #e9ecef;
+    }
+
+    .header-info h2 {
+        margin: 0;
+        color: #2c3e50;
+        font-size: 1.5rem;
+    }
+
+    .header-info .subtitle {
+        margin: 0;
+        color: #6c757d;
+        font-size: 0.875rem;
+    }
+
+    .btn-back {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.5rem 1rem;
+        background: #6c757d;
+        color: white;
+        text-decoration: none;
+        border-radius: 0.375rem;
+        font-size: 0.875rem;
+    }
+
+    .btn-back:hover {
+        background: #5a6268;
+        color: white;
+        text-decoration: none;
+    }
+
+    .quick-actions {
+        margin-bottom: 1.5rem;
+    }
+
+    .action-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.75rem 1rem;
+        border: none;
+        border-radius: 0.375rem;
+        text-decoration: none;
+        font-size: 1rem;
+        cursor: pointer;
+        transition: all 0.2s;
+        justify-content: center;
+    }
+
+    .action-btn.primary {
+        background: #007bff;
+        color: white;
+    }
+
+    .action-btn.primary:hover {
+        background: #0056b3;
+        color: white;
+        text-decoration: none;
+    }
+
+    .action-btn.secondary {
+        background: #6c757d;
+        color: white;
+    }
+
+    .action-btn.secondary:hover {
+        background: #5a6268;
+        color: white;
+        text-decoration: none;
+    }
+
+    .action-btn.danger {
+        background: #dc3545;
+        color: white;
+    }
+
+    .action-btn.danger:hover {
+        background: #c82333;
+        color: white;
+        text-decoration: none;
+    }
+
+    .plans-list {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    .plan-card {
+        background: white;
+        border-radius: 0.5rem;
+        padding: 1rem;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        border-left: 4px solid #007bff;
+    }
+
+    .plan-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1rem;
+    }
+
+    .plan-id {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        color: #2c3e50;
+        font-weight: 500;
+    }
+
+    .plan-status {
+        padding: 0.25rem 0.75rem;
+        border-radius: 1rem;
+        font-size: 0.75rem;
+        font-weight: 500;
+        text-transform: uppercase;
+    }
+
+    .plan-status.pendente {
+        background: #fff3cd;
+        color: #856404;
+    }
+
+    .plan-status.em-andamento {
+        background: #cce5ff;
+        color: #004085;
+    }
+
+    .plan-status.concluído {
+        background: #d4edda;
+        color: #155724;
+    }
+
+    .plan-status.cancelado {
+        background: #f8d7da;
+        color: #721c24;
+    }
+
+    .plan-description {
+        margin-bottom: 1rem;
+        color: #2c3e50;
+        font-weight: 500;
+        line-height: 1.4;
+    }
+
+    .plan-details {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+        margin-bottom: 1rem;
+    }
+
+    .detail-item {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        color: #6c757d;
+        font-size: 0.875rem;
+    }
+
+    .detail-item i {
+        width: 1rem;
+        color: #007bff;
+    }
+
+    .plan-actions {
+        display: flex;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+    }
+
+    .plan-actions .action-btn {
+        flex: 1;
+        min-width: 0;
+        padding: 0.5rem 0.75rem;
+        font-size: 0.875rem;
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 3rem 1rem;
+        color: #6c757d;
+    }
+
+    .empty-state i {
+        font-size: 4rem;
+        margin-bottom: 1rem;
+        opacity: 0.5;
+    }
+
+    .empty-state h3 {
+        margin: 0 0 0.5rem 0;
+        color: #495057;
+    }
+
+    .empty-state p {
+        margin: 0 0 1.5rem 0;
+    }
+
+    /* Responsive adjustments */
+    @media (max-width: 576px) {
+        .plan-header {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 0.5rem;
+        }
+
+        .plan-actions {
+            flex-direction: column;
+        }
+
+        .plan-actions .action-btn {
+            flex: none;
+        }
+    }
+    </style>
+{% endblock content %}

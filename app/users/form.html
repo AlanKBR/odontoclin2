@@ -1,0 +1,22 @@
+<!doctype html>
+<title>Form Usuário</title>
+<h1>Usuário</h1>
+{% with msgs = get_flashed_messages(with_categories=true) %}
+{% if msgs %}
+<ul>
+    {% for cat, msg in msgs %}
+    <li>{{ cat }}: {{ msg }}</li>
+    {% endfor %}
+</ul>
+{% endif %}
+{% endwith %}
+<form method="post">
+    {{ form.hidden_tag() }}
+    <p>{{ form.username.label }} {{ form.username() }}</p>
+    <p>{{ form.nome_completo.label }} {{ form.nome_completo() }}</p>
+    <p>{{ form.cro.label }} {{ form.cro() }}</p>
+    <p>{{ form.nome_profissional.label }} {{ form.nome_profissional() }}</p>
+    <p>{{ form.cargo.label }} {{ form.cargo() }}</p>
+    <p>{{ form.password.label }} {{ form.password() }} {{ form.confirm.label }} {{ form.confirm() }}</p>
+    <p>{{ form.submit() }}</p>
+</form>

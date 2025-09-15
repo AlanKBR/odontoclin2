@@ -1,0 +1,26 @@
+{% extends 'core/base.html' %}
+{% block title %}CRO{% endblock %}
+{% block content %}
+<h1>CRO</h1>
+<p>Consulta / registro profissional (placeholder).</p>
+<form method="post">
+    <div>
+        <input type="text" name="search_term" value="{{ search_term }}" placeholder="Nome" />
+        <select name="uf">
+            <option value="todos" {% if uf=='todos' %}selected{% endif %}>Todos</option>
+            <option value="SP" {% if uf=='SP' %}selected{% endif %}>SP</option>
+            <option value="RJ" {% if uf=='RJ' %}selected{% endif %}>RJ</option>
+        </select>
+        <button type="submit">Buscar</button>
+    </div>
+</form>
+{% if results %}
+<ul>
+    {% for r in results %}
+    <li>{{ r.nome }} - {{ r.registro }} / {{ r.uf }}</li>
+    {% endfor %}
+</ul>
+{% elif search_term %}
+<p>Nenhum resultado.</p>
+{% endif %}
+{% endblock %}

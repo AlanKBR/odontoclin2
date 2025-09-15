@@ -1,0 +1,92 @@
+{% extends "base.html" %}
+{% block title %}
+    OdontoClinic - Meu Perfil
+{% endblock title %}
+{% block content %}
+    <div class="container-fluid">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1>
+                <i class="bi bi-person-circle"></i> Meu Perfil
+            </h1>
+            <a href="{{ url_for("main.dashboard") }}" class="btn btn-secondary">
+                <i class="bi bi-arrow-left"></i> Voltar
+            </a>
+        </div>
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <form method="post" novalidate>
+                    {% if form.id.data %}{{ form.id }}{% endif %}
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="{{ form.username.id }}" class="form-label">{{ form.username.label.text }} *</label>
+                                {{ form.username(class="form-control" + (" is-invalid" if form.username.errors else "") ) }}
+                                {% for error in form.username.errors %}<div class="invalid-feedback">{{ error }}</div>{% endfor %}
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="{{ form.nome_completo.id }}" class="form-label">{{ form.nome_completo.label.text }} *</label>
+                                {{ form.nome_completo(class="form-control" + (" is-invalid" if form.nome_completo.errors else "") ) }}
+                                {% for error in form.nome_completo.errors %}<div class="invalid-feedback">{{ error }}</div>{% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="{{ form.cro.id }}" class="form-label">{{ form.cro.label.text }}</label>
+                                {{ form.cro(class="form-control" + (" is-invalid" if form.cro.errors else "") ) }}
+                                {% for error in form.cro.errors %}<div class="invalid-feedback">{{ error }}</div>{% endfor %}
+                                <small class="form-text text-muted">Opcional</small>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="{{ form.nome_profissional.id }}" class="form-label">{{ form.nome_profissional.label.text }} *</label>
+                                {{ form.nome_profissional(class="form-control" + (" is-invalid" if form.nome_profissional.errors else "") ) }}
+                                {% for error in form.nome_profissional.errors %}<div class="invalid-feedback">{{ error }}</div>{% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="cargo" class="form-label">Cargo</label>
+                                <input type="text"
+                                       class="form-control"
+                                       value="{{ current_user.cargo|capitalize }}"
+                                       readonly
+                                       disabled>
+                                <small class="form-text text-muted">Seu cargo não pode ser alterado. Contate um administrador para isso.</small>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="{{ form.password.id }}" class="form-label">
+                                    {{ form.password.label.text }} (deixe em branco para manter a senha atual)
+                                </label>
+                                {{ form.password(class="form-control" + (" is-invalid" if form.password.errors else "") , type="password") }}
+                                {% for error in form.password.errors %}<div class="invalid-feedback">{{ error }}</div>{% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="{{ form.confirm_password.id }}" class="form-label">{{ form.confirm_password.label.text }}</label>
+                                {{ form.confirm_password(class="form-control" + (" is-invalid" if form.confirm_password.errors else "") , type="password") }}
+                                {% for error in form.confirm_password.errors %}<div class="invalid-feedback">{{ error }}</div>{% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <a href="{{ url_for("main.dashboard") }}"
+                           class="btn btn-secondary me-md-2">Cancelar</a>
+                        {{ form.submit(class="btn btn-primary") }}
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+{% endblock content %}

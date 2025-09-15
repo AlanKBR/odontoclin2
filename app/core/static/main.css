@@ -1,0 +1,47 @@
+/* CSS global inicial - expandir conforme necessidade */
+:root {
+    --color-bg: #ffffff;
+    --color-fg: #222;
+    --color-primary: #0d6efd;
+    --space-sm: 0.5rem;
+    --space-md: 1rem;
+    --space-lg: 2rem;
+    --font-stack: system-ui, -apple-system, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Fira Sans', 'Droid Sans', 'Helvetica Neue', Arial, sans-serif;
+}
+body {
+    background: var(--color-bg);
+    color: var(--color-fg);
+    font-family: var(--font-stack);
+    margin: 0;
+    line-height: 1.5;
+}
+.site-header, .site-footer {
+    background: #f5f5f5;
+    padding: var(--space-md);
+}
+.navbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-md);
+}
+.navbar-menu {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    gap: var(--space-md);
+}
+.navbar-menu a {
+    text-decoration: none;
+    color: var(--color-primary);
+    font-weight: 500;
+}
+.main-content {
+    padding: var(--space-lg) var(--space-md);
+    max-width: 960px;
+    margin: 0 auto;
+}
+.hero h1 {
+    margin-top: 0;
+}

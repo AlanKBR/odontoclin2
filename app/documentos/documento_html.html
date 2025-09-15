@@ -1,0 +1,25 @@
+{% extends 'core/base.html' %}
+{% block title %}Documento {{ documento.id }}{% endblock %}
+{% block content %}
+<h1 class="h4">{{ documento.titulo_documento }}</h1>
+<p class="text-muted small mb-2">Emitido em {{ documento.data_emissao.strftime('%d/%m/%Y') }}</p>
+<div class="border rounded p-3 mb-3" style="white-space: pre-wrap;">
+    {{ conteudo_final|safe }}
+</div>
+<div class="mb-3">
+    {% if paciente %}<strong>Paciente:</strong> {{ paciente.nome }}<br>{% endif %}
+    {% if dentista %}<strong>Dentista:</strong> {{ dentista.nome_completo }} {% if dentista.cro %}(CRO: {{ dentista.cro
+    }}){% endif %}<br>{% endif %}
+    {% if clinica and clinica.nome %}<strong>Clínica:</strong> {{ clinica.nome }}{% endif %}
+</div>
+{% if documento.observacoes %}
+<div class="alert alert-secondary py-2">
+    <strong>Observações:</strong><br>
+    {{ documento.observacoes }}
+</div>
+{% endif %}
+<div class="d-flex gap-2 mt-3">
+    <a class="btn btn-sm btn-outline-secondary" href="{{ url_for('documentos.historico') }}">Voltar</a>
+    <a class="btn btn-sm btn-primary" href="{{ url_for('documentos.gerar_pdf', doc_id=documento.id) }}">Baixar PDF</a>
+</div>
+{% endblock %}

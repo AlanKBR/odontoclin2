@@ -1,0 +1,15 @@
+{% extends 'core/base.html' %}
+{% block title %}Aniversários{% endblock %}
+{% block content %}
+<h1>Aniversariantes do mês {{ mes }}</h1>
+{% if pacientes %}
+<ul>
+    {% for p in pacientes %}
+    <li>{{ p.nome }} - {{ p.data_nascimento.strftime('%d/%m') if p.data_nascimento else '' }}</li>
+    {% endfor %}
+</ul>
+{% else %}
+<p>Nenhum aniversário.</p>
+{% endif %}
+<a href="{{ url_for('pacientes.listar') }}">Voltar</a>
+{% endblock %}

@@ -1,0 +1,537 @@
+{% extends "mobile/base.html" %}
+{% block title %}
+    Plano #{{ plano.id }} - {{ paciente.nome }}
+{% endblock title %}
+{% block content %}
+    <div class="mobile-plan-view-container">
+        <div class="mobile-header">
+            <div class="header-info">
+                <h2>Plano #{{ plano.id }}</h2>
+                <p class="subtitle">{{ paciente.nome }}</p>
+            </div>
+            <a href="{{ url_for('pacientes.listar_planos', paciente_id=paciente.id) }}"
+               class="btn-back">
+                <i class="fas fa-arrow-left"></i>
+                Voltar
+            </a>
+        </div>
+        <!-- Plan Summary -->
+        <div class="plan-summary">
+            <div class="summary-header">
+                <div class="plan-status {{ plano.status.lower().replace(' ', '-') }}">{{ plano.status }}</div>
+                <div class="plan-date">
+                    <i class="fas fa-calendar"></i>
+                    {{ plano.data_criacao.strftime("%d/%m/%Y") if plano.data_criacao else 'Data não informada' }}
+                </div>
+            </div>
+            <div class="plan-description">
+                <h3>Descrição</h3>
+                <p>{{ plano.descricao or 'Sem descrição' }}</p>
+            </div>
+            {% if plano.observacoes %}
+                <div class="plan-observations">
+                    <h3>Observações</h3>
+                    <p>{{ plano.observacoes }}</p>
+                </div>
+            {% endif %}
+            <div class="plan-budget">
+                <h3>Orçamento Total</h3>
+                <div class="budget-value">R$ {{ "%.2f"|format(plano.orcamento_total) if plano.orcamento_total else '0.00' }}</div>
+            </div>
+            {% if dentista %}
+                <div class="plan-dentist">
+                    <h3>Dentista Responsável</h3>
+                    <p>
+                        <i class="fas fa-user-md"></i> {{ dentista.nome }}
+                    </p>
+                </div>
+            {% endif %}
+        </div>
+        <!-- Quick Actions -->
+        <div class="quick-actions">
+            <button class="action-btn primary" onclick="showAddProcedureModal()">
+                <i class="fas fa-plus"></i>
+                Adicionar Procedimento
+            </button>
+            <button class="action-btn secondary">
+                <i class="fas fa-edit"></i>
+                Editar Plano
+            </button>
+            <button class="action-btn danger">
+                <i class="fas fa-trash"></i>
+                Excluir
+            </button>
+        </div>
+        <!-- Procedures List -->
+        <div class="procedures-section">
+            <h3>Procedimentos</h3>
+            {% if procedimentos %}
+                <div class="procedures-list">
+                    {% for procedimento in procedimentos %}
+                        <div class="procedure-card">
+                            <div class="procedure-header">
+                                <div class="procedure-name">
+                                    {{ procedimento.tratamento.nome if procedimento.tratamento else 'Tratamento não especificado' }}
+                                </div>
+                                <div class="procedure-status {{ procedimento.status.lower().replace(' ', '-') }}">{{ procedimento.status }}</div>
+                            </div>
+                            <div class="procedure-body">
+                                {% if procedimento.dente %}
+                                    <div class="procedure-detail">
+                                        <i class="fas fa-tooth"></i>
+                                        <span>Dente: {{ procedimento.dente }}</span>
+                                    </div>
+                                {% endif %}
+                                <div class="procedure-detail">
+                                    <i class="fas fa-dollar-sign"></i>
+                                    <span>R$ {{ "%.2f"|format(procedimento.valor) if procedimento.valor else '0.00' }}</span>
+                                </div>
+                                {% if procedimento.data_realizado %}
+                                    <div class="procedure-detail">
+                                        <i class="fas fa-calendar-check"></i>
+                                        <span>Realizado em: {{ procedimento.data_realizado.strftime("%d/%m/%Y") }}</span>
+                                    </div>
+                                {% endif %}
+                                {% if procedimento.observacoes %}
+                                    <div class="procedure-detail">
+                                        <i class="fas fa-sticky-note"></i>
+                                        <span>{{ procedimento.observacoes|truncate(100) }}</span>
+                                    </div>
+                                {% endif %}
+                            </div>
+                            <div class="procedure-actions">
+                                <button class="action-btn small secondary" title="Editar">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                {% if procedimento.status != 'Concluído' %}
+                                    <button class="action-btn small success" title="Marcar como concluído">
+                                        <i class="fas fa-check"></i>
+                                    </button>
+                                {% endif %}
+                                <button class="action-btn small danger" title="Excluir">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="empty-state">
+                    <i class="fas fa-procedures"></i>
+                    <h3>Nenhum procedimento</h3>
+                    <p>Não há procedimentos cadastrados para este plano.</p>
+                    <button class="action-btn primary" onclick="showAddProcedureModal()">
+                        <i class="fas fa-plus"></i>
+                        Adicionar Primeiro Procedimento
+                    </button>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+    <!-- Add Procedure Modal (simplified for mobile) -->
+    <div id="addProcedureModal" class="mobile-modal d-none">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Adicionar Procedimento</h3>
+                <button class="modal-close" onclick="hideAddProcedureModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p>Funcionalidade será implementada em breve...</p>
+            </div>
+            <div class="modal-actions">
+                <button class="action-btn secondary" onclick="hideAddProcedureModal()">Cancelar</button>
+            </div>
+        </div>
+    </div>
+    <style>
+    .mobile-plan-view-container {
+        padding: 1rem;
+        max-width: 100%;
+    }
+
+    .mobile-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1.5rem;
+        padding-bottom: 1rem;
+        border-bottom: 2px solid #e9ecef;
+    }
+
+    .header-info h2 {
+        margin: 0;
+        color: #2c3e50;
+        font-size: 1.5rem;
+    }
+
+    .header-info .subtitle {
+        margin: 0;
+        color: #6c757d;
+        font-size: 0.875rem;
+    }
+
+    .btn-back {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.5rem 1rem;
+        background: #6c757d;
+        color: white;
+        text-decoration: none;
+        border-radius: 0.375rem;
+        font-size: 0.875rem;
+    }
+
+    .btn-back:hover {
+        background: #5a6268;
+        color: white;
+        text-decoration: none;
+    }
+
+    .plan-summary {
+        background: white;
+        border-radius: 0.5rem;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    .summary-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1rem;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+    }
+
+    .plan-status {
+        padding: 0.25rem 0.75rem;
+        border-radius: 1rem;
+        font-size: 0.75rem;
+        font-weight: 500;
+        text-transform: uppercase;
+    }
+
+    .plan-status.pendente {
+        background: #fff3cd;
+        color: #856404;
+    }
+
+    .plan-status.em-andamento {
+        background: #cce5ff;
+        color: #004085;
+    }
+
+    .plan-status.concluído {
+        background: #d4edda;
+        color: #155724;
+    }
+
+    .plan-status.cancelado {
+        background: #f8d7da;
+        color: #721c24;
+    }
+
+    .plan-date {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        color: #6c757d;
+        font-size: 0.875rem;
+    }
+
+    .plan-description h3,
+    .plan-observations h3,
+    .plan-budget h3,
+    .plan-dentist h3 {
+        margin: 0 0 0.5rem 0;
+        color: #2c3e50;
+        font-size: 1rem;
+        border-bottom: 1px solid #e9ecef;
+        padding-bottom: 0.25rem;
+    }
+
+    .plan-description p,
+    .plan-observations p,
+    .plan-dentist p {
+        margin: 0;
+        color: #495057;
+        line-height: 1.4;
+    }
+
+    .budget-value {
+        font-size: 1.5rem;
+        font-weight: bold;
+        color: #28a745;
+        margin: 0;
+    }
+
+    .quick-actions {
+        display: flex;
+        gap: 0.5rem;
+        margin-bottom: 1.5rem;
+        flex-wrap: wrap;
+    }
+
+    .action-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.75rem 1rem;
+        border: none;
+        border-radius: 0.375rem;
+        text-decoration: none;
+        font-size: 1rem;
+        cursor: pointer;
+        transition: all 0.2s;
+        justify-content: center;
+    }
+
+    .action-btn.primary {
+        background: #007bff;
+        color: white;
+    }
+
+    .action-btn.primary:hover {
+        background: #0056b3;
+        color: white;
+        text-decoration: none;
+    }
+
+    .action-btn.secondary {
+        background: #6c757d;
+        color: white;
+    }
+
+    .action-btn.secondary:hover {
+        background: #5a6268;
+        color: white;
+        text-decoration: none;
+    }
+
+    .action-btn.danger {
+        background: #dc3545;
+        color: white;
+    }
+
+    .action-btn.danger:hover {
+        background: #c82333;
+        color: white;
+        text-decoration: none;
+    }
+
+    .action-btn.success {
+        background: #28a745;
+        color: white;
+    }
+
+    .action-btn.success:hover {
+        background: #1e7e34;
+        color: white;
+        text-decoration: none;
+    }
+
+    .action-btn.small {
+        padding: 0.5rem;
+        font-size: 0.875rem;
+    }
+
+    .procedures-section h3 {
+        margin: 0 0 1rem 0;
+        color: #2c3e50;
+        font-size: 1.25rem;
+    }
+
+    .procedures-list {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    .procedure-card {
+        background: white;
+        border-radius: 0.5rem;
+        padding: 1rem;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        border-left: 4px solid #007bff;
+    }
+
+    .procedure-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 1rem;
+        gap: 0.5rem;
+    }
+
+    .procedure-name {
+        font-weight: 500;
+        color: #2c3e50;
+        flex: 1;
+    }
+
+    .procedure-status {
+        padding: 0.25rem 0.5rem;
+        border-radius: 0.25rem;
+        font-size: 0.75rem;
+        font-weight: 500;
+        text-transform: uppercase;
+        flex-shrink: 0;
+    }
+
+    .procedure-status.pendente {
+        background: #fff3cd;
+        color: #856404;
+    }
+
+    .procedure-status.em-andamento {
+        background: #cce5ff;
+        color: #004085;
+    }
+
+    .procedure-status.concluído {
+        background: #d4edda;
+        color: #155724;
+    }
+
+    .procedure-status.cancelado {
+        background: #f8d7da;
+        color: #721c24;
+    }
+
+    .procedure-body {
+        margin-bottom: 1rem;
+    }
+
+    .procedure-detail {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        margin-bottom: 0.5rem;
+        color: #6c757d;
+        font-size: 0.875rem;
+    }
+
+    .procedure-detail i {
+        width: 1rem;
+        color: #007bff;
+    }
+
+    .procedure-actions {
+        display: flex;
+        gap: 0.5rem;
+        justify-content: flex-end;
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 3rem 1rem;
+        color: #6c757d;
+    }
+
+    .empty-state i {
+        font-size: 4rem;
+        margin-bottom: 1rem;
+        opacity: 0.5;
+    }
+
+    .empty-state h3 {
+        margin: 0 0 0.5rem 0;
+        color: #495057;
+    }
+
+    .empty-state p {
+        margin: 0 0 1.5rem 0;
+    }
+
+    .mobile-modal {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 1000;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 1rem;
+    }
+
+    .modal-content {
+        background: white;
+        border-radius: 0.5rem;
+        width: 100%;
+        max-width: 500px;
+        max-height: 90vh;
+        overflow-y: auto;
+    }
+
+    .modal-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 1rem;
+        border-bottom: 1px solid #e9ecef;
+    }
+
+    .modal-header h3 {
+        margin: 0;
+        color: #2c3e50;
+    }
+
+    .modal-close {
+        background: none;
+        border: none;
+        font-size: 1.25rem;
+        color: #6c757d;
+        cursor: pointer;
+        padding: 0.5rem;
+    }
+
+    .modal-body {
+        padding: 1rem;
+    }
+
+    .modal-actions {
+        padding: 1rem;
+        border-top: 1px solid #e9ecef;
+        display: flex;
+        gap: 0.5rem;
+        justify-content: flex-end;
+    }
+
+    /* Responsive adjustments */
+    @media (max-width: 576px) {
+        .quick-actions {
+            flex-direction: column;
+        }
+
+        .procedure-header {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .procedure-actions {
+            justify-content: center;
+        }
+
+        .summary-header {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+    }
+    </style>
+    <script>
+    function showAddProcedureModal() {
+        document.getElementById('addProcedureModal').style.display = 'flex';
+    }
+
+    function hideAddProcedureModal() {
+        document.getElementById('addProcedureModal').style.display = 'none';
+    }
+    </script>
+{% endblock content %}

@@ -1,0 +1,16 @@
+{% extends 'core/base.html' %}
+{% block title %}Novo Lançamento Financeiro - {{ paciente.nome }}{% endblock %}
+{% block content %}
+<h1>Novo Lançamento Financeiro - {{ paciente.nome }}</h1>
+<form method="post">
+    {{ form.hidden_tag() }}
+    <div>{{ form.descricao.label }} {{ form.descricao(size=50) }}</div>
+    <div>{{ form.valor.label }} {{ form.valor() }}</div>
+    <div>{{ form.tipo.label }} {{ form.tipo() }}</div>
+    <div>{{ form.forma_pagamento.label }} {{ form.forma_pagamento() }}</div>
+    <div>{{ form.status.label }} {{ form.status() }}</div>
+    <div>{{ form.data_pagamento.label }} {{ form.data_pagamento() }}</div>
+    <button type="submit">Salvar</button>
+    <a href="{{ url_for('pacientes.financeiro', paciente_id=paciente.id) }}">Cancelar</a>
+</form>
+{% endblock %}

@@ -1,0 +1,17 @@
+{% extends 'core/base.html' %}
+{% block title %}Planos - {{ paciente.nome }}{% endblock %}
+{% block content %}
+<h1>Planos de Tratamento - {{ paciente.nome }}</h1>
+<p><a href="{{ url_for('pacientes.novo_plano', paciente_id=paciente.id) }}">Novo Plano</a> | <a
+        href="{{ url_for('pacientes.visualizar', paciente_id=paciente.id) }}">Voltar</a></p>
+{% if planos %}
+<ul>
+    {% for plano in planos %}
+    <li><a href="{{ url_for('pacientes.visualizar_plano', paciente_id=paciente.id, plano_id=plano.id) }}">Plano #{{
+            plano.id }} - {{ plano.status }} - {{ plano.data_criacao.strftime('%d/%m/%Y') }}</a></li>
+    {% endfor %}
+</ul>
+{% else %}
+<p>Nenhum plano.</p>
+{% endif %}
+{% endblock %}

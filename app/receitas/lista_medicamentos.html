@@ -1,0 +1,28 @@
+{% extends 'core/base.html' %}
+{% block title %}Medicamentos{% endblock %}
+{% block content %}
+<h1>Medicamentos</h1>
+<a href="{{ url_for('receitas.index') }}" class="btn btn-secondary btn-sm">Voltar</a>
+<table class="table table-sm mt-3">
+    <thead>
+        <tr>
+            <th>Princípio Ativo</th>
+            <th>Apresentação</th>
+            <th>Categoria</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for m in medicamentos %}
+        <tr>
+            <td><a href="{{ url_for('receitas.ver_medicamento', med_id=m.id) }}">{{ m.principio_ativo }}</a></td>
+            <td>{{ m.apresentacao }}</td>
+            <td>{{ m.categoria }}</td>
+        </tr>
+        {% else %}
+        <tr>
+            <td colspan="3">Nenhum medicamento.</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}

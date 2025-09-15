@@ -1,0 +1,145 @@
+{% extends "base.html" %}
+{% block title %}
+    Lista Completa de Tratamentos
+{% endblock title %}
+{% block content %}
+    <div class="container-fluid py-4">
+        <nav aria-label="breadcrumb" class="mb-3">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item">
+                    <a href="{{ url_for("tratamentos.lista_categorias") }}">Categorias</a>
+                </li>
+                <li class="breadcrumb-item active">Lista Completa</li>
+            </ol>
+        </nav>
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2 class="h3">Lista Completa de Tratamentos</h2>
+            <a href="{{ url_for("tratamentos.novo_tratamento") }}"
+               class="btn btn-primary">
+                <i class="bi bi-plus-circle"></i> Novo Tratamento
+            </a>
+        </div>
+        <!-- Lista de categorias e tratamentos -->
+        {% for categoria in categorias %}
+            <div class="card shadow mb-4">
+                <div class="card-header bg-light">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">{{ categoria.nome }}</h5>
+                        <a href="{{ url_for('tratamentos.visualizar_categoria', categoria_id=categoria.id) }}"
+                           class="btn btn-sm btn-outline-primary">Gerenciar</a>
+                    </div>
+                </div>
+                <div class="card-body p-0">
+                    {% if categoria.tratamentos %}
+                        <div class="table-responsive">
+                            <table class="table mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Procedimento</th>
+                                        <th>Preço</th>
+                                        <th>Duração</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for tratamento in categoria.tratamentos %}
+                                        {% if tratamento.ativo %}
+                                            <tr>
+                                                <td>{{ tratamento.nome }}</td>
+                                                <td>R$ {{ "%.2f"|format(tratamento.preco) }}</td>
+                                                <td>{{ tratamento.duracao_estimada or '-' }}</td>
+                                                <td>
+                                                    {% if tratamento.ativo %}
+                                                        <span class="badge bg-success">Ativo</span>
+                                                    {% else %}
+                                                        <span class="badge bg-secondary">Inativo</span>
+                                                    {% endif %}
+                                                </td>
+                                            </tr>
+                                        {% endif %}
+                                    {% endfor %}
+                                    {# Mostrar tratamentos inativos separadamente #}
+                                    {% for tratamento in categoria.tratamentos %}
+                                        {% if not tratamento.ativo %}
+                                            <tr class="table-secondary text-muted">
+                                                <td>{{ tratamento.nome }}</td>
+                                                <td>R$ {{ "%.2f"|format(tratamento.preco) }}</td>
+                                                <td>{{ tratamento.duracao_estimada or '-' }}</td>
+                                                <td>
+                                                    <span class="badge bg-secondary">Inativo</span>
+                                                </td>
+                                            </tr>
+                                        {% endif %}
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="p-3">
+                            <p class="text-muted mb-0">Nenhum tratamento cadastrado nesta categoria.</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        {% else %}
+            <div class="alert alert-info">
+                <i class="bi bi-info-circle"></i> Nenhuma categoria ou tratamento cadastrado.
+                <a href="{{ url_for("tratamentos.nova_categoria") }}" class="alert-link">Comece cadastrando uma categoria</a>.
+            </div>
+        {% endfor %}
+        <!-- Botão de impressão -->
+        <div class="d-flex justify-content-center mt-4 mb-2">
+            <button onclick="window.print()" class="btn btn-outline-secondary">
+                <i class="bi bi-printer"></i> Imprimir Lista de Preços
+            </button>
+        </div>
+    </div>
+    {% block extra_css %}
+        <style>
+    @media print {
+
+        .navbar,
+        .sidebar,
+        .card-header .btn,
+        .breadcrumb,
+        .d-flex .btn,
+        .d-flex button {
+            display: none !important;
+        }
+
+        .container-fluid {
+            width: 100%;
+            padding: 0;
+            margin: 0;
+        }
+
+        .card {
+            border: none !important;
+            box-shadow: none !important;
+            margin-bottom: 20px !important;
+        }
+
+        .card-header {
+            background-color: #f8f9fa !important;
+            border-bottom: 1px solid #dee2e6 !important;
+            padding: 10px 15px !important;
+        }
+
+        body {
+            font-size: 12pt;
+        }
+
+        .table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .badge {
+            border: 1px solid #ccc;
+            color: #333 !important;
+            background-color: transparent !important;
+        }
+    }
+        </style>
+    {% endblock content %}
+{% endblock extra_css %}

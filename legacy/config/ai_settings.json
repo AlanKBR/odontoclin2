@@ -1,0 +1,58 @@
+{
+  "ai_enabled": true,
+  "model_name": "mradermacher/BioMistral-7B-i1-GGUF",
+  "max_tokens": 2048,
+  "temperature": 0.2,
+  "request_timeout": 30,
+  "system_prompt": "Você é um assistente especializado em odontologia",
+  "providers": {
+    "preferred_order": [
+      "gguf",
+      "local",
+      "simple",
+      "custom",
+      "openai",
+      "vllm"
+    ],
+    "vllm": {
+      "server_url": "http://localhost:8000",
+      "auto_start_server": true,
+      "server_startup_timeout": 120,
+      "gpu_memory_utilization": 0.8,
+      "max_model_len": 4096
+    },
+    "local": {
+      "cache_dir": "./models_cache/",
+      "device": "cpu",
+      "gpu_type": "none",
+      "backend": "cpu_optimized",
+      "model_name": "gpt2"
+    },
+    "gguf": {
+      "cache_dir": "./models_cache/",
+      "model_name": "Lucy-in-the-Sky/Qwen2.5-1.5B-Instruct-Q6_K-GGUF",
+      "n_ctx": 32768,
+      "n_threads": 4,
+      "n_gpu_layers": 0,
+      "verbose": false
+    },
+    "openai": {
+      "api_key": "",
+      "model_name": "gpt-3.5-turbo",
+      "base_url": "https://api.openai.com/v1"
+    }
+  },
+  "ui_settings": {
+    "enable_chat_history": true,
+    "show_in_sidebar": true,
+    "max_history_items": 50
+  },
+  "safety_settings": {
+    "enable_content_filter": false,
+    "max_query_length": 2000,
+    "medical_disclaimer": false
+  },
+  "processing_method": "cpu",
+  "selected_model": "mradermacher/BioMistral-7B-i1-GGUF",
+  "provider_change": true
+}

@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+    <!-- filepath: a:\programa\prototipo\app\templates\base.html -->
+    {% if is_mobile %}
+        <body class="mobile-view">{% include "mobile/base.html" %}</body>
+    {% else %}
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <meta name="description"
+                  content="OdontoClinic - Sistema de Gerenciamento de Clínica Odontológica">
+            <meta name="keywords"
+                  content="odontologia, clínica, dentista, agendamento, pacientes, tratamentos">
+            <title>
+                {% block title %}
+                    OdontoClinic
+                {% endblock title %}
+            </title>
+            <link rel="icon"
+                  type="image/x-icon"
+                  href="{{ url_for('static', filename='favicon.ico') }}">
+            <!-- Bootstrap CSS -->
+            <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css"
+                  rel="stylesheet">
+            <!-- Bootstrap Icons -->
+            <link rel="stylesheet"
+                  href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+            <!-- Flatpickr CSS -->
+            <link rel="stylesheet"
+                  href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+            <!-- Custom CSS -->
+            <link rel="stylesheet"
+                  href="{{ url_for('static', filename='css/dark-mode.css') }}">
+            <link rel="stylesheet"
+                  href="{{ url_for('static', filename='css/modern-sidebar.css') }}">
+            <style nonce="{{ csp_nonce() }}">
+        /* Flash messages positioning */
+        .flash-messages-container {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 2000;
+            max-width: 500px;
+            width: 90%;
+        }
+
+        /* Badge styles */
+        .badge {
+            padding: 0.25rem 0.5rem;
+            font-size: 0.75rem;
+            font-weight: 500;
+            border-radius: 0.375rem;
+        }
+
+        .badge-primary {
+            background-color: var(--primary-color);
+            color: white;
+        }
+
+        .badge-beta {
+            font-size: 0.6rem;
+            padding: 0.15rem 0.4rem;
+        }
+
+        /* Clinic logo styles */
+        .clinic-logo {
+            max-width: 48px;
+            max-height: 48px;
+        }
+        }
+
+        .badge-warning {
+            background-color: #f59e0b;
+            color: white;
+        }
+
+        .badge-success {
+            background-color: #10b981;
+            color: white;
+        }
+
+        /* Highlight animation */
+        .menu-link.highlight {
+            animation: highlightPulse 2s ease-in-out;
+        }
+
+        @keyframes highlightPulse {
+            0%, 100% { background-color: transparent; }
+            50% { background-color: var(--active-color); }
+        }
+
+        @media (max-width: 768px) {
+            .flash-messages-container {
+                top: 20px;
+            }
+        }
+            </style>
+            {% block extra_css %}
+            {% endblock extra_css %}
+        </head>
+        <body>
+            <!-- Mobile overlay for sidebar -->
+            <div class="mobile-overlay"></div>
+            <!-- Flash Messages -->
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    <div class="flash-messages-container">
+                        {% for category, message in messages %}
+                            <div class="alert alert-{{ category }} alert-dismissible fade show"
+                                 role="alert">
+                                {{ message }}
+                                <button type="button"
+                                        class="btn-close"
+                                        data-bs-dismiss="alert"
+                                        aria-label="Close"></button>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            {% endwith %}
+            {% if current_user.is_authenticated %}
+                <!-- Modern Sidebar -->
+                <nav class="modern-sidebar">
+                    <!-- Sidebar Header -->
+                    <div class="sidebar-header">
+                        <div class="sidebar-logo">
+                            {% set clinic_logo_path = "static/uploads/clinic_logo.png" %}
+                            {% if (clinic_logo_path | file_exists) %}
+                                <img src="{{ url_for('static', filename='uploads/clinic_logo.png') }}?v={{ now.timestamp() }}"
+                                     alt="Logo da Clínica"
+                                     class="clinic-logo"
+                                     width="48"
+                                     height="48">
+                            {% else %}
+                                <i class="bi bi-hospital"></i>
+                            {% endif %}
+                        </div>
+                        <div class="sidebar-title">OdontoClinic</div>
+                    </div>
+                    <!-- Toggle Button -->
+                    <button class="sidebar-toggle">
+                        <i class="bi bi-chevron-left"></i>
+                    </button>
+                    <!-- Navigation -->
+                    <div class="sidebar-nav">
+                        <!-- Main Menu Group -->
+                        <div class="menu-group">
+                            <div class="menu-label">Menu Principal</div>
+                            <ul class="menu-list">
+                                {% if endpoint_exists('agenda.index') %}
+                                <li class="menu-item">
+                                    <a href="{{ url_for('agenda.index') }}"
+                                       class="menu-link {% if request.endpoint.startswith('agenda.') %}active{% endif %}"
+                                       data-tooltip="Agenda">
+                                        <span class="menu-icon">
+                                            <i class="bi bi-calendar3"></i>
+                                        </span>
+                                        <span class="menu-text">Agenda</span>
+                                    </a>
+                                </li>
+                                {% endif %}
+                                <li class="menu-item">
+                                    <a href="{{ url_for("main.dashboard") }}"
+                                       class="menu-link {% if request.endpoint.startswith('main.dashboard') %}active{% endif %}"
+                                       data-tooltip="Dashboard">
+                                        <span class="menu-icon">
+                                            <i class="bi bi-speedometer2"></i>
+                                        </span>
+                                        <span class="menu-text">Dashboard</span>
+                                    </a>
+                                </li>
+                                <li class="menu-item menu-dropdown">
+                                    <a href="#"
+                                       class="menu-link"
+                                       data-dropdown="pacientes"
+                                       aria-expanded="{%- if request.endpoint.startswith('pacientes.') -%}true{%- else -%}false{%- endif -%}"
+                                       data-tooltip="Pacientes">
+                                        <span class="menu-icon">
+                                            <i class="bi bi-people"></i>
+                                        </span>
+                                        <span class="menu-text">Pacientes</span>
+                                        <span class="dropdown-arrow"><i class="bi bi-chevron-down"></i></span>
+                                    </a>
+                                    <ul class="submenu {% if request.endpoint.startswith('pacientes.') %}show{% endif %}">
+                                        <li class="menu-item">
+                                            <a href="{{ url_for("pacientes.listar_pacientes") }}"
+                                               class="menu-link {% if request.endpoint == 'pacientes.lista_pacientes' %}active{% endif %}"
+                                               data-tooltip="Lista de Pacientes">
+                                                <span class="menu-icon">
+                                                    <i class="bi bi-list-ul"></i>
+                                                </span>
+                                                <span class="menu-text">Lista de Pacientes</span>
+                                            </a>
+                                        </li>
+                                        <li class="menu-item">
+                                            <a href="{{ url_for("pacientes.aniversarios") }}"
+                                               class="menu-link {% if request.endpoint == 'pacientes.aniversarios' %}active{% endif %}"
+                                               data-tooltip="Aniversários">
+                                                <span class="menu-icon">
+                                                    <i class="bi bi-gift"></i>
+                                                </span>
+                                                <span class="menu-text">Aniversários</span>
+                                            </a>
+                                        </li>
+                                    </ul>
+                                </li>
+                                <li class="menu-item">
+                                    <a href="#" class="menu-link" data-tooltip="Financeiro">
+                                        <span class="menu-icon">
+                                            <i class="bi bi-currency-dollar"></i>
+                                        </span>
+                                        <span class="menu-text">Financeiro</span>
+                                    </a>
+                                </li>
+                                <li class="menu-item">
+                                    <a href="{{ url_for("tratamentos.lista_categorias") }}"
+                                       class="menu-link {% if request.endpoint.startswith('tratamentos.') %}active{% endif %}"
+                                       data-tooltip="Tratamentos">
+                                        <span class="menu-icon">
+                                            <i class="bi bi-clipboard2-plus"></i>
+                                        </span>
+                                        <span class="menu-text">Tratamentos</span>
+                                    </a>
+                                </li>
+                                <li class="menu-item">
+                                    <a href="{{ url_for("receitas.index") }}"
+                                       class="menu-link {% if request.endpoint.startswith('receitas.') %}active{% endif %}"
+                                       data-tooltip="Receitas">
+                                        <span class="menu-icon">
+                                            <i class="bi bi-prescription2"></i>
+                                        </span>
+                                        <span class="menu-text">Receitas</span>
+                                    </a>
+                                </li>
+                                
+                                <li class="menu-item">
+                                    <a href="{{ url_for("atestados.gerar_atestado") }}"
+                                       class="menu-link {% if request.endpoint.startswith('atestados.') %}active{% endif %}"
+                                       data-tooltip="Atestados">
+                                        <span class="menu-icon">
+                                            <i class="bi bi-file-earmark-medical"></i>
+                                        </span>
+                                        <span class="menu-text">Atestados</span>
+                                    </a>
+                                </li>
+                                <li class="menu-item">
+                                    <a href="{{ url_for("documentos.index") }}"
+                                       class="menu-link {% if request.endpoint.startswith('documentos.') %}active{% endif %}"
+                                       data-tooltip="Documentos">
+                                        <span class="menu-icon">
+                                            <i class="bi bi-file-earmark-text"></i>
+                                        </span>
+                                        <span class="menu-text">Documentos</span>
+                                    </a>
+                                </li>
+                                <li class="menu-item menu-dropdown">
+                                    <a href="#"
+                                       class="menu-link"
+                                       data-dropdown="extras"
+                                       aria-expanded="{%- if request.endpoint.startswith('cro.') or request.endpoint.startswith('calculadora_anestesico') or request.endpoint.startswith('ai_assistant.') -%}true{%- else -%}false{%- endif -%}"
+                                       data-tooltip="Extras">
+                                        <span class="menu-icon">
+                                            <i class="bi bi-stars"></i>
+                                        </span>
+                                        <span class="menu-text">Extras</span>
+                                        <span class="dropdown-arrow"><i class="bi bi-chevron-down"></i></span>
+                                    </a>
+                                    <ul class="submenu {% if request.endpoint.startswith('cro.') or request.endpoint.startswith('calculadora_anestesico') or request.endpoint.startswith('ai_assistant.') %}show{% endif %}">
+                                        <li class="menu-item">
+                                            <a href="{{ url_for("cro.index") }}"
+                                               class="menu-link {% if request.endpoint.startswith('cro.') %}active{% endif %}"
+                                               data-tooltip="CRO">
+                                                <span class="menu-icon">
+                                                    <i class="bi bi-card-list"></i>
+                                                </span>
+                                                <span class="menu-text">CRO</span>
+                                            </a>
+                                        </li>
+                                        <li class="menu-item">
+                                            <a href="{{ url_for("main.calculadora_anestesico") }}"
+                                               class="menu-link {% if request.endpoint.startswith('calculadora_anestesico') %}active{% endif %}"
+                                               data-tooltip="Calculadora de Anestésico">
+                                                <span class="menu-icon">
+                                                    <i class="bi bi-calculator"></i>
+                                                </span>
+                                                <span class="menu-text">Calculadora de Anestésico</span>
+                                            </a>
+                                        </li>
+                                        {% if ai_available %}
+                                            <li class="menu-item">
+                                                <a href="{{ url_for("ai_assistant.index") }}"
+                                                   class="menu-link {% if request.endpoint.startswith('ai_assistant.') %}active{% endif %}"
+                                                   data-tooltip="Assistente de IA">
+                                                    <span class="menu-icon">
+                                                        <i class="bi bi-robot"></i>
+                                                    </span>
+                                                    <span class="menu-text">Assistente de IA</span>
+                                                    <span class="badge badge-primary badge-beta ms-1">BETA</span>
+                                                </a>
+                                            </li>
+                                        {% endif %}
+                                    </ul>
+                                </li>
+                            </ul>
+                        </div>
+                        <!-- Administration Group -->
+                        <div class="menu-group">
+                            <div class="menu-label">Administração</div>
+                            <ul class="menu-list">
+                                <li class="menu-item">
+                                    <a href="{{ url_for("users.listar_usuarios") }}"
+                                       class="menu-link {% if request.endpoint.startswith('users.') %}active{% endif %}">
+                                        <span class="menu-icon">
+                                            <i class="bi bi-person-badge"></i>
+                                        </span>
+                                        <span class="menu-text">Usuários</span>
+                                    </a>
+                                </li>
+                                <li class="menu-item">
+                                    <a href="{{ url_for("main.settings") }}"
+                                       class="menu-link {% if request.endpoint == 'main.settings' %}active{% endif %}">
+                                        <span class="menu-icon">
+                                            <i class="bi bi-gear"></i>
+                                        </span>
+                                        <span class="menu-text">Configurações</span>
+                                    </a>
+                                </li>
+                                <li class="menu-item">
+                                    <a href="#" class="menu-link">
+                                        <span class="menu-icon">
+                                            <i class="bi bi-file-earmark-bar-graph"></i>
+                                        </span>
+                                        <span class="menu-text">Relatórios</span>
+                                    </a>
+                                </li>
+                                <li class="menu-item">
+                                    <button id="theme-toggle-button" class="menu-link theme-toggle-btn">
+                                        <span class="menu-icon">
+                                            <i class="bi bi-moon"></i>
+                                        </span>
+                                        <span class="menu-text">Modo Escuro</span>
+                                    </button>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                    <!-- User Profile Footer -->
+                    <div class="sidebar-footer">
+                        <div class="user-profile" id="user-profile-btn">
+                            <div class="user-avatar">{{ current_user.nome_completo[0:1].upper() }}</div>
+                            <div class="user-info">
+                                <div class="user-name">{{ current_user.nome_completo }}</div>
+                                <div class="user-role">Dentista</div>
+                            </div>
+                            <div class="user-menu-indicator">
+                                <i class="bi bi-three-dots"></i>
+                            </div>
+                        </div>
+                        <!-- User Actions Popup -->
+                        <div class="user-actions-popup" id="user-actions-popup">
+                            <div class="popup-arrow"></div>
+                            <div class="popup-content">
+                                <a href="{{ url_for("users.meu_perfil") }}" class="popup-item">
+                                    <i class="bi bi-person"></i>
+                                    <span>Meu Perfil</span>
+                                </a>
+                                <div class="popup-divider"></div>
+                                <a href="{{ url_for("auth.logout") }}"
+                                   class="popup-item popup-item-danger">
+                                    <i class="bi bi-box-arrow-right"></i>
+                                    <span>Sair</span>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </nav>
+                <!-- Main Content -->
+                <main class="main-content">
+                    {% block content %}
+                    {% endblock content %}
+                </main>
+            {% else %}
+                <!-- Content for non-authenticated users -->
+                <div class="container mt-5">
+                    {% block auth_content %}
+                    {% endblock auth_content %}
+                </div>
+            {% endif %}
+            <!-- Bootstrap JS Bundle with Popper -->
+            <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"
+                    nonce="{{ csp_nonce() }}"></script>
+            <!-- Flatpickr JS -->
+            <script src="https://cdn.jsdelivr.net/npm/flatpickr"
+                    nonce="{{ csp_nonce() }}"></script>
+            <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/pt.js"
+                    nonce="{{ csp_nonce() }}"></script>
+            <!-- Custom JavaScript -->
+            <script src="{{ url_for('static', filename='js/theme-toggle.js') }}"
+                    nonce="{{ csp_nonce() }}"></script>
+            <script src="{{ url_for('static', filename='js/modern-sidebar.js') }}"
+                    nonce="{{ csp_nonce() }}"></script>
+            <script nonce="{{ csp_nonce() }}">
+        document.addEventListener('DOMContentLoaded', function () {
+            // Auto-hide flash messages after 8 seconds
+            setTimeout(function () {
+                const flashMessages = document.querySelectorAll('.flash-messages-container .alert');
+                flashMessages.forEach(function (flashMessage) {
+                    var alert = new bootstrap.Alert(flashMessage);
+                    alert.close();
+                });
+            }, 8000);
+
+            // Initialize flatpickr for date picker
+            flatpickr(".datepicker", {
+                dateFormat: "d/m/Y",
+                locale: "pt",
+                allowInput: true,
+                altInput: true,
+                altFormat: "d/m/Y",
+            });
+
+            // Initialize flatpickr for time picker
+            flatpickr(".timepicker", {
+                enableTime: true,
+                noCalendar: true,
+                dateFormat: "H:i",
+                time_24hr: true,
+                locale: "pt",
+                allowInput: true,
+                altInput: true,
+                altFormat: "H:i",
+            });
+
+            // Dismiss flash messages on click
+            document.addEventListener('click', function (event) {
+                if (event.target.classList.contains('btn-close')) {
+                    var alert = event.target.closest('.alert');
+                    if (alert) {
+                        var bsAlert = new bootstrap.Alert(alert);
+                        bsAlert.close();
+                    }
+                }
+            });
+
+            // Listen for sidebar toggle events
+            window.addEventListener('sidebarToggle', function(e) {
+                console.log('Sidebar toggled:', e.detail.collapsed ? 'collapsed' : 'expanded');
+            });
+
+            // User profile popup functionality
+            const userProfile = document.querySelector('.user-profile');
+            const userPopup = document.getElementById('user-actions-popup');
+
+            console.log('User profile element:', userProfile);
+            console.log('User popup element:', userPopup);
+
+            if (userProfile && userPopup) {
+                userProfile.addEventListener('click', function(e) {
+                    console.log('User profile clicked!');
+                    e.preventDefault();
+                    e.stopPropagation();
+                    userPopup.classList.toggle('show');
+                    console.log('Popup classes:', userPopup.className);
+                });
+
+                // Close popup when clicking outside
+                document.addEventListener('click', function(e) {
+                    if (!userProfile.contains(e.target) && !userPopup.contains(e.target)) {
+                        userPopup.classList.remove('show');
+                    }
+                });
+
+                // Close popup when pressing Escape
+                document.addEventListener('keydown', function(e) {
+                    if (e.key === 'Escape') {
+                        userPopup.classList.remove('show');
+                    }
+                });
+            } else {
+                console.log('Elements not found - userProfile:', userProfile, 'userPopup:', userPopup);
+            }
+        });
+            </script>
+            {% block extra_js %}
+            {% endblock extra_js %}
+        </body>
+    {% endif %}
+</html>

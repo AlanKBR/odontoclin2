@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+{% block title %}
+    {{ titulo }}
+{% endblock title %}
+{% block content %}
+    <div class="container-fluid py-4">
+        <div class="row">
+            <div class="col-md-8 mx-auto">
+                <div class="card shadow">
+                    <div class="card-header">
+                        <h5 class="mb-0">{{ titulo }}</h5>
+                    </div>
+                    <div class="card-body">
+                        <form method="post" class="needs-validation" novalidate>
+                            <div class="mb-3">
+                                <label for="categoria_id" class="form-label">Categoria *</label>
+                                {{ form.categoria_id(class="form-select", id="categoria_id") }}
+                                {% if form.categoria_id.errors %}
+                                    <div class="text-danger">
+                                        {% for error in form.categoria_id.errors %}<small>{{ error }}</small>{% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            <div class="mb-3">
+                                <label for="nome" class="form-label">Nome do Procedimento *</label>
+                                {{ form.nome(class="form-control", id="nome", placeholder="Ex: Limpeza dental, Canal,
+                                                                Extração, etc.") }}
+                                {% if form.nome.errors %}
+                                    <div class="text-danger">
+                                        {% for error in form.nome.errors %}<small>{{ error }}</small>{% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            <div class="mb-3">
+                                <label for="descricao" class="form-label">Descrição</label>
+                                {{ form.descricao(class="form-control", id="descricao", rows="3", placeholder="Descrição
+                                                                detalhada do procedimento (opcional)") }}
+                                {% if form.descricao.errors %}
+                                    <div class="text-danger">
+                                        {% for error in form.descricao.errors %}<small>{{ error }}</small>{% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <label for="preco" class="form-label">Preço (R$) *</label>
+                                    {{ form.preco(class="form-control", id="preco", placeholder="Ex: 150.00") }}
+                                    {% if form.preco.errors %}
+                                        <div class="text-danger">
+                                            {% for error in form.preco.errors %}<small>{{ error }}</small>{% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="duracao_estimada" class="form-label">Duração Estimada</label>
+                                    {{ form.duracao_estimada(class="form-control", id="duracao_estimada", placeholder="Ex:
+                                                                        30min, 1:30h") }}
+                                    {% if form.duracao_estimada.errors %}
+                                        <div class="text-danger">
+                                            {% for error in form.duracao_estimada.errors %}<small>{{ error }}</small>{% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="mb-3 form-check">
+                                {{ form.ativo(class="form-check-input", id="ativo") }}
+                                <label class="form-check-label" for="ativo">Ativo</label>
+                            </div>
+                            <div class="d-flex justify-content-between mt-4">
+                                <button type="button" id="btnVoltar" class="btn btn-outline-secondary">Voltar</button>
+                                {{ form.submit(class="btn btn-primary") }}
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% block scripts %}
+        <script nonce="{{ csp_nonce() }}">
+    document.getElementById('btnVoltar').addEventListener('click', function () {
+        history.back();
+    });
+        </script>
+    {% endblock content %}
+{% endblock scripts %}

@@ -1,0 +1,17 @@
+{% extends 'base.html' %}
+{% block title %}{% if cat %}Editar Categoria{% else %}Nova Categoria{% endif %}{% endblock %}
+{% block content %}
+<h1>{% if cat %}Editar Categoria{% else %}Nova Categoria{% endif %}</h1>
+<form method="post">
+    <div class="mb-3">
+        <label class="form-label">Nome</label>
+        <input name="nome" class="form-control" value="{{ cat.nome if cat else '' }}" required>
+    </div>
+    <div class="mb-3">
+        <label class="form-label">Descrição</label>
+        <textarea name="descricao" class="form-control" rows="3">{{ cat.descricao if cat else '' }}</textarea>
+    </div>
+    <button class="btn btn-primary">Salvar</button>
+    <a href="{{ url_for('catalogo.listar') }}" class="btn btn-secondary">Cancelar</a>
+</form>
+{% endblock %}

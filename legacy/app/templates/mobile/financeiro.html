@@ -1,0 +1,415 @@
+{% extends "mobile/base.html" %}
+{% block title %}
+    Financeiro - {{ paciente.nome }}
+{% endblock title %}
+{% block content %}
+    <div class="mobile-financial-container">
+        <div class="mobile-header">
+            <div class="header-info">
+                <h2>{{ paciente.nome }}</h2>
+                <p class="subtitle">Financeiro</p>
+            </div>
+            <a href="{{ url_for('pacientes.visualizar_paciente', paciente_id=paciente.id) }}"
+               class="btn-back">
+                <i class="fas fa-arrow-left"></i>
+                Voltar
+            </a>
+        </div>
+        <!-- Summary Cards -->
+        <div class="summary-cards">
+            <div class="summary-card credit">
+                <div class="card-icon">
+                    <i class="fas fa-arrow-up"></i>
+                </div>
+                <div class="card-content">
+                    <h3>R$ {{ "%.2f"|format(total_credito) }}</h3>
+                    <p>Créditos</p>
+                </div>
+            </div>
+            <div class="summary-card debit">
+                <div class="card-icon">
+                    <i class="fas fa-arrow-down"></i>
+                </div>
+                <div class="card-content">
+                    <h3>R$ {{ "%.2f"|format(total_debito) }}</h3>
+                    <p>Débitos</p>
+                </div>
+            </div>
+            <div class="summary-card balance">
+                <div class="card-icon">
+                    <i class="fas fa-wallet"></i>
+                </div>
+                <div class="card-content">
+                    <h3>R$ {{ "%.2f"|format(saldo) }}</h3>
+                    <p>Total Pago</p>
+                </div>
+            </div>
+        </div>
+        <!-- Quick Actions -->
+        <div class="quick-actions">
+            <a href="{{ url_for('pacientes.novo_financeiro', paciente_id=paciente.id) }}"
+               class="action-btn primary">
+                <i class="fas fa-plus"></i>
+                Novo Lançamento
+            </a>
+        </div>
+        <!-- Transactions List -->
+        <div class="transactions-section">
+            <h3>Lançamentos</h3>
+            {% if lancamentos %}
+                <div class="transactions-list">
+                    {% for lancamento in lancamentos %}
+                        <div class="transaction-card">
+                            <div class="transaction-header">
+                                <div class="transaction-date">
+                                    <i class="fas fa-calendar"></i>
+                                    {{ lancamento.data_lancamento.strftime("%d/%m/%Y") if lancamento.data_lancamento }}
+                                </div>
+                                <div class="transaction-value {{ 'credit' if lancamento.tipo == 'Crédito' else 'debit' }}">
+                                    R$ {{ "%.2f"|format(lancamento.valor) }}
+                                </div>
+                            </div>
+                            <div class="transaction-body">
+                                <div class="transaction-description">{{ lancamento.descricao }}</div>
+                                <div class="transaction-details">
+                                    <span class="transaction-type {{ 'credit' if lancamento.tipo == 'Crédito' else 'debit' }}">{{ lancamento.tipo }}</span>
+                                    <span class="transaction-payment">{{ lancamento.forma_pagamento }}</span>
+                                    <span class="transaction-status {{ lancamento.status.lower() }}">{{ lancamento.status }}</span>
+                                </div>
+                            </div>
+                            <div class="transaction-actions">
+                                <button class="action-btn secondary small" title="Ver detalhes">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                                <button class="action-btn primary small" title="Editar">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button class="action-btn danger small" title="Excluir">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="empty-state">
+                    <i class="fas fa-file-invoice-dollar"></i>
+                    <h3>Nenhum lançamento</h3>
+                    <p>Não há lançamentos financeiros registrados para este paciente.</p>
+                    <a href="{{ url_for('pacientes.novo_financeiro', paciente_id=paciente.id) }}"
+                       class="action-btn primary">
+                        <i class="fas fa-plus"></i>
+                        Adicionar Primeiro Lançamento
+                    </a>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+    <style>
+    .mobile-financial-container {
+        padding: 1rem;
+        max-width: 100%;
+    }
+
+    .mobile-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1.5rem;
+        padding-bottom: 1rem;
+        border-bottom: 2px solid #e9ecef;
+    }
+
+    .header-info h2 {
+        margin: 0;
+        color: #2c3e50;
+        font-size: 1.5rem;
+    }
+
+    .header-info .subtitle {
+        margin: 0;
+        color: #6c757d;
+        font-size: 0.875rem;
+    }
+
+    .btn-back {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.5rem 1rem;
+        background: #6c757d;
+        color: white;
+        text-decoration: none;
+        border-radius: 0.375rem;
+        font-size: 0.875rem;
+    }
+
+    .btn-back:hover {
+        background: #5a6268;
+        color: white;
+        text-decoration: none;
+    }
+
+    .summary-cards {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .summary-card {
+        display: flex;
+        align-items: center;
+        padding: 1rem;
+        border-radius: 0.5rem;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        gap: 1rem;
+    }
+
+    .summary-card.credit {
+        background: linear-gradient(135deg, #28a745, #20c997);
+        color: white;
+    }
+
+    .summary-card.debit {
+        background: linear-gradient(135deg, #dc3545, #fd7e14);
+        color: white;
+    }
+
+    .summary-card.balance {
+        background: linear-gradient(135deg, #007bff, #6610f2);
+        color: white;
+    }
+
+    .card-icon {
+        font-size: 2rem;
+        opacity: 0.8;
+    }
+
+    .card-content h3 {
+        margin: 0;
+        font-size: 1.5rem;
+        font-weight: bold;
+    }
+
+    .card-content p {
+        margin: 0;
+        font-size: 0.875rem;
+        opacity: 0.9;
+    }
+
+    .quick-actions {
+        margin-bottom: 1.5rem;
+    }
+
+    .action-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.75rem 1rem;
+        border: none;
+        border-radius: 0.375rem;
+        text-decoration: none;
+        font-size: 1rem;
+        cursor: pointer;
+        transition: all 0.2s;
+        justify-content: center;
+    }
+
+    .action-btn.primary {
+        background: #007bff;
+        color: white;
+    }
+
+    .action-btn.primary:hover {
+        background: #0056b3;
+        color: white;
+        text-decoration: none;
+    }
+
+    .action-btn.secondary {
+        background: #6c757d;
+        color: white;
+    }
+
+    .action-btn.secondary:hover {
+        background: #5a6268;
+        color: white;
+        text-decoration: none;
+    }
+
+    .action-btn.danger {
+        background: #dc3545;
+        color: white;
+    }
+
+    .action-btn.danger:hover {
+        background: #c82333;
+        color: white;
+        text-decoration: none;
+    }
+
+    .action-btn.small {
+        padding: 0.5rem;
+        font-size: 0.875rem;
+    }
+
+    .transactions-section h3 {
+        margin: 0 0 1rem 0;
+        color: #2c3e50;
+        font-size: 1.25rem;
+    }
+
+    .transactions-list {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    .transaction-card {
+        background: white;
+        border-radius: 0.5rem;
+        padding: 1rem;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        border-left: 4px solid #e9ecef;
+    }
+
+    .transaction-card:has(.transaction-value.credit) {
+        border-left-color: #28a745;
+    }
+
+    .transaction-card:has(.transaction-value.debit) {
+        border-left-color: #dc3545;
+    }
+
+    .transaction-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 0.75rem;
+    }
+
+    .transaction-date {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        color: #6c757d;
+        font-size: 0.875rem;
+    }
+
+    .transaction-value {
+        font-weight: bold;
+        font-size: 1.125rem;
+    }
+
+    .transaction-value.credit {
+        color: #28a745;
+    }
+
+    .transaction-value.debit {
+        color: #dc3545;
+    }
+
+    .transaction-description {
+        margin-bottom: 0.75rem;
+        font-weight: 500;
+        color: #2c3e50;
+    }
+
+    .transaction-details {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        margin-bottom: 1rem;
+    }
+
+    .transaction-type,
+    .transaction-payment,
+    .transaction-status {
+        padding: 0.25rem 0.5rem;
+        border-radius: 0.25rem;
+        font-size: 0.75rem;
+        font-weight: 500;
+    }
+
+    .transaction-type.credit {
+        background: #d4edda;
+        color: #155724;
+    }
+
+    .transaction-type.debit {
+        background: #f8d7da;
+        color: #721c24;
+    }
+
+    .transaction-payment {
+        background: #e2e3e5;
+        color: #383d41;
+    }
+
+    .transaction-status.pago {
+        background: #d4edda;
+        color: #155724;
+    }
+
+    .transaction-status.pendente {
+        background: #fff3cd;
+        color: #856404;
+    }
+
+    .transaction-status.cancelado {
+        background: #e2e3e5;
+        color: #383d41;
+    }
+
+    .transaction-actions {
+        display: flex;
+        gap: 0.5rem;
+        justify-content: flex-end;
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 3rem 1rem;
+        color: #6c757d;
+    }
+
+    .empty-state i {
+        font-size: 4rem;
+        margin-bottom: 1rem;
+        opacity: 0.5;
+    }
+
+    .empty-state h3 {
+        margin: 0 0 0.5rem 0;
+        color: #495057;
+    }
+
+    .empty-state p {
+        margin: 0 0 1.5rem 0;
+    }
+
+    /* Responsive adjustments */
+    @media (min-width: 768px) {
+        .summary-cards {
+            grid-template-columns: repeat(3, 1fr);
+        }
+    }
+
+    @media (max-width: 576px) {
+        .transaction-header {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 0.5rem;
+        }
+
+        .transaction-value {
+            font-size: 1rem;
+        }
+
+        .transaction-actions {
+            justify-content: center;
+        }
+    }
+    </style>
+{% endblock content %}

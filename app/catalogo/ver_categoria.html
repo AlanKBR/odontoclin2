@@ -1,0 +1,48 @@
+{% extends 'core/base.html' %}
+{% block title %}Categoria: {{ cat.nome }}{% endblock %}
+{% block content %}
+<h1>{{ cat.nome }}</h1>
+<p>{{ cat.descricao or 'Sem descrição.' }}</p>
+<div class="mb-3">
+    <a class="btn btn-sm btn-secondary" href="{{ url_for('catalogo.editar_categoria', cat_id=cat.id) }}">Editar
+        Categoria</a>
+    <form method="post" action="{{ url_for('catalogo.excluir_categoria', cat_id=cat.id) }}" style="display:inline"
+        onsubmit="return confirm('Excluir categoria?');">
+        <button class="btn btn-sm btn-danger">Excluir</button>
+    </form>
+    <a class="btn btn-sm btn-primary" href="{{ url_for('catalogo.novo_tratamento', cat_id=cat.id) }}">Novo
+        Tratamento</a>
+</div>
+<table class="table table-sm">
+    <thead>
+        <tr>
+            <th>Nome</th>
+            <th>Preço</th>
+            <th>Duração</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for t in tratamentos %}
+        <tr>
+            <td>{{ t.nome }}</td>
+            <td>{{ '%.2f'| format(t.preco) }}</td>
+            <td>{{ t.duracao_estimada or '-' }}</td>
+            <td class="text-end">
+                <a class="btn btn-sm btn-outline-secondary"
+                    href="{{ url_for('catalogo.editar_tratamento', trat_id=t.id) }}">Editar</a>
+                <form method="post" action="{{ url_for('catalogo.excluir_tratamento', trat_id=t.id) }}"
+                    style="display:inline" onsubmit="return confirm('Excluir tratamento?');">
+                    <button class="btn btn-sm btn-outline-danger">X</button>
+                </form>
+            </td>
+        </tr>
+        {% else %}
+        <tr>
+            <td colspan="4" class="text-muted">Nenhum tratamento.</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+<a class="btn btn-secondary" href="{{ url_for('catalogo.listar') }}">Voltar</a>
+{% endblock %}

@@ -1,0 +1,18 @@
+{% extends 'core/base.html' %}
+{% block title %}Novo Modelo de Receita{% endblock %}
+{% block content %}
+<h1>Novo Modelo</h1>
+<form method="post">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <div>
+        <label for="titulo">Título</label>
+        <input name="titulo" id="titulo" class="form-control" />
+    </div>
+    <div class="mt-2">
+        <label for="conteudo">Conteúdo</label>
+        <textarea name="conteudo" id="conteudo" class="form-control" rows="6"></textarea>
+    </div>
+    <button class="btn btn-success btn-sm mt-3">Salvar</button>
+    <a href="{{ url_for('receitas.index') }}" class="btn btn-secondary btn-sm mt-3">Voltar</a>
+</form>
+{% endblock %}

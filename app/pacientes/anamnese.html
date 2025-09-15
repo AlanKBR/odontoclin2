@@ -1,0 +1,17 @@
+{% extends 'core/base.html' %}
+{% block title %}Anamnese - {{ paciente.nome }}{% endblock %}
+{% block content %}
+<h1>Anamnese - {{ paciente.nome }}</h1>
+<form method="post">
+    {{ form.hidden_tag() }}
+    <div>{{ form.historico_medico.label }} {{ form.historico_medico(rows=3) }}</div>
+    <div>{{ form.medicamentos_uso.label }} {{ form.medicamentos_uso(rows=3) }}</div>
+    <div>{{ form.cirurgias_previas.label }} {{ form.cirurgias_previas(rows=3) }}</div>
+    <div>{{ form.doencas_cronicas.label }} {{ form.doencas_cronicas(rows=3) }}</div>
+    <div>{{ form.habitos.label }} {{ form.habitos(rows=3) }}</div>
+    <div>{{ form.problemas_dentarios.label }} {{ form.problemas_dentarios(rows=3) }}</div>
+    <div>{{ form.ultima_visita_dentista.label }} {{ form.ultima_visita_dentista(size=20) }}</div>
+    <button type="submit">Salvar</button>
+    <a href="{{ url_for('pacientes.visualizar', paciente_id=paciente.id) }}">Voltar</a>
+</form>
+{% endblock %}

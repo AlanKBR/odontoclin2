@@ -1,0 +1,25 @@
+{% extends 'core/base.html' %}
+{% block title %}{{ paciente.nome }} - Paciente{% endblock %}
+{% block content %}
+<h1>
+    {{ paciente.nome }}
+    {% if paciente.deleted_at %}
+    <span class="badge bg-danger">Removido</span>
+    {% endif %}
+</h1>
+<p><strong>Idade:</strong> {{ paciente.idade() or '—' }}</p>
+<p><strong>Telefone:</strong> {{ paciente.telefone or '—' }}</p>
+<p><strong>Email:</strong> {{ paciente.email or '—' }}</p>
+<p><strong>Data Nasc.:</strong> {{ paciente.data_nascimento and paciente.data_nascimento.strftime('%d/%m/%Y') or '—' }}
+</p>
+{% if saldo is not none %}
+<p><strong>Saldo:</strong> {{ '%.2f'|format(saldo) }}</p>
+{% endif %}
+
+{% if paciente.deleted_at and g.user and g.user.cargo == 'admin' %}
+<form method="post" action="{{ url_for('pacientes.restaurar', paciente_id=paciente.id) }}">
+    <button class="btn btn-sm btn-outline-success" type="submit">Restaurar</button>
+</form>
+{% endif %}
+<a href="{{ url_for('pacientes.listar') }}">Voltar</a>
+{% endblock %}

@@ -1,0 +1,13 @@
+{% extends 'core/base.html' %}
+{% block title %}Novo Plano - {{ paciente.nome }}{% endblock %}
+{% block content %}
+<h1>Novo Plano - {{ paciente.nome }}</h1>
+<form method="post">
+    {{ form.hidden_tag() }}
+    <div>{{ form.descricao.label }} {{ form.descricao(rows=3) }}</div>
+    <div>{{ form.status.label }} {{ form.status() }}</div>
+    <div>{{ form.observacoes.label }} {{ form.observacoes(rows=3) }}</div>
+    <button type="submit">Salvar</button>
+    <a href="{{ url_for('pacientes.planos', paciente_id=paciente.id) }}">Cancelar</a>
+</form>
+{% endblock %}

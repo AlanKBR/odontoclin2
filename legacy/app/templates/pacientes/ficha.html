@@ -1,0 +1,119 @@
+{% extends "pacientes/visualizar_paciente.html" %}
+{% block conteudo_aba %}
+    <div class="tab-pane fade show active">
+        <div class="row">
+            <div class="col-12 mb-4">
+                <div class="card shadow">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">Ficha Clínica</h5>
+                        <small class="text-muted">Última atualização:
+                            {% if paciente.ficha and paciente.ficha.ultima_atualizacao %}
+                                {{ paciente.ficha.ultima_atualizacao|date }} {{ paciente.ficha.ultima_atualizacao.strftime("%H:%M") }}
+                            {% else %}
+                                -
+                            {% endif %}
+                        </small>
+                    </div>
+                    <div class="card-body">
+                        <form method="post">
+                            {{ form.hidden_tag() }}
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <label for="responsavel" class="form-label">Responsável</label>
+                                    {{ form.responsavel(class="form-control", id="responsavel") }}
+                                    {% if form.responsavel.errors %}
+                                        <div class="text-danger">
+                                            {% for error in form.responsavel.errors %}<small>{{ error }}</small>{% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="contato_emergencia" class="form-label">Contato de Emergência</label>
+                                    {{ form.contato_emergencia(class="form-control", id="contato_emergencia") }}
+                                    {% if form.contato_emergencia.errors %}
+                                        <div class="text-danger">
+                                            {% for error in form.contato_emergencia.errors %}<small>{{ error }}</small>{% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <hr class="my-4">
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <label for="convenio" class="form-label">Convênio</label>
+                                    {{ form.convenio(class="form-control", id="convenio") }}
+                                    {% if form.convenio.errors %}
+                                        <div class="text-danger">
+                                            {% for error in form.convenio.errors %}<small>{{ error }}</small>{% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="numero_convenio" class="form-label">Número do Convênio</label>
+                                    {{ form.numero_convenio(class="form-control", id="numero_convenio") }}
+                                    {% if form.numero_convenio.errors %}
+                                        <div class="text-danger">
+                                            {% for error in form.numero_convenio.errors %}<small>{{ error }}</small>{% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="row mb-3">
+                                <div class="col-12">
+                                    <label for="alergias" class="form-label">Alergias</label>
+                                    {{ form.alergias(class="form-control", id="alergias", rows="3") }}
+                                    {% if form.alergias.errors %}
+                                        <div class="text-danger">
+                                            {% for error in form.alergias.errors %}<small>{{ error }}</small>{% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="row mb-3">
+                                <div class="col-12">
+                                    <label for="observacoes" class="form-label">Observações</label>
+                                    {{ form.observacoes(class="form-control", id="observacoes", rows="4") }}
+                                    {% if form.observacoes.errors %}
+                                        <div class="text-danger">
+                                            {% for error in form.observacoes.errors %}<small>{{ error }}</small>{% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="d-flex justify-content-end">
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="bi bi-save"></i> Salvar Alterações
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock conteudo_aba %}
+{% block extra_js %}
+    {{ super() }}
+    <script nonce="{{ csp_nonce() }}">
+    // Adiciona máscara ao telefone de emergência
+    document.addEventListener('DOMContentLoaded', function () {
+        const telefoneEmergenciaInput = document.getElementById('telefone_emergencia');
+        if (telefoneEmergenciaInput) {
+            telefoneEmergenciaInput.addEventListener('input', function (e) {
+                let value = e.target.value.replace(/\D/g, '');
+                if (value.length > 11) {
+                    value = value.substring(0, 11);
+                }
+                if (value.length > 10) {
+                    value = value.replace(/^(\d{2})(\d{5})(\d{4})/, '($1) $2-$3');
+                } else if (value.length > 6) {
+                    value = value.replace(/^(\d{2})(\d{4})/, '($1) $2-');
+                } else if (value.length > 2) {
+                    value = value.replace(/^(\d{2})/, '($1) ');
+                }
+                e.target.value = value;
+            });
+        }
+    });
+    </script>
+{% endblock extra_js %}

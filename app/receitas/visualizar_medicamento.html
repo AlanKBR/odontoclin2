@@ -1,0 +1,11 @@
+{% extends 'core/base.html' %}
+{% block title %}Medicamento{% endblock %}
+{% block content %}
+<h1>{{ medicamento.principio_ativo }}</h1>
+<p><strong>Categoria:</strong> {{ medicamento.categoria }}</p>
+<p><strong>Apresentação:</strong> {{ medicamento.apresentacao }}</p>
+<p><strong>Posologia:</strong><br>{{ medicamento.posologia|replace('\n','<br>')|safe }}</p>
+{% if medicamento.indicacoes %}<p><strong>Indicações:</strong><br>{{ medicamento.indicacoes|replace('\n','<br>')|safe }}
+</p>{% endif %}
+<a href="{{ url_for('receitas.listar_medicamentos') }}" class="btn btn-secondary btn-sm">Voltar</a>
+{% endblock %}

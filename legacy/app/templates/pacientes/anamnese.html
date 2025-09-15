@@ -1,0 +1,105 @@
+{% extends "pacientes/visualizar_paciente.html" %}
+{% block conteudo_aba %}
+    <div class="tab-pane fade show active">
+        <div class="row">
+            <div class="col-12 mb-4">
+                <div class="card shadow">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">Anamnese</h5>
+                        <small class="text-muted">Última atualização:
+                            {% if paciente.anamnese and paciente.anamnese.ultima_atualizacao %}
+                                {{ paciente.anamnese.ultima_atualizacao|date }} {{ paciente.anamnese.ultima_atualizacao.strftime("%H:%M") }}
+                            {% else %}
+                                -
+                            {% endif %}
+                        </small>
+                    </div>
+                    <div class="card-body">
+                        <form method="post">
+                            {{ form.hidden_tag() }}
+                            <div class="row mb-3">
+                                <div class="col-12">
+                                    <label for="historico_medico" class="form-label">Histórico Médico</label>
+                                    {{ form.historico_medico(class="form-control", id="historico_medico", rows="4", placeholder="Doenças, cirurgias, internações, etc.") }}
+                                    {% if form.historico_medico.errors %}
+                                        <div class="text-danger">
+                                            {% for error in form.historico_medico.errors %}<small>{{ error }}</small>{% endfor %}
+                                        </div>
+                                    {% endif %}
+                                    <div class="form-text">Descreva doenças, cirurgias, internações e outros eventos médicos relevantes.</div>
+                                </div>
+                            </div>
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <label for="medicamentos_uso" class="form-label">Medicamentos em Uso</label>
+                                    {{ form.medicamentos_uso(class="form-control", id="medicamentos_uso", rows="3", placeholder="Nome, dosagem e frequência") }}
+                                    {% if form.medicamentos_uso.errors %}
+                                        <div class="text-danger">
+                                            {% for error in form.medicamentos_uso.errors %}<small>{{ error }}</small>{% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="cirurgias_previas" class="form-label">Cirurgias Prévias</label>
+                                    {{ form.cirurgias_previas(class="form-control", id="cirurgias_previas", rows="3", placeholder="Tipo de cirurgia e data aproximada") }}
+                                    {% if form.cirurgias_previas.errors %}
+                                        <div class="text-danger">
+                                            {% for error in form.cirurgias_previas.errors %}<small>{{ error }}</small>{% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <label for="doencas_cronicas" class="form-label">Doenças Crônicas</label>
+                                    {{ form.doencas_cronicas(class="form-control", id="doencas_cronicas", rows="3", placeholder="Hipertensão, diabetes, etc.") }}
+                                    {% if form.doencas_cronicas.errors %}
+                                        <div class="text-danger">
+                                            {% for error in form.doencas_cronicas.errors %}<small>{{ error }}</small>{% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="habitos" class="form-label">Hábitos</label>
+                                    {{ form.habitos(class="form-control", id="habitos", rows="3", placeholder="Fumo, álcool, etc.") }}
+                                    {% if form.habitos.errors %}
+                                        <div class="text-danger">
+                                            {% for error in form.habitos.errors %}<small>{{ error }}</small>{% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <hr class="my-4">
+                            <h5>Informações Odontológicas</h5>
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <label for="problemas_dentarios" class="form-label">Problemas Dentários</label>
+                                    {{ form.problemas_dentarios(class="form-control", id="problemas_dentarios", rows="3", placeholder="Descreva problemas dentários atuais ou passados") }}
+                                    {% if form.problemas_dentarios.errors %}
+                                        <div class="text-danger">
+                                            {% for error in form.problemas_dentarios.errors %}<small>{{ error }}</small>{% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="ultima_visita_dentista" class="form-label">Última Visita ao Dentista</label>
+                                    {{ form.ultima_visita_dentista(class="form-control", id="ultima_visita_dentista", placeholder="Data aproximada e procedimentos realizados") }}
+                                    {% if form.ultima_visita_dentista.errors %}
+                                        <div class="text-danger">
+                                            {% for error in form.ultima_visita_dentista.errors %}<small>{{ error }}</small>{% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="d-flex justify-content-end">
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="bi bi-save"></i> Salvar Alterações
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock conteudo_aba %}

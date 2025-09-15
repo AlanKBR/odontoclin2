@@ -1,0 +1,26 @@
+{% extends 'base.html' %}
+{% block title %}{% if trat %}Editar Tratamento{% else %}Novo Tratamento{% endif %}{% endblock %}
+{% block content %}
+<h1>{% if trat %}Editar Tratamento{% else %}Novo Tratamento{% endif %}</h1>
+<form method="post">
+    <div class="mb-3">
+        <label class="form-label">Nome</label>
+        <input name="nome" class="form-control" value="{{ trat.nome if trat else '' }}" required>
+    </div>
+    <div class="mb-3">
+        <label class="form-label">Preço</label>
+        <input name="preco" class="form-control" value="{{ trat.preco if trat else '' }}" required>
+    </div>
+    <div class="mb-3">
+        <label class="form-label">Duração Estimada</label>
+        <input name="duracao_estimada" class="form-control" value="{{ trat.duracao_estimada if trat else '' }}">
+    </div>
+    <div class="mb-3">
+        <label class="form-label">Descrição</label>
+        <textarea name="descricao" class="form-control" rows="4">{{ trat.descricao if trat else '' }}</textarea>
+    </div>
+    <button class="btn btn-primary">Salvar</button>
+    <a href="{% if trat %}{{ url_for('catalogo.ver_categoria', cat_id=trat.categoria_id) }}{% else %}{{ url_for('catalogo.listar') }}{% endif %}"
+        class="btn btn-secondary">Cancelar</a>
+</form>
+{% endblock %}

@@ -1,0 +1,40 @@
+{% extends "mobile/base.html" %}
+{% block title %}
+    Aniversariantes de {{ nome_mes }}
+{% endblock title %}
+{% block header_title %}
+    Aniversariantes
+{% endblock header_title %}
+{% block content %}
+    <div class="mobile-card card mb-3">
+        <div class="card-body">
+            <h5 class="mb-3">
+                <i class="bi bi-gift"></i> Aniversariantes de {{ nome_mes }}
+            </h5>
+            {% if pacientes %}
+                <ul class="list-group list-group-flush">
+                    {% for paciente in pacientes %}
+                        <li class="list-group-item d-flex justify-content-between align-items-center flex-wrap">
+                            <span>
+                                <i class="bi bi-person"></i> {{ paciente.nome }}
+                                <span class="text-muted small ms-2">{{ paciente.data_nascimento.strftime("%d/%m") }}
+                                    • {{ ((now.year - paciente.data_nascimento.year) - ((now.month, now.day) < (paciente.data_nascimento.month, paciente.data_nascimento.day))) }} anos
+                                </span>
+                            </span>
+                            {% if paciente.celular %}
+                                <a class="btn btn-success btn-sm ms-2"
+                                   target="_blank"
+                                   title="Conversar no WhatsApp"
+                                   href="https://wa.me/55{{ paciente.celular|replace('(', '') |replace(')', '')|replace('-', '')|replace(' ', '') }}?text=Olá%20{{ paciente.nome|urlencode }},%20feliz%20aniversário!">
+                                    <i class="bi bi-whatsapp"></i>
+                                </a>
+                            {% endif %}
+                        </li>
+                    {% endfor %}
+                </ul>
+            {% else %}
+                <div class="alert alert-info text-center mb-0">Nenhum paciente faz aniversário neste mês.</div>
+            {% endif %}
+        </div>
+    </div>
+{% endblock content %}

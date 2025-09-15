@@ -1,0 +1,251 @@
+{% extends "base.html" %}
+{% block title %}
+    {{ paciente.nome }} | OdontoClinic
+{% endblock %}
+{% block extra_css %}
+    <style nonce="{{ csp_nonce() }}">
+    .nav-tabs .nav-link {
+        border: none;
+        color: #6c757d;
+        padding: 12px 16px;
+        font-weight: 500;
+    }
+
+    .nav-tabs .nav-link.active {
+        color: #0d6efd;
+        border-bottom: 2px solid #0d6efd;
+        background-color: transparent;
+    }
+
+    .nav-tabs .nav-link:hover:not(.active) {
+        border-bottom: 2px solid #dee2e6;
+    }
+
+    .tab-pane {
+        padding: 20px 0;
+    }
+
+    .paciente-header {
+        background-color: #f8f9fa;
+        border-radius: 0.25rem;
+        padding: 15px;
+        margin-bottom: 20px;
+    }
+    </style>
+{% endblock %}
+{% block content %}
+    <div class="container-fluid py-4">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item">
+                    <a href="{{ url_for("main.dashboard") }}">Dashboard</a>
+                </li>
+                <li class="breadcrumb-item">
+                    <a href="{{ url_for("pacientes.listar_pacientes") }}">Pacientes</a>
+                </li>
+                <li class="breadcrumb-item active" aria-current="page">{{ paciente.nome }}</li>
+            </ol>
+        </nav>
+        <!-- Cabeçalho do paciente -->
+        <div class="paciente-header">
+            <div class="row">
+                <div class="col-md-9">
+                    <h2>{{ paciente.nome }}</h2>
+                    <p class="mb-0">
+                        {% if paciente.data_nascimento %}
+                            <span class="badge bg-secondary">{{ paciente.data_nascimento|date if paciente.data_nascimento else '-' }}</span>
+                        {% endif %}
+                        {% if paciente.sexo %}<span class="badge bg-info text-dark">{{ paciente.sexo }}</span>{% endif %}
+                        {% if paciente.cpf %}<span class="badge bg-light text-dark">CPF: {{ paciente.cpf }}</span>{% endif %}
+                    </p>
+                </div>
+                <div class="col-md-3 text-end">
+                    <a href="{{ url_for('pacientes.editar_paciente', paciente_id=paciente.id) }}"
+                       class="btn btn-primary">
+                        <i class="bi bi-pencil-square"></i> Editar
+                    </a>
+                    <button type="button"
+                            class="btn btn-danger"
+                            data-bs-toggle="modal"
+                            data-bs-target="#excluirModal">
+                        <i class="bi bi-trash"></i> Excluir
+                    </button>
+                </div>
+            </div>
+        </div>
+        <!-- Abas do paciente -->
+        <ul class="nav nav-tabs mb-3" id="myTab" role="tablist">
+            <li class="nav-item" role="presentation">
+                <a class="nav-link {% if aba_ativa == "ficha" %}active{% endif %}"
+                   href="{{ url_for('pacientes.editar_ficha', paciente_id=paciente.id) }}"
+                   role="tab">
+                    <i class="bi bi-file-earmark-text"></i> Ficha
+                </a>
+            </li>
+            <li class="nav-item" role="presentation">
+                <a class="nav-link {% if aba_ativa == "anamnese" %}active{% endif %}"
+                   href="{{ url_for('pacientes.editar_anamnese', paciente_id=paciente.id) }}"
+                   role="tab">
+                    <i class="bi bi-clipboard2-pulse"></i> Anamnese
+                </a>
+            </li>
+            <li class="nav-item" role="presentation">
+                <a class="nav-link {% if aba_ativa == "plano" %}active{% endif %}"
+                   href="{{ url_for('pacientes.listar_planos', paciente_id=paciente.id) }}"
+                   role="tab">
+                    <i class="bi bi-card-checklist"></i> Plano de Tratamento
+                </a>
+            </li>
+            <li class="nav-item" role="presentation">
+                <a class="nav-link {% if aba_ativa == "historico" %}active{% endif %}"
+                   href="{{ url_for('pacientes.listar_historico', paciente_id=paciente.id) }}"
+                   role="tab">
+                    <i class="bi bi-clock-history"></i> Histórico
+                </a>
+            </li>
+            <li class="nav-item" role="presentation">
+                <a class="nav-link {% if aba_ativa == "financeiro" %}active{% endif %}"
+                   href="{{ url_for('pacientes.listar_financeiro', paciente_id=paciente.id) }}"
+                   role="tab">
+                    <i class="bi bi-currency-dollar"></i> Financeiro
+                </a>
+            </li>
+        </ul>
+        <!-- Conteúdo das abas -->
+        <div class="tab-content" id="myTabContent">
+            {% block conteudo_aba %}
+                <div class="tab-pane fade show active">
+                    <!-- Informações básicas do paciente -->
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="card mb-3">
+                                <div class="card-header">
+                                    <h5 class="card-title mb-0">Informações Pessoais</h5>
+                                </div>
+                                <div class="card-body">
+                                    <div class="row mb-2">
+                                        <div class="col-md-4 fw-bold">Nome:</div>
+                                        <div class="col-md-8">{{ paciente.nome }}</div>
+                                    </div>
+                                    <div class="row mb-2">
+                                        <div class="col-md-4 fw-bold">Data de Nascimento:</div>
+                                        <div class="col-md-8">{{ paciente.data_nascimento|date if paciente.data_nascimento else '-' }}</div>
+                                    </div>
+                                    <div class="row mb-2">
+                                        <div class="col-md-4 fw-bold">Sexo:</div>
+                                        <div class="col-md-8">{{ paciente.sexo or '-' }}</div>
+                                    </div>
+                                    <div class="row mb-2">
+                                        <div class="col-md-4 fw-bold">CPF:</div>
+                                        <div class="col-md-8">{{ paciente.cpf or '-' }}</div>
+                                    </div>
+                                    <div class="row mb-2">
+                                        <div class="col-md-4 fw-bold">Profissão:</div>
+                                        <div class="col-md-8">{{ paciente.profissao or '-' }}</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="card mb-3">
+                                <div class="card-header">
+                                    <h5 class="card-title mb-0">Contato</h5>
+                                </div>
+                                <div class="card-body">
+                                    <div class="row mb-2">
+                                        <div class="col-md-4 fw-bold">Telefone:</div>
+                                        <div class="col-md-8">{{ paciente.celular or '-' }}</div>
+                                    </div>
+                                    <div class="row mb-2">
+                                        <div class="col-md-4 fw-bold">Email:</div>
+                                        <div class="col-md-8">{{ paciente.email or '-' }}</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="card">
+                                <div class="card-header">
+                                    <h5 class="card-title mb-0">Endereço</h5>
+                                </div>
+                                <div class="card-body">
+                                    <div class="row mb-2">
+                                        <div class="col-md-4 fw-bold">CEP:</div>
+                                        <div class="col-md-8">{{ paciente.cep or '-' }}</div>
+                                    </div>
+                                    <div class="row mb-2">
+                                        <div class="col-md-4 fw-bold">Logradouro:</div>
+                                        <div class="col-md-8">{{ paciente.endereco or '-' }}</div>
+                                    </div>
+                                    <div class="row mb-2">
+                                        <div class="col-md-4 fw-bold">Bairro:</div>
+                                        <div class="col-md-8">{{ paciente.bairro or '-' }}</div>
+                                    </div>
+                                    <div class="row mb-2">
+                                        <div class="col-md-4 fw-bold">Cidade/Estado:</div>
+                                        <div class="col-md-8">
+                                            {% if paciente.cidade or paciente.estado %}
+                                                {{ paciente.cidade or '' }}
+                                                {% if paciente.cidade and paciente.estado %}
+                                                    /
+                                                {% endif
+                                                %}
+                                                {{ paciente.estado or '' }}
+                                            {% else %}
+                                                -
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% endblock %}
+        </div>
+    </div>
+    <!-- Modal de confirmação de exclusão -->
+    <div class="modal fade"
+         id="excluirModal"
+         tabindex="-1"
+         aria-labelledby="excluirModalLabel"
+         aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="excluirModalLabel">Confirmar exclusão</h5>
+                    <button type="button"
+                            class="btn-close"
+                            data-bs-dismiss="modal"
+                            aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    Deseja realmente excluir o paciente <strong>{{ paciente.nome }}</strong>? Esta ação não pode ser
+                    desfeita e todos os dados relacionados ao paciente serão removidos.
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <form id="form-excluir-paciente"
+                          method="post"
+                          action="{{ url_for('pacientes.excluir_paciente', paciente_id=paciente.id) }}">
+                        <button type="submit" id="btn-excluir-paciente" class="btn btn-danger">Excluir</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% block extra_js %}
+        <script nonce="{{ csp_nonce() }}">
+    document.addEventListener('DOMContentLoaded', function () {
+        const formExcluir = document.getElementById('form-excluir-paciente');
+        const btnExcluir = document.getElementById('btn-excluir-paciente');
+
+        if (formExcluir && btnExcluir) {
+            formExcluir.addEventListener('submit', function (event) {
+                // Disable the button to prevent multiple clicks
+                btnExcluir.disabled = true;
+                btnExcluir.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Excluindo...';
+            });
+        }
+    });
+        </script>
+{% endblock %}
+{% endblock %}

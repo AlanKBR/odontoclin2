@@ -1,0 +1,392 @@
+{% extends "pacientes/visualizar_paciente.html" %}
+{% block conteudo_aba %}
+    <div class="tab-pane fade show active">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <div>
+                <h4>Plano de Tratamento #{{ plano.id }}</h4>
+                <p class="text-muted mb-0">Criado em: {{ plano.data_criacao|date }}</p>
+            </div>
+            <div>
+                <a href="{{ url_for('pacientes.listar_planos', paciente_id=paciente.id) }}"
+                   class="btn btn-secondary btn-sm">
+                    <i class="bi bi-arrow-left"></i> Voltar
+                </a>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-8">
+                <div class="card shadow mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0">Detalhes do Plano</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row mb-3">
+                            <div class="col-md-3 fw-bold">Status:</div>
+                            <div class="col-md-9">
+                                <span class="badge {% if plano.status == "Pendente" %}bg-warning{% elif plano.status == "Em andamento" %}bg-primary{% elif plano.status == "Concluído" %}bg-success{% elif plano.status == "Cancelado" %}bg-danger{% endif %}">
+                                    {{ plano.status }}
+                                </span>
+                            </div>
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col-md-3 fw-bold">Dentista:</div>
+                            <div class="col-md-9">{{ dentista.nome_completo if dentista else '-' }}</div>
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col-md-3 fw-bold">Descrição:</div>
+                            <div class="col-md-9">{{ plano.descricao|nl2br }}</div>
+                        </div>
+                        {% if plano.observacoes %}
+                            <div class="row mb-3">
+                                <div class="col-md-3 fw-bold">Observações:</div>
+                                <div class="col-md-9">{{ plano.observacoes|nl2br }}</div>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="card shadow">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">Procedimentos</h5>
+                        <button class="btn btn-sm btn-primary"
+                                data-bs-toggle="modal"
+                                data-bs-target="#modalNovoProcedimento">
+                            <i class="bi bi-plus-circle"></i> Adicionar Procedimento
+                        </button>
+                    </div>
+                    <div class="card-body">
+                        {% if procedimentos %}
+                            <div class="table-responsive">
+                                <table class="table table-hover">
+                                    <thead>
+                                        <tr>
+                                            <th>Descrição</th>
+                                            <th>Dente</th>
+                                            <th>Valor</th>
+                                            <th>Status</th>
+                                            <th>Data Prevista</th>
+                                            <th>Ações</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for proc in procedimentos %}
+                                            <tr>
+                                                <td>
+                                                    {{ proc.descricao }}
+                                                    {% if proc.tratamento %}<span class="badge bg-info">Catálogo</span>{% endif %}
+                                                </td>
+                                                <td>{{ proc.dente or '-' }}</td>
+                                                <td>R$ {{ "%.2f"|format(proc.valor) }}</td>
+                                                <td>
+                                                    <span class="badge {% if proc.status == "Pendente" %}bg-warning{% elif proc.status == "Realizado" %}bg-success{% elif proc.status == "Cancelado" %}bg-danger{% endif %}">
+                                                        {{ proc.status }}
+                                                    </span>
+                                                </td>
+                                                <td>{{ proc.data_prevista|date if proc.data_prevista else '-' }}</td>
+                                                <td>
+                                                    <a href="{{ url_for('pacientes.editar_procedimento', paciente_id=paciente.id, plano_id=plano.id, proc_id=proc.id) }}"
+                                                       class="btn btn-sm btn-outline-primary">
+                                                        <i class="bi bi-pencil"></i>
+                                                    </a>
+                                                    <button class="btn btn-sm btn-outline-danger"
+                                                            data-bs-toggle="modal"
+                                                            data-bs-target="#excluirProcedimento{{ proc.id }}">
+                                                        <i class="bi bi-trash"></i>
+                                                    </button>
+                                                    <!-- Modal de exclusão de procedimento -->
+                                                    <div class="modal fade"
+                                                         id="excluirProcedimento{{ proc.id }}"
+                                                         tabindex="-1"
+                                                         aria-labelledby="excluirProcedimentoLabel{{ proc.id }}"
+                                                         aria-hidden="true">
+                                                        <div class="modal-dialog">
+                                                            <div class="modal-content">
+                                                                <div class="modal-header">
+                                                                    <h5 class="modal-title" id="excluirProcedimentoLabel{{ proc.id }}">
+                                                                        Confirmar
+                                                                        Exclusão
+                                                                    </h5>
+                                                                    <button type="button"
+                                                                            class="btn-close"
+                                                                            data-bs-dismiss="modal"
+                                                                            aria-label="Close"></button>
+                                                                </div>
+                                                                <div class="modal-body">
+                                                                    Tem certeza que deseja excluir o procedimento <strong>{{
+                                                                    proc.descricao }}</strong>?
+                                                                </div>
+                                                                <div class="modal-footer">
+                                                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                                                                    <form action="{{ url_for('pacientes.excluir_procedimento', paciente_id=paciente.id, plano_id=plano.id, proc_id=proc.id) }}"
+                                                                          method="post">
+                                                                        <button type="submit" class="btn btn-danger">Excluir</button>
+                                                                    </form>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                    <tfoot>
+                                        <tr>
+                                            <th colspan="2" class="text-end">Total:</th>
+                                            <th>R$ {{ "%.2f"|format(plano.orcamento_total) }}</th>
+                                            <th colspan="3"></th>
+                                        </tr>
+                                    </tfoot>
+                                </table>
+                            </div>
+                        {% else %}
+                            <div class="alert alert-info">
+                                <i class="bi bi-info-circle"></i> Nenhum procedimento adicionado a este plano.
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card shadow mb-4">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0">Resumo Financeiro</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between mb-3">
+                            <span>Total do Plano:</span>
+                            <span class="fw-bold">R$ {{ "%.2f"|format(plano.orcamento_total) }}</span>
+                        </div>
+                        <div class="d-flex justify-content-between mb-3">
+                            <span>Valor Pago:</span>
+                            <span class="fw-bold text-success">R$ 0,00</span>
+                        </div>
+                        <div class="d-flex justify-content-between mb-3">
+                            <span>Valor Pendente:</span>
+                            <span class="fw-bold text-danger">R$ {{ "%.2f"|format(plano.orcamento_total) }}</span>
+                        </div>
+                        <hr>
+                        <div class="d-grid gap-2">
+                            <a href="{{ url_for('pacientes.novo_financeiro', paciente_id=paciente.id) }}"
+                               class="btn btn-primary">
+                                <i class="bi bi-cash"></i> Registrar Pagamento
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                <div class="card shadow">
+                    <div class="card-header">
+                        <h5 class="mb-0">Ações</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="d-grid gap-2">
+                            <button class="btn btn-outline-primary">
+                                <i class="bi bi-printer"></i> Imprimir Plano
+                            </button>
+                            <button class="btn btn-outline-success">
+                                <i class="bi bi-envelope"></i> Enviar por Email
+                            </button>
+                            <a href="{{ url_for('pacientes.editar_plano', paciente_id=paciente.id, plano_id=plano.id) }}"
+                               class="btn btn-outline-warning">
+                                <i class="bi bi-pencil-square"></i> Editar Plano
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Modal Novo Procedimento -->
+    <div class="modal fade"
+         id="modalNovoProcedimento"
+         tabindex="-1"
+         aria-labelledby="modalNovoProcedimentoLabel"
+         aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalNovoProcedimentoLabel">Adicionar Procedimento</h5>
+                    <button type="button"
+                            class="btn-close"
+                            data-bs-dismiss="modal"
+                            aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="formProcedimento"
+                          method="post"
+                          action="{{ url_for('pacientes.adicionar_procedimento', paciente_id=paciente.id, plano_id=plano.id) }}">
+                        <!-- Abas para escolher entre catálogo ou procedimento personalizado -->
+                        <ul class="nav nav-tabs mb-3" id="procedimentoTabs" role="tablist">
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link active"
+                                        id="catalogo-tab"
+                                        data-bs-toggle="tab"
+                                        data-bs-target="#catalogo-tab-pane"
+                                        type="button"
+                                        role="tab"
+                                        aria-controls="catalogo-tab-pane"
+                                        aria-selected="true">Catálogo de Tratamentos</button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link"
+                                        id="personalizado-tab"
+                                        data-bs-toggle="tab"
+                                        data-bs-target="#personalizado-tab-pane"
+                                        type="button"
+                                        role="tab"
+                                        aria-controls="personalizado-tab-pane"
+                                        aria-selected="false">Procedimento Personalizado</button>
+                            </li>
+                        </ul>
+                        <div class="tab-content" id="procedimentoTabsContent">
+                            <!-- Aba do Catálogo -->
+                            <div class="tab-pane fade show active"
+                                 id="catalogo-tab-pane"
+                                 role="tabpanel"
+                                 aria-labelledby="catalogo-tab"
+                                 tabindex="0">
+                                <div class="row mb-3">
+                                    <div class="col-md-6">
+                                        <label for="categoria_id" class="form-label">Categoria</label>
+                                        <select class="form-select" id="categoria_id" name="categoria_id">
+                                            <option value="">Selecione uma categoria...</option>
+                                            {% for categoria in categorias %}<option value="{{ categoria.id }}">{{ categoria.nome }}</option>{% endfor %}
+                                        </select>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label for="tratamento_id" class="form-label">Procedimento</label>
+                                        <select class="form-select" id="tratamento_id" name="tratamento_id" disabled>
+                                            <option value="">Selecione uma categoria primeiro...</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div id="tratamento_detalhes" class="border rounded p-3 mb-3 d-none">
+                                    <h6 class="mb-2">Detalhes do Procedimento</h6>
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <p>
+                                                <strong>Preço:</strong> R$ <span id="tratamento_preco">0.00</span>
+                                            </p>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <p>
+                                                <strong>Duração Estimada:</strong> <span id="tratamento_duracao">-</span>
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- Aba de Procedimento Personalizado -->
+                            <div class="tab-pane fade"
+                                 id="personalizado-tab-pane"
+                                 role="tabpanel"
+                                 aria-labelledby="personalizado-tab"
+                                 tabindex="0">
+                                <div class="mb-3">
+                                    <label for="descricao" class="form-label">Descrição</label>
+                                    <input type="text"
+                                           class="form-control"
+                                           id="descricao"
+                                           name="descricao"
+                                           placeholder="Descreva o procedimento">
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Campos comuns -->
+                        <div class="mb-3">
+                            <label for="dente" class="form-label">Dente</label>
+                            <input type="text"
+                                   class="form-control"
+                                   id="dente"
+                                   name="dente"
+                                   placeholder="Ex: 36, 47, etc.">
+                        </div>
+                        <div class="mb-3">
+                            <label for="valor" class="form-label">Valor (R$)</label>
+                            <input type="number"
+                                   class="form-control"
+                                   id="valor"
+                                   name="valor"
+                                   min="0"
+                                   step="0.01"
+                                   required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="status" class="form-label">Status</label>
+                            <select class="form-select" id="status" name="status">
+                                <option value="Pendente" selected>Pendente</option>
+                                <option value="Realizado">Realizado</option>
+                                <option value="Cancelado">Cancelado</option>
+                            </select>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="data_prevista" class="form-label">Data Prevista</label>
+                                    <input type="date"
+                                           class="form-control"
+                                           id="data_prevista"
+                                           name="data_prevista">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="data_realizado" class="form-label">Data Realização</label>
+                                    <input type="date"
+                                           class="form-control"
+                                           id="data_realizado"
+                                           name="data_realizado">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="observacoes" class="form-label">Observações</label>
+                            <textarea class="form-control" id="observacoes" name="observacoes" rows="3"></textarea>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" form="formProcedimento" class="btn btn-primary">Adicionar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock content %}
+{% block scripts %}
+    {{ super() }}
+    <script src="{{ url_for('static', filename='js/procedimentos.js') }}"></script>
+    {% set tratamentos_for_js = {} %}
+    {% for categoria in categorias %}
+        {% set categoria_key = categoria.id | string %}
+        {% set current_tratamentos = [] %}
+        {% for tratamento in categoria.tratamentos %}
+            {% do current_tratamentos.append({
+            'id': tratamento.id,
+            'nome': tratamento.nome,
+            'preco': tratamento.preco,
+            'duracao': tratamento.duracao_estimada | default('-', true)
+            }) %}
+        {% endfor %}
+        {% do tratamentos_for_js.update({categoria_key: current_tratamentos}) %}
+    {% endfor %}
+    <script id="tratamentos-json-data" type="application/json">{{- tratamentos_for_js | tojson | safe -}}</script>
+    <script>
+    let tratamentosDataFromElement;
+    const tratamentosDataElement = document.getElementById('tratamentos-json-data');
+    if (tratamentosDataElement && tratamentosDataElement.textContent) {
+        try {
+            tratamentosDataFromElement = JSON.parse(tratamentosDataElement.textContent);
+        } catch (e) {
+            console.error("Error parsing tratamentosData JSON:", e);
+            tratamentosDataFromElement = {}; // Fallback to empty object
+        }
+    } else {
+        console.error("Could not find tratamentos-json-data element or it was empty.");
+        tratamentosDataFromElement = {};
+    }
+    window.tratamentosData = tratamentosDataFromElement;
+
+    document.addEventListener('DOMContentLoaded', function() {
+        // Other DOMContentLoaded logic from procedimentos.js or other scripts might be here
+    });
+    </script>
+{% endblock scripts %}

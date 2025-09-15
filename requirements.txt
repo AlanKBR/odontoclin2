@@ -1,0 +1,8 @@
+Flask==3.0.3
+Flask-WTF==1.2.1
+Flask-SQLAlchemy==3.1.1
+WTForms==3.1.2
+python-dateutil==2.9.0.post0
+requests==2.32.3
+reportlab==4.2.2  # PDF geração documentos
+alembic==1.13.2  # migrations

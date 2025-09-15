@@ -1,0 +1,30 @@
+{% extends 'core/base.html' %}
+{% block title %}Histórico de Documentos{% endblock %}
+{% block content %}
+<h1>Histórico de Documentos</h1>
+<a href="{{ url_for('documentos.index') }}" class="btn btn-secondary btn-sm">Voltar</a>
+<table class="table table-sm mt-3">
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>Título</th>
+            <th>Tipo</th>
+            <th>Data</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for d in documentos %}
+        <tr>
+            <td>{{ d.id }}</td>
+            <td>{{ d.titulo_documento }}</td>
+            <td>{{ d.tipo_documento }}</td>
+            <td>{{ d.data_emissao.strftime('%d/%m/%Y') }}</td>
+        </tr>
+        {% else %}
+        <tr>
+            <td colspan="4">Nenhum documento.</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}

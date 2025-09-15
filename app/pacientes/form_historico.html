@@ -1,0 +1,13 @@
+{% extends 'core/base.html' %}
+{% block title %}Novo Histórico - {{ paciente.nome }}{% endblock %}
+{% block content %}
+<h1>Novo Registro de Histórico - {{ paciente.nome }}</h1>
+<form method="post">
+    {{ form.hidden_tag() }}
+    <div>{{ form.descricao.label }} {{ form.descricao(rows=3) }}</div>
+    <div>{{ form.procedimentos_realizados.label }} {{ form.procedimentos_realizados(rows=3) }}</div>
+    <div>{{ form.observacoes.label }} {{ form.observacoes(rows=3) }}</div>
+    <button type="submit">Salvar</button>
+    <a href="{{ url_for('pacientes.historico', paciente_id=paciente.id) }}">Cancelar</a>
+</form>
+{% endblock %}

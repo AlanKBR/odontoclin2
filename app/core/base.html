@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{% block title %}OdontoClin{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('core.static', filename='main.css') }}" />
+    {# Allow pages to inject additional CSS like Bootstrap/FullCalendar #}
+    {% block extra_css %}{% endblock %}
+</head>
+
+<body>
+    <header class="site-header">
+        <nav class="navbar" aria-label="Principal">
+            <div class="navbar-brand">
+                <a href="{{ url_for('core.index') }}" class="brand-link">OdontoClin</a>
+            </div>
+            <ul class="navbar-menu" role="menubar">
+                <li role="none"><a role="menuitem" href="{{ url_for('core.index') }}">Início</a></li>
+                <li role="none"><a role="menuitem" href="{{ url_for('pacientes.listar') }}">Pacientes</a></li>
+                <li role="none"><a role="menuitem" href="{{ url_for('pacientes.dashboard') }}">Pacientes Dashboard</a>
+                </li>
+                <li role="none"><a role="menuitem" href="{{ url_for('agenda.index') }}">Agenda</a></li>
+                <li role="none"><a role="menuitem" href="{{ url_for('receitas.index') }}">Receitas</a></li>
+                <li role="none"><a role="menuitem" href="{{ url_for('documentos.index') }}">Documentos</a></li>
+                <li role="none"><a role="menuitem" href="{{ url_for('atestados.gerar_atestado') }}">Atestados</a></li>
+                <li role="none"><a role="menuitem" href="{{ url_for('main.dashboard') }}">Dashboard</a></li>
+                <li role="none"><a role="menuitem" href="{{ url_for('cro.index') }}">CRO</a></li>
+                <li role="none"><a role="menuitem" href="{{ url_for('ai_assistant.index') }}">IA</a></li>
+                <li role="none"><a role="menuitem" href="{{ url_for('reports.index') }}">Relatórios</a></li>
+                {% if g.user %}
+                <form method="post" action="{{ url_for('auth.logout') }}" style="display:inline">
+                    <input type="hidden" name="csrf_token"
+                        value="{{ csrf_token() if csrf_token is defined else '' }}" />
+                    <button class="btn btn-sm btn-outline-danger">Sair</button>
+                </form>
+                <span class="user-professional" style="margin-left: .5rem; opacity:.8;">
+                    {{ g.user.nome_profissional or g.user.nome_completo or g.user.username }}
+                </span>
+                {% else %}
+                <a class="btn btn-sm btn-outline-success" href="{{ url_for('auth.login') }}">Login</a>
+                {% endif %}
+            </ul>
+        </nav>
+    </header>
+    <main id="main-content" class="main-content" tabindex="-1">
+        {% include 'shared/_flash_messages.html' %}
+        {% block content %}{% endblock %}
+    </main>
+    <footer class="site-footer">
+        <section class="footer-inner">
+            <p>&copy; {{ 2025 }} OdontoClin</p>
+        </section>
+    </footer>
+</body>
+
+</html>

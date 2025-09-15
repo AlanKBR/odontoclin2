@@ -1,0 +1,25 @@
+{% extends 'core/base.html' %}
+{% block title %}Histórico - {{ paciente.nome }}{% endblock %}
+{% block content %}
+<h1>Histórico Clínico - {{ paciente.nome }}</h1>
+<p><a href="{{ url_for('pacientes.novo_historico', paciente_id=paciente.id) }}">Novo Registro</a> | <a
+        href="{{ url_for('pacientes.visualizar', paciente_id=paciente.id) }}">Voltar</a></p>
+{% if historicos %}
+<ul>
+    {% for h in historicos %}
+    <li>{{ h.data.strftime('%d/%m/%Y') }} - {{ h.descricao[:80] }}{% if h.descricao|length > 80 %}...{% endif %}</li>
+    {% endfor %}
+</ul>
+<div class="pagination">
+    {% if page > 1 %}
+    <a href="{{ url_for('pacientes.historico', paciente_id=paciente.id, page=page-1) }}">&laquo; Anterior</a>
+    {% endif %}
+    <span>Página {{ page }} de {{ pages }}</span>
+    {% if page < pages %} <a href="{{ url_for('pacientes.historico', paciente_id=paciente.id, page=page+1) }}">Próxima
+        &raquo;</a>
+        {% endif %}
+</div>
+{% else %}
+<p>Sem registros.</p>
+{% endif %}
+{% endblock %}

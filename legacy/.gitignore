@@ -1,0 +1,124 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+venv/
+.venv/
+.ruff_cache/
+env/
+ENV/
+.env
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# VS Code
+.vscode/*
+.vscode/
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+*.code-workspace
+
+# Editor/Config files to ignore
+.eslintignore
+.eslintrc.json
+.flake8
+.jshintrc
+.pylintrc
+OdontoClin.code-workspace
+eslint.config.mjs
+
+# Backup and temporary files
+*.bak
+*.old
+*.new
+*.broken
+*.swp
+*.swo
+
+# Jupyter and notebook checkpoints
+.ipynb_checkpoints/
+*.ipynb
+
+# Test, coverage, and profiling
+htmlcov/
+models_cache/
+.tox/
+.nox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+.hypothesis/
+.pytest_cache/
+.pyre/
+.mypy_cache/
+.pytype/
+
+# Logs
+*.log
+
+# Local dev tools
+*.DS_Store
+*.idea/
+*.iml
+
+# System files
+Thumbs.db
+.DS_Store
+
+# Model cache and AI-related temporary files
+models_cache/
+models_cache/*
+models_cache/downloads/
+models_cache/temp/
+*.tmp
+*.temp
+
+# Instance databases (depending on your policy)
+# instance/*.db
+
+# Development and legacy files
+legacy/
+node_modules/
+
+# Ignore all extension config files
+*.sublime*
+*.vscode*
+*.idea*
+*.iml
+*.editorconfig
+*.eslintrc*
+*.prettierrc*
+*.pylintrc
+*.flake8
+*.envrc
+
+# Development/test scripts that shouldn't be committed
+*test*.py
+*debug*.py
+*clean*.js
+*backup*.js
+*old*.js
+*new*.js
+REMOVER-*.txt

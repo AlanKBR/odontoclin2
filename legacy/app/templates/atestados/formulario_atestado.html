@@ -1,0 +1,1222 @@
+{% extends "base.html" %}
+{% block title %}
+    Emitir Atestado | OdontoClinic
+{% endblock title %}
+{% block extra_css %}
+    <style nonce="{{ csp_nonce() }}">
+    /* Estilos para busca de CID-10 */
+    #resultados-cids {
+        max-height: 400px;
+        overflow-y: auto;
+        border: 1px solid #dee2e6;
+        border-radius: 0.375rem;
+    }
+    
+    #cid_selecionado {
+        display: none;
+    }
+    
+    .list-group-item:hover {
+        background-color: #f8f9fa;
+    }
+    
+    #texto_atestado {
+        min-height: 150px;
+        font-family: 'Times New Roman', serif;
+        line-height: 1.6;
+    }
+    
+    .form-floating > .form-control,
+    .form-floating > .form-select {
+        padding-top: 1.625rem;
+        padding-bottom: 0.625rem;
+    }
+    
+    .btn-group .btn {
+        margin-right: 0.5rem;
+    }
+    
+    .btn-group .btn:last-child {
+        margin-right: 0;
+    }
+    
+    /* Loading spinner */
+    .loading-spinner {
+        display: inline-block;
+        width: 1rem;
+        height: 1rem;
+        border: 0.2em solid #f3f3f3;
+        border-top: 0.2em solid #007bff;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+    }
+    
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+    
+    /* Estilos para template de impressão */
+    #template-impressao-atestado {
+        display: none;
+    }
+    
+    .template-document {
+        font-family: 'Times New Roman', serif;
+        max-width: 210mm;
+        margin: 0 auto;
+        padding: 20mm;
+        background: white;
+        color: #333;
+    }
+    
+    .template-header {
+        border-bottom: 2px solid #2c5aa0;
+        padding-bottom: 15px;
+        margin-bottom: 25px;
+    }
+    
+    .template-header-content {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+    
+    .template-header-left {
+        flex: 1;
+    }
+    
+    .template-clinic-name {
+        color: #2c5aa0;
+        margin: 0;
+        font-size: 28px;
+        font-weight: bold;
+    }
+    
+    .template-clinic-subtitle {
+        margin: 5px 0 0 0;
+        color: #666;
+        font-size: 14px;
+    }
+    
+    .template-clinic-info {
+        margin-top: 10px;
+        font-size: 12px;
+        color: #666;
+    }
+    
+    .template-clinic-info p {
+        margin: 2px 0;
+    }
+    
+    .template-logo-container {
+        text-align: center;
+        margin-left: 20px;
+    }
+    
+    .template-logo-circle {
+        width: 80px;
+        height: 80px;
+        border: 2px solid #2c5aa0;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+    }
+    
+    .template-logo-img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        border-radius: 50%;
+    }
+    
+    .template-title-container {
+        text-align: center;
+        margin-bottom: 40px;
+    }
+    
+    .template-title {
+        color: #2c5aa0;
+        margin: 0;
+        font-size: 24px;
+        letter-spacing: 2px;
+        border: 2px solid #2c5aa0;
+        padding: 10px;
+        display: inline-block;
+    }
+    
+    .template-text {
+        margin: 40px 0;
+        text-align: justify;
+        text-indent: 2cm;
+        line-height: 1.8;
+        font-size: 14px;
+    }
+    
+    .template-signature-section {
+        margin-top: 80px;
+    }
+    
+    .template-date-right {
+        text-align: right;
+        margin-bottom: 80px;
+    }
+    
+    .template-date-text {
+        margin: 0;
+        font-size: 14px;
+        color: #333;
+    }
+    
+    .template-signature-center {
+        text-align: center;
+    }
+    
+    .template-signature-line {
+        border-top: 1px solid #333;
+        width: 300px;
+        margin: 0 auto 10px auto;
+    }
+    
+    .template-signature-name {
+        margin: 0;
+        font-size: 16px;
+        font-weight: bold;
+        color: #333;
+    }
+    
+    .template-signature-cro {
+        margin: 5px 0 0 0;
+        font-size: 14px;
+        color: #666;
+    }
+    
+    .template-signature-title {
+        margin: 5px 0 0 0;
+        font-size: 14px;
+        color: #666;
+    }
+    
+    .template-footer {
+        margin-top: 60px;
+        text-align: center;
+        font-size: 10px;
+        color: #999;
+        border-top: 1px solid #ddd;
+        padding-top: 10px;
+    }
+    
+    .template-footer p {
+        margin: 0;
+    }
+    
+    #cids_selecionados {
+        display: none;
+    }
+    
+    .template-logo-fallback {
+        color: #2c5aa0;
+        font-weight: bold;
+        font-size: 14px;
+    }
+    </style>
+{% endblock extra_css %}
+{% block content %}
+    <div class="container-fluid">
+        <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+            <h1 class="h2">
+                <i class="bi bi-file-earmark-medical"></i> Emitir Atestado
+            </h1>
+            <div class="btn-toolbar mb-2 mb-md-0">
+                <div class="btn-group me-2">
+                    <a href="{{ url_for("atestados.historico_atestados") }}"
+                       class="btn btn-sm btn-outline-secondary">
+                        <i class="bi bi-clock-history"></i> Histórico
+                    </a>
+                    <button type="button"
+                            class="btn btn-sm btn-outline-info"
+                            data-bs-toggle="modal"
+                            data-bs-target="#modalAjuda">
+                        <i class="bi bi-question-circle"></i> Ajuda
+                    </button>
+                </div>
+            </div>
+        </div>
+        <form method="post" id="form-atestado">
+            <div class="row">
+                <!-- Coluna principal do formulário -->
+                <div class="col-md-8">
+                    <div class="card mb-4">
+                        <div class="card-header bg-primary text-white">
+                            <h5 class="card-title mb-0">
+                                <i class="bi bi-person-fill"></i> Dados do Paciente
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="form-floating mb-3">
+                                <select name="paciente_id"
+                                        id="paciente_id"
+                                        class="form-select select2"
+                                        required>
+                                    <option value="">Selecione um paciente...</option>
+                                    {% for paciente in pacientes %}
+                                        <option value="{{ paciente.id }}" data-cpf="{{ paciente.cpf or '' }}">
+                                            {{ paciente.nome }}
+                                            {% if paciente.cpf %}(CPF: {{ paciente.cpf }}){% endif %}
+                                        </option>
+                                    {% endfor %}
+                                </select>
+                                <label for="paciente_id">Paciente *</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card mb-4">
+                        <div class="card-header bg-success text-white">
+                            <h5 class="card-title mb-0">
+                                <i class="bi bi-person-badge"></i> Profissional Responsável
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="form-floating mb-3">
+                                <select name="dentista_id"
+                                        id="dentista_id"
+                                        class="form-select select2"
+                                        required>
+                                    {% if not dentista_selecionado_id %}<option value="">Selecione um dentista...</option>{% endif %}
+                                    {% for dentista in dentistas %}
+                                        <option value="{{ dentista.id }}"
+                                                data-cro="{{ dentista.cro or '' }}"
+                                                {% if dentista_selecionado_id and dentista.id == dentista_selecionado_id %}selected{% endif %}>
+                                            {{ dentista.nome_completo }}
+                                            {% if dentista.cro %}(CRO: {{ dentista.cro }}){% endif %}
+                                        </option>
+                                    {% endfor %}
+                                </select>
+                                <label for="dentista_id">Dentista Responsável *</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card mb-4">
+                        <div class="card-header bg-warning text-dark">
+                            <h5 class="card-title mb-0">
+                                <i class="bi bi-clipboard2-pulse"></i> Configuração do Atestado
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <!-- Finalidade do atestado -->
+                            <div class="form-floating mb-3">
+                                <select name="finalidade" id="finalidade" class="form-select" required>
+                                    <option value="trabalhistas" selected>Fins trabalhistas</option>
+                                    <option value="escolares">Fins escolares/acadêmicos</option>
+                                    <option value="medicos">Fins médicos</option>
+                                    <option value="juridicos">Fins jurídicos</option>
+                                    <option value="gerais">Fins gerais</option>
+                                </select>
+                                <label for="finalidade">Finalidade do Atestado *</label>
+                            </div>
+                            <!-- Número de dias com barra deslizante -->
+                            <div class="mb-3">
+                                <label for="dias_afastamento" class="form-label">Dias de Afastamento *</label>
+                                <div class="row align-items-center">
+                                    <div class="col-9">
+                                        <input type="range"
+                                               class="form-range"
+                                               id="dias-slider"
+                                               min="1"
+                                               max="7"
+                                               step="1"
+                                               value="1"
+                                               oninput="document.getElementById('dias_afastamento').value = this.value">
+                                    </div>
+                                    <div class="col-3">
+                                        <input type="number"
+                                               name="dias_afastamento"
+                                               id="dias_afastamento"
+                                               class="form-control"
+                                               min="1"
+                                               max="7"
+                                               value="1"
+                                               required
+                                               oninput="document.getElementById('dias-slider').value = this.value">
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- Opções de CID -->
+                            <div class="row mb-3">
+                                <div class="col-6">
+                                    <div class="form-check">
+                                        <input class="form-check-input"
+                                               type="checkbox"
+                                               name="incluir_cid"
+                                               id="incluir_cid"
+                                               checked>
+                                        <label class="form-check-label" for="incluir_cid">
+                                            <strong>Incluir CID no atestado</strong>
+                                        </label>
+                                    </div>
+                                </div>
+                                <div class="col-6" id="incluir_descricao_container">
+                                    <div class="form-check">
+                                        <input class="form-check-input"
+                                               type="checkbox"
+                                               name="incluir_descricao_cid"
+                                               id="incluir_descricao_cid">
+                                        <label class="form-check-label" for="incluir_descricao_cid">
+                                            <strong>Descrição</strong>
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- Texto do atestado -->
+                            <div class="form-floating mb-3">
+                                <textarea name="texto_atestado"
+                                          id="texto_atestado"
+                                          class="form-control"
+                                          required
+                                          placeholder="Digite o texto do atestado"></textarea>
+                                <label for="texto_atestado">Texto do Atestado *</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card mb-4">
+                        <div class="card-body text-end">
+                            <button type="reset" class="btn btn-outline-secondary me-2">
+                                <i class="bi bi-arrow-clockwise"></i> Limpar
+                            </button>
+                            <button type="button"
+                                    id="btn-imprimir-atestado"
+                                    class="btn btn-outline-primary me-2">
+                                <i class="bi bi-printer"></i> Imprimir HTML
+                            </button>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-file-earmark-pdf"></i> Gerar Atestado PDF
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <!-- Coluna lateral -->
+                <div class="col-md-4">
+                    <div class="card mb-4">
+                        <div class="card-header bg-info text-white">
+                            <h5 class="card-title mb-0">
+                                <i class="bi bi-search"></i> Classificação CID-10
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="mb-3">
+                                <label for="busca_cid" class="form-label">Buscar CID-10</label>
+                                <input type="text"
+                                       id="busca_cid"
+                                       class="form-control"
+                                       placeholder="Digite código ou descrição...">
+                            </div>
+                            <div id="resultados-cids" class="list-group mt-3">
+                                <!-- Resultados da busca aparecerão aqui -->
+                            </div>
+                            <!-- Campo hidden para enviar os CIDs selecionados -->
+                            <input type="hidden" name="cid_codigo" id="cid_codigo_hidden" required>
+                            <input type="hidden" name="cid_descricao" id="cid_descricao_hidden">
+                            <!-- Exibir CIDs selecionados -->
+                            <div id="cids_selecionados" class="mt-3">
+                                <strong>CIDs selecionados:</strong>
+                                <div id="lista_cids_selecionados" class="mt-2"></div>
+                                <button type="button"
+                                        class="btn btn-sm btn-outline-danger mt-2"
+                                        onclick="limparTodosCids()">
+                                    <i class="bi bi-trash"></i> Limpar todos
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+    <!-- Template de Impressão HTML (oculto) -->
+    <div id="template-impressao-atestado">
+        <div class="template-document">
+            <!-- Cabeçalho da clínica -->
+            <div class="template-header">
+                <div class="template-header-content">
+                    <div class="template-header-left">
+                        <h1 class="template-clinic-name">{{ clinica_global.nome if clinica_global else 'OdontoClinic' }}</h1>
+                        <p class="template-clinic-subtitle">Clínica Odontológica Especializada</p>
+                        <div class="template-clinic-info">
+                            {% if clinica_global and clinica_global.endereco %}
+                                <p>
+                                    📍 {{ clinica_global.endereco }}
+                                    {% if clinica_global.cep %}- CEP {{ clinica_global.cep }}{% endif %}
+                                </p>
+                            {% else %}
+                                <p>📍 Endereço da Clínica - CEP 00000-000</p>
+                            {% endif %}
+                            <p>
+                                {% if clinica_global and (clinica_global.telefone or clinica_global.celular) %}
+                                    {% if clinica_global.telefone %}📞 {{ clinica_global.telefone }}{% endif %}
+                                    {% if clinica_global.telefone and clinica_global.celular %}|{% endif %}
+                                    {% if clinica_global.celular %}📱 {{ clinica_global.celular }}{% endif %}
+                                {% else %}
+                                    📞 (11) 0000-0000 | 📱 (11) 90000-0000
+                                {% endif %}
+                            </p>
+                            {% if clinica_global and clinica_global.email %}
+                                <p>✉️ {{ clinica_global.email }}</p>
+                            {% else %}
+                                <p>✉️ contato@odontoclinic.com.br</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="template-logo-container">
+                        <!-- Logo da clínica -->
+                        <div class="template-logo-circle">
+                            <img id="print-logo-atestado"
+                                 src="{{ url_for('main.uploaded_logo', filename='clinic_logo.png') }}"
+                                 alt="Logo da Clínica"
+                                 width="80"
+                                 height="80"
+                                 class="template-logo-img"
+                                 onerror="this.style.display='none'; this.parentNode.innerHTML='<span class=\'template-logo-fallback\'>LOGO</span>'">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- Título do documento -->
+                <div class="template-title-container">
+                    <h2 class="template-title">ATESTADO ODONTOLÓGICO</h2>
+                </div>
+                <!-- Texto do atestado -->
+                <div class="template-text">
+                    <div id="print-texto-atestado"></div>
+                </div>
+                <!-- Assinatura -->
+                <div class="template-signature-section">
+                    <div class="template-date-right">
+                        <p class="template-date-text">
+                            <span id="print-local-data"></span>
+                        </p>
+                    </div>
+                    <div class="template-signature-center">
+                        <div class="template-signature-line"></div>
+                        <p class="template-signature-name">
+                            <span id="print-dentista-nome-atestado"></span>
+                        </p>
+                        <p class="template-signature-cro">
+                            CRO: <span id="print-dentista-cro-atestado"></span>
+                        </p>
+                        <p class="template-signature-title">Cirurgião-Dentista</p>
+                    </div>
+                </div>
+                <!-- Rodapé simplificado -->
+                <div class="template-footer">
+                    <p>Este documento foi gerado eletronicamente e possui validade legal.</p>
+                </div>
+            </div>
+        </div>
+        <!-- Modal de Ajuda -->
+        <div class="modal fade"
+             id="modalAjuda"
+             tabindex="-1"
+             aria-labelledby="modalAjudaLabel"
+             aria-hidden="true">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="modalAjudaLabel">
+                            <i class="bi bi-question-circle"></i> Como usar o módulo de atestados
+                        </h5>
+                        <button type="button"
+                                class="btn-close"
+                                data-bs-dismiss="modal"
+                                aria-label="Fechar"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="accordion" id="accordionAjuda">
+                            <div class="accordion-item">
+                                <h2 class="accordion-header" id="headingOne">
+                                    <button class="accordion-button"
+                                            type="button"
+                                            data-bs-toggle="collapse"
+                                            data-bs-target="#collapseOne">1. Selecionando o Paciente</button>
+                                </h2>
+                                <div id="collapseOne"
+                                     class="accordion-collapse collapse show"
+                                     data-bs-parent="#accordionAjuda">
+                                    <div class="accordion-body">
+                                        <p>Digite o nome do paciente para buscar na lista. O sistema mostrará o nome e CPF para facilitar a identificação.</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="accordion-item">
+                                <h2 class="accordion-header" id="headingTwo">
+                                    <button class="accordion-button collapsed"
+                                            type="button"
+                                            data-bs-toggle="collapse"
+                                            data-bs-target="#collapseTwo">2. Código CID-10</button>
+                                </h2>
+                                <div id="collapseTwo"
+                                     class="accordion-collapse collapse"
+                                     data-bs-parent="#accordionAjuda">
+                                    <div class="accordion-body">
+                                        <p>Busque pelo código ou descrição do CID-10. Temos mais de 14.000 códigos disponíveis.</p>
+                                        <p>
+                                            <strong>Dica:</strong> Para odontologia, use códigos que começam com "K".
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="accordion-item">
+                                <h2 class="accordion-header" id="headingThree">
+                                    <button class="accordion-button collapsed"
+                                            type="button"
+                                            data-bs-toggle="collapse"
+                                            data-bs-target="#collapseThree">3. Texto Automático</button>
+                                </h2>
+                                <div id="collapseThree"
+                                     class="accordion-collapse collapse"
+                                     data-bs-parent="#accordionAjuda">
+                                    <div class="accordion-body">
+                                        <p>Ao selecionar um CID-10, o texto do atestado é preenchido automaticamente com um modelo apropriado.</p>
+                                        <p>Você pode editar o texto conforme necessário antes de gerar o PDF.</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% endblock content %}
+    {% block extra_js %}
+        <script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Elementos do formulário
+    const buscaCidInput = document.getElementById('busca_cid');
+    const resultadosCidsDiv = document.getElementById('resultados-cids');
+    const cidCodigoHidden = document.getElementById('cid_codigo_hidden');
+    const cidDescricaoHidden = document.getElementById('cid_descricao_hidden');
+    const cidSelecionadosDiv = document.getElementById('cids_selecionados');
+    const listaCidsSelecionados = document.getElementById('lista_cids_selecionados');
+    const textoAtestado = document.getElementById('texto_atestado');
+    const pacienteSelect = document.getElementById('paciente_id');
+    const formAtestado = document.getElementById('form-atestado');
+    const finalidadeSelect = document.getElementById('finalidade');
+    const diasAfastamentoInput = document.getElementById('dias_afastamento');
+    const diasSlider = document.getElementById('dias-slider');
+    const incluirCidCheckbox = document.getElementById('incluir_cid');
+    const incluirDescricaoCidCheckbox = document.getElementById('incluir_descricao_cid');
+    const incluirDescricaoContainer = document.getElementById('incluir_descricao_container');
+    
+    // Array para armazenar todos os CIDs carregados e selecionados
+    let todosCids = [];
+    let cidsSelecionados = [];
+    
+    // Carregar todos os CIDs no início
+    carregarTodosCids();
+    
+    // Função para controlar visibilidade da opção de descrição
+    function controlarVisibilidadeDescricao() {
+        if (incluirCidCheckbox.checked) {
+            incluirDescricaoContainer.style.display = 'block';
+        } else {
+            incluirDescricaoContainer.style.display = 'none';
+            incluirDescricaoCidCheckbox.checked = false;
+        }
+    }
+    
+    // Configurar estado inicial
+    controlarVisibilidadeDescricao();
+    
+    // Template genérico padrão para todos os códigos CID
+    const templatePadrao = 'Atesto para os devidos fins {finalidade} que o(a) paciente {paciente}, portador(a) do CPF {paciente_cpf}, necessita de afastamento de suas atividades por {dias} dia(s) devido a tratamento odontológico{cid_info}.';
+    
+    // Função para carregar todos os CIDs
+    function carregarTodosCids() {
+        console.log('Carregando CIDs...');
+        fetch('{{ url_for("atestados.obter_todos_cids") }}')
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            }
+            return response.json();
+        })
+        .then(cids => {
+            todosCids = cids;
+            console.log(`Carregados ${todosCids.length} códigos CID-10 para busca instantânea`);
+        })
+        .catch(error => {
+            console.error('Erro ao carregar CIDs:', error);
+            resultadosCidsDiv.innerHTML = `
+                <div class="alert alert-danger">
+                    <i class="bi bi-exclamation-triangle"></i> 
+                    Erro ao carregar códigos CID-10.
+                </div>
+            `;
+        });
+    }
+    
+    // Função para busca instantânea local
+    // Função auxiliar para normalizar texto (remover acentos)
+    function normalizarTexto(texto) {
+        return texto.toLowerCase()
+            .normalize('NFD')
+            .replace(/[\u0300-\u036f]/g, ''); // Remove diacríticos (acentos)
+    }
+    
+    function buscarCidsInstantaneo(termo) {
+        if (!termo || termo.trim().length === 0) {
+            resultadosCidsDiv.innerHTML = '';
+            return;
+        }
+
+        if (termo.length < 1) {
+            resultadosCidsDiv.innerHTML = '';
+            return;
+        }
+
+        const termoNormalizado = normalizarTexto(termo);
+        const resultados = [];
+        
+        // Buscar e categorizar resultados com prioridade inteligente
+        todosCids.forEach(cid => {
+            const codigoNormalizado = normalizarTexto(cid.codigo);
+            const descricaoCompleta = normalizarTexto(cid.descricao);
+            
+            // Extrair apenas a descrição (parte após " - ")
+            const descricaoSemCodigo = descricaoCompleta.includes(' - ') 
+                ? descricaoCompleta.split(' - ', 2)[1] 
+                : descricaoCompleta;
+            
+            let prioridade = 0;
+            let match = false;
+            
+            // Prioridade 1: Código exato ou descrição que começa com o termo
+            if (codigoNormalizado.startsWith(termoNormalizado) || descricaoSemCodigo.startsWith(termoNormalizado)) {
+                prioridade = 1;
+                match = true;
+            }
+            // Prioridade 2: Descrição tem palavra que começa com o termo
+            else if (descricaoSemCodigo.split(/\s+/).some(palavra => {
+                // Remove pontuação da palavra antes de comparar
+                const palavraLimpa = palavra.replace(/[^\w]/g, '');
+                return palavraLimpa.startsWith(termoNormalizado);
+            })) {
+                prioridade = 2;
+                match = true;
+            }
+            // Prioridade 3: Código ou descrição contém o termo em qualquer lugar
+            else if (codigoNormalizado.includes(termoNormalizado) || descricaoSemCodigo.includes(termoNormalizado)) {
+                prioridade = 3;
+                match = true;
+            }
+            
+            if (match) {
+                resultados.push({
+                    ...cid,
+                    prioridade: prioridade,
+                    descricaoSemCodigo: descricaoSemCodigo
+                });
+            }
+        });
+        
+        // Ordenar por prioridade e depois alfabeticamente
+        const cidsFiltrados = resultados.sort((a, b) => {
+            if (a.prioridade !== b.prioridade) {
+                return a.prioridade - b.prioridade; // Menor prioridade primeiro
+            }
+            return a.descricaoSemCodigo.localeCompare(b.descricaoSemCodigo); // Alfabético
+        });
+
+        // Limitar a 30 resultados para performance
+        const cidsLimitados = cidsFiltrados.slice(0, 30);
+        mostrarCids(cidsLimitados, cidsFiltrados.length);
+    }
+    
+    // Função para mostrar CIDs na lista
+    function mostrarCids(cids, totalEncontrados) {
+        resultadosCidsDiv.innerHTML = '';
+
+        if (cids.length === 0) {
+            resultadosCidsDiv.innerHTML = `
+                <div class="alert alert-warning">
+                    <i class="bi bi-search"></i> 
+                    Nenhum código CID-10 encontrado.
+                </div>
+            `;
+            return;
+        }
+
+        // Mostrar informação sobre resultados limitados
+        if (totalEncontrados > 30) {
+            const infoDiv = document.createElement('div');
+            infoDiv.className = 'alert alert-info py-2 mb-2';
+            infoDiv.innerHTML = `
+                <small>
+                    <i class="bi bi-info-circle"></i> 
+                    Mostrando 30 de ${totalEncontrados} resultados encontrados.
+                </small>
+            `;
+            resultadosCidsDiv.appendChild(infoDiv);
+        }
+
+        cids.forEach(cid => {
+            const item = document.createElement('a');
+            item.href = '#';
+            item.className = 'list-group-item list-group-item-action';
+            
+            // Destacar o código e a descrição
+            const partes = cid.descricao.split(' - ');
+            const codigo = partes[0];
+            const descricao = partes.slice(1).join(' - ');
+            
+            item.innerHTML = `
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <strong class="text-primary">${codigo}</strong>
+                        <br><small class="text-muted">${descricao}</small>
+                    </div>
+                    <i class="bi bi-arrow-right text-muted"></i>
+                </div>
+            `;
+
+            item.addEventListener('click', function(e) {
+                e.preventDefault();
+                selecionarCid(cid);
+            });
+
+            resultadosCidsDiv.appendChild(item);
+        });
+    }
+    
+    // Função para selecionar um CID (múltipla seleção)
+    function selecionarCid(cid) {
+        // Verificar se o CID já foi selecionado
+        const jaExiste = cidsSelecionados.find(c => c.codigo === cid.codigo);
+        if (jaExiste) {
+            alert('Este CID já foi selecionado!');
+            return;
+        }
+        
+        // Adicionar CID à lista de selecionados
+        cidsSelecionados.push(cid);
+        
+        // Atualizar campos hidden (usar apenas o primeiro CID para compatibilidade)
+        if (cidsSelecionados.length === 1) {
+            cidCodigoHidden.value = cid.codigo;
+            cidDescricaoHidden.value = cid.descricao;
+        } else {
+            // Para múltiplos CIDs, concatenar códigos separados por vírgula
+            cidCodigoHidden.value = cidsSelecionados.map(c => c.codigo).join(', ');
+            cidDescricaoHidden.value = cidsSelecionados.map(c => c.descricao).join(' | ');
+        }
+        
+        // Atualizar exibição dos CIDs selecionados
+        atualizarExibicaoCids();
+        
+        // Limpar busca
+        buscaCidInput.value = '';
+        resultadosCidsDiv.innerHTML = `
+            <div class="text-success text-center py-3">
+                <i class="bi bi-check-circle"></i><br>
+                CID adicionado com sucesso!<br>
+                <small>Total selecionados: ${cidsSelecionados.length}</small>
+            </div>
+        `;
+        
+        // Preencher texto do atestado
+        preencherTextoAtestado();
+        
+        console.log('CID adicionado:', cid);
+        console.log('CIDs selecionados:', cidsSelecionados);
+    }
+    
+    // Função para atualizar a exibição dos CIDs selecionados
+    function atualizarExibicaoCids() {
+        if (cidsSelecionados.length === 0) {
+            cidSelecionadosDiv.style.display = 'none';
+            return;
+        }
+        
+        cidSelecionadosDiv.style.display = 'block';
+        
+        let html = '';
+        cidsSelecionados.forEach((cid, index) => {
+            // Corrigir duplicação: remover código do início da descrição
+            const descricaoLimpa = cid.descricao.replace(/^[A-Z0-9]+\s*-\s*/, '');
+            
+            html += `
+                <div class="alert alert-success py-2 mb-2">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <strong>${cid.codigo}</strong> - ${descricaoLimpa}
+                        </div>
+                        <button type="button" class="btn btn-sm btn-outline-danger" onclick="removerCid(${index})">
+                            <i class="bi bi-x"></i>
+                        </button>
+                    </div>
+                </div>
+            `;
+        });
+        
+        listaCidsSelecionados.innerHTML = html;
+    }
+    
+    // Função para remover um CID específico
+    function removerCid(index) {
+        cidsSelecionados.splice(index, 1);
+        
+        // Atualizar campos hidden
+        if (cidsSelecionados.length === 0) {
+            cidCodigoHidden.value = '';
+            cidDescricaoHidden.value = '';
+        } else if (cidsSelecionados.length === 1) {
+            cidCodigoHidden.value = cidsSelecionados[0].codigo;
+            cidDescricaoHidden.value = cidsSelecionados[0].descricao;
+        } else {
+            cidCodigoHidden.value = cidsSelecionados.map(c => c.codigo).join(', ');
+            cidDescricaoHidden.value = cidsSelecionados.map(c => c.descricao).join(' | ');
+        }
+        
+        // Atualizar exibição
+        atualizarExibicaoCids();
+        
+        // Atualizar texto do atestado
+        preencherTextoAtestado();
+    }
+    
+    // Função para limpar todos os CIDs selecionados
+    window.limparTodosCids = function() {
+        cidsSelecionados = [];
+        cidCodigoHidden.value = '';
+        cidDescricaoHidden.value = '';
+        atualizarExibicaoCids();
+        
+        resultadosCidsDiv.innerHTML = '';
+        
+        // Limpar texto do atestado
+        textoAtestado.value = '';
+    };
+    
+    // Função para preencher texto automaticamente
+    function preencherTextoAtestado() {
+        if (cidsSelecionados.length === 0) return;
+        
+        // Usar sempre o template genérico padrão
+        let template = templatePadrao;
+        
+        // Obter valores dos campos
+        const diasValue = diasAfastamentoInput.value || '1';
+        const finalidadeValue = finalidadeSelect.value;
+        const incluirCid = incluirCidCheckbox.checked;
+        const incluirDescricaoCid = incluirDescricaoCidCheckbox.checked;
+        
+        // Definir finalidade
+        let finalidadeTexto = '';
+        switch(finalidadeValue) {
+            case 'trabalhistas':
+                finalidadeTexto = 'trabalhistas';
+                break;
+            case 'escolares':
+                finalidadeTexto = 'escolares/acadêmicos';
+                break;
+            case 'medicos':
+                finalidadeTexto = 'médicos';
+                break;
+            case 'juridicos':
+                finalidadeTexto = 'jurídicos';
+                break;
+            case 'gerais':
+                finalidadeTexto = 'gerais';
+                break;
+            default:
+                finalidadeTexto = 'que se fizerem necessários';
+        }
+        
+        // Construir informação dos CIDs
+        let cidInfo = '';
+        if (incluirCid) {
+            if (cidsSelecionados.length === 1) {
+                const cid = cidsSelecionados[0];
+                if (incluirDescricaoCid) {
+                    // Extrair apenas a descrição (parte após " - ")
+                    const partes = cid.descricao.split(' - ');
+                    const descricaoLimpa = partes.length > 1 ? partes.slice(1).join(' - ') : cid.descricao;
+                    cidInfo = ` (CID ${cid.codigo}: ${descricaoLimpa})`;
+                } else {
+                    cidInfo = ` (CID ${cid.codigo})`;
+                }
+            } else {
+                // Múltiplos CIDs
+                if (incluirDescricaoCid) {
+                    const cidsTexto = cidsSelecionados.map(cid => {
+                        // Extrair apenas a descrição (parte após " - ")
+                        const partes = cid.descricao.split(' - ');
+                        const descricaoLimpa = partes.length > 1 ? partes.slice(1).join(' - ') : cid.descricao;
+                        return `${cid.codigo}: ${descricaoLimpa}`;
+                    }).join('; ');
+                    cidInfo = ` (CIDs ${cidsTexto})`;
+                } else {
+                    const codigos = cidsSelecionados.map(cid => cid.codigo).join(', ');
+                    cidInfo = ` (CIDs ${codigos})`;
+                }
+            }
+        } else {
+            cidInfo = '';
+        }
+        
+        // Substituir placeholders
+        template = template.replace('{finalidade}', finalidadeTexto);
+        template = template.replace('{dias}', diasValue);
+        template = template.replace('{cid_info}', cidInfo);
+        
+        // Se há paciente selecionado, substitui o nome e CPF
+        const pacienteSelected = pacienteSelect.value;
+        if (pacienteSelected) {
+            const pacienteOption = pacienteSelect.querySelector(`option[value="${pacienteSelected}"]`);
+            if (pacienteOption) {
+                const nomePaciente = pacienteOption.textContent.split(' (')[0];
+                const cpfPaciente = pacienteOption.getAttribute('data-cpf') || 'CPF não informado';
+                template = template.replace('{paciente}', nomePaciente);
+                template = template.replace('{paciente_cpf}', cpfPaciente);
+            } else {
+                template = template.replace('{paciente}', '[Nome do Paciente]');
+                template = template.replace('{paciente_cpf}', '[CPF não informado]');
+            }
+        } else {
+            template = template.replace('{paciente}', '[Nome do Paciente]');
+            template = template.replace('{paciente_cpf}', '[CPF não informado]');
+        }
+        
+        textoAtestado.value = template;
+    }
+    
+    // Event listeners
+    buscaCidInput.addEventListener('input', function() {
+        buscarCidsInstantaneo(this.value);
+    });
+    
+    // Atualizar texto quando campos mudarem
+    finalidadeSelect.addEventListener('change', preencherTextoAtestado);
+    diasAfastamentoInput.addEventListener('input', preencherTextoAtestado);
+    diasSlider.addEventListener('input', preencherTextoAtestado);
+    incluirCidCheckbox.addEventListener('change', function() {
+        controlarVisibilidadeDescricao();
+        preencherTextoAtestado();
+    });
+    incluirDescricaoCidCheckbox.addEventListener('change', preencherTextoAtestado);
+    
+    // Atualizar nome e CPF do paciente no texto
+    pacienteSelect.addEventListener('change', function() {
+        const textoAtual = textoAtestado.value;
+        if (textoAtual && (textoAtual.includes('[Nome do Paciente]') || textoAtual.includes('[CPF não informado]'))) {
+            const selectedOption = this.querySelector(`option[value="${this.value}"]`);
+            if (selectedOption) {
+                const nomePaciente = selectedOption.textContent.split(' (')[0];
+                const cpfPaciente = selectedOption.getAttribute('data-cpf') || 'CPF não informado';
+                let novoTexto = textoAtual.replace('[Nome do Paciente]', nomePaciente);
+                novoTexto = novoTexto.replace('[CPF não informado]', cpfPaciente);
+                textoAtestado.value = novoTexto;
+            }
+        } else if (cidsSelecionados.length > 0) {
+            // Regenerar texto completo se já há CIDs selecionados
+            preencherTextoAtestado();
+        }
+    });
+    
+    // Feedback visual no submit
+    formAtestado.addEventListener('submit', function(e) {
+        // Verificar se um CID foi selecionado
+        if (!cidCodigoHidden.value) {
+            e.preventDefault();
+            alert('Por favor, selecione um código CID-10 antes de gerar o atestado.');
+            buscaCidInput.focus();
+            return false;
+        }
+        
+        // Verificar se os dias foram informados
+        if (!diasAfastamentoInput.value || diasAfastamentoInput.value < 1 || diasAfastamentoInput.value > 7) {
+            e.preventDefault();
+            alert('Por favor, informe um número válido de dias de afastamento (1 a 7 dias).');
+            diasAfastamentoInput.focus();
+            return false;
+        }
+        
+        const submitBtn = this.querySelector('button[type="submit"]');
+        const originalText = submitBtn.innerHTML;
+        submitBtn.innerHTML = '<i class="bi bi-hourglass-split"></i> Gerando PDF...';
+        submitBtn.disabled = true;
+        
+        // Restaurar botão em caso de erro (timeout)
+        setTimeout(function() {
+            submitBtn.innerHTML = originalText;
+            submitBtn.disabled = false;
+        }, 10000);
+    });
+    
+    // Limpar formulário
+    document.querySelector('button[type="reset"]').addEventListener('click', function() {
+        limparTodosCids();
+        textoAtestado.value = '';
+        pacienteSelect.value = '';
+        finalidadeSelect.value = 'trabalhistas'; // Reset para o padrão
+        diasAfastamentoInput.value = '1';
+        diasSlider.value = '1';
+        incluirCidCheckbox.checked = true;
+        incluirDescricaoCidCheckbox.checked = false;
+        controlarVisibilidadeDescricao();
+    });
+    
+    // Função para impressão HTML do atestado
+    function imprimirAtestado() {
+        // Validar se os campos obrigatórios estão preenchidos
+        if (!pacienteSelect.value) {
+            alert('Por favor, selecione um paciente antes de imprimir.');
+            pacienteSelect.focus();
+            return;
+        }
+        
+        if (!cidCodigoHidden.value) {
+            alert('Por favor, selecione um código CID-10 antes de imprimir.');
+            buscaCidInput.focus();
+            return;
+        }
+        
+        if (!textoAtestado.value.trim()) {
+            alert('Por favor, preencha o texto do atestado antes de imprimir.');
+            textoAtestado.focus();
+            return;
+        }
+        
+        const dentistaSelect = document.getElementById('dentista_id');
+        if (!dentistaSelect.value) {
+            alert('Por favor, selecione um dentista responsável antes de imprimir.');
+            dentistaSelect.focus();
+            return;
+        }
+        
+        // Abrir janela de impressão
+        const printWindow = window.open('', '_blank');
+        const template = document.getElementById('template-impressao-atestado').innerHTML;
+        
+        printWindow.document.write(`
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <title>Atestado Odontológico</title>
+    <meta name="description" content="Sistema de gestão odontológica OdontoClinic">
+    <meta name="keywords" content="odontologia, dentista, gestão, clínica, pacientes">
+                <meta charset="UTF-8">
+                <style>
+                    @media print {
+                        body { 
+                            font-size: 12pt; 
+                            margin: 0; 
+                            padding: 0;
+                            background: white;
+                        }
+                        @page {
+                            margin: 15mm;
+                            size: A4;
+                        }
+                    }
+                    @media screen {
+                        body {
+                            background: #f5f5f5;
+                            padding: 20px;
+                        }
+                    }
+</style>
+            </head>
+            <body>${template}</body>
+            </html>
+        `);
+        
+        // Função para preencher dados e imprimir
+        function preencherEImprimirAtestado() {
+            const dataAtual = new Date();
+            const numeroAtestado = `${dataAtual.getFullYear()}${String(dataAtual.getMonth() + 1).padStart(2, '0')}${String(dataAtual.getDate()).padStart(2, '0')}-${Math.floor(Math.random() * 1000).toString().padStart(3, '0')}`;
+            
+            // Obter dados do paciente
+            const pacienteOption = pacienteSelect.selectedOptions[0];
+            const pacienteNome = pacienteOption ? pacienteOption.textContent.split(' (')[0] : '';
+            
+            // Obter dados do dentista
+            const dentistaOption = dentistaSelect.selectedOptions[0];
+            const dentistaNome = dentistaOption ? dentistaOption.textContent.split(' (')[0] : '';
+            const dentistaTexto = dentistaOption ? dentistaOption.textContent : '';
+            const croMatch = dentistaTexto.match(/CRO:\s*([^)]+)/);
+            const dentistaCro = croMatch ? croMatch[1] : '';
+            
+            // Obter dados do CID
+            const cidCodigo = cidCodigoHidden.value;
+            const cidDescricao = cidDescricaoHidden.value;
+            const cidDescricaoLimpa = cidDescricao.split(' - ').slice(1).join(' - ');
+            
+            // Formatar data
+            const hoje = new Date();
+            const meses = [
+                'janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho',
+                'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro'
+            ];
+            const dataFormatada = `${hoje.getDate()} de ${meses[hoje.getMonth()]} de ${hoje.getFullYear()}`;
+            
+            // Obter local (usar dados da clínica se disponível)
+            const localData = `{{ clinica_global.cidade if clinica_global and clinica_global.cidade else 'Local' }}, ${dataFormatada}`;
+            
+            // Preencher os dados no template de impressão
+            const elementosPreencher = {
+                'print-texto-atestado': textoAtestado.value,
+                'print-dentista-nome-atestado': dentistaNome,
+                'print-dentista-cro-atestado': dentistaCro,
+                'print-local-data': localData
+            };
+            
+            // Preencher elementos no documento de impressão
+            Object.keys(elementosPreencher).forEach(id => {
+                const elemento = printWindow.document.getElementById(id);
+                if (elemento) {
+                    elemento.textContent = elementosPreencher[id];
+                }
+            });
+            
+            // Configurar logo
+            const logoOriginal = document.getElementById('print-logo-atestado');
+            const logoImpressao = printWindow.document.getElementById('print-logo-atestado');
+            
+            if (logoOriginal && logoImpressao) {
+                if (logoOriginal.complete && logoOriginal.naturalHeight !== 0) {
+                    logoImpressao.src = logoOriginal.src;
+                    logoImpressao.style.display = 'block';
+                } else {
+                    logoImpressao.style.display = 'none';
+                    logoImpressao.parentNode.innerHTML = '<span class="template-logo-fallback">LOGO</span>';
+                }
+            }
+            
+            printWindow.document.close();
+            
+            // Atraso para garantir que o conteúdo seja carregado antes de imprimir
+            setTimeout(() => {
+                printWindow.print();
+                printWindow.close();
+            }, 800);
+        }
+        
+        // Executar preenchimento e impressão
+        preencherEImprimirAtestado();
+    }
+    
+    // Event listener para o botão de impressão
+    const btnImprimirAtestado = document.getElementById('btn-imprimir-atestado');
+    if (btnImprimirAtestado) {
+        btnImprimirAtestado.addEventListener('click', imprimirAtestado);
+    }
+    
+    console.log('Módulo de atestados carregado com busca otimizada!');
+});
+        </script>
+    {% endblock extra_js %}

@@ -1,0 +1,25 @@
+{% extends 'core/base.html' %}
+{% block title %}Login{% endblock %}
+{% block content %}
+<h1>Login (Placeholder)</h1>
+<form method="post">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() if csrf_token is defined else '' }}">
+    <div class="mb-3">
+        <label for="username" class="form-label">Usuário</label>
+        {% if users and users|length > 0 %}
+        <select class="form-select" id="username" name="username" required>
+            {% for u in users %}
+            <option value="{{ u.username }}">{{ u.nome_profissional or u.nome_completo or u.username }}</option>
+            {% endfor %}
+        </select>
+        {% else %}
+        <input class="form-control" id="username" name="username" required>
+        {% endif %}
+    </div>
+    <div class="mb-3">
+        <label for="password" class="form-label">Senha</label>
+        <input type="password" class="form-control" id="password" name="password" required>
+    </div>
+    <button class="btn btn-primary">Entrar</button>
+</form>
+{% endblock %}

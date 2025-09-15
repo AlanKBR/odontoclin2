@@ -1,0 +1,21 @@
+Flask           # Framework web principal
+Flask-SQLAlchemy # ORM para integração com bancos de dados
+Flask-Login      # Gerenciamento de autenticação de usuários
+Flask-WTF        # Integração de formulários WTForms ao Flask
+WTForms          # Criação e validação de formulários
+markupsafe       # Segurança para renderização de templates
+email-validator  # Validação de e-mails em formulários
+requests         # Requisições HTTP
+Flask-Mobility   # Detecção de dispositivos móveis
+torch            # Framework de deep learning (AI)
+accelerate       # Otimização de execução de modelos AI
+sentencepiece    # Tokenização de texto para modelos AI
+protobuf         # Serialização de dados (usado por AI)
+openai           # Integração com API OpenAI
+llama-cpp-python # Suporte a modelos GGUF (AI local)
+psutil           # Monitoramento de recursos do sistema
+huggingface-hub[hf_xet] # Download de modelos AI via Hugging Face
+python-dotenv    # Carregar variáveis de ambiente de .env (opcional)
+pyngrok          # Túnel ngrok para expor o servidor local
+reportlab        # Geração de PDFs para módulo de atestados
+python-dateutil  # Parse de datas usado pela Agenda

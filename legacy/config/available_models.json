@@ -1,0 +1,95 @@
+{
+  "recommended_models": [
+    {
+      "name": "microsoft/DialoGPT-small",
+      "description": "Small conversational AI model optimized for dialogue",
+      "type": "conversational",
+      "size_estimate": "~117MB",
+      "recommended": true,
+      "tags": ["conversational", "small", "portuguese"]
+    },
+    {
+      "name": "microsoft/DialoGPT-medium", 
+      "description": "Medium-sized conversational AI with better context understanding",
+      "type": "conversational",
+      "size_estimate": "~350MB",
+      "recommended": true,
+      "tags": ["conversational", "medium"]
+    },
+    {
+      "name": "pierreguillou/gpt2-small-portuguese",
+      "description": "GPT-2 model fine-tuned for Portuguese language",
+      "type": "text-generation",
+      "size_estimate": "~500MB",
+      "recommended": true,
+      "tags": ["portuguese", "text-generation", "gpt2"]
+    },
+    {
+      "name": "neuralmind/bert-base-portuguese-cased",
+      "description": "BERT model for Portuguese language tasks",
+      "type": "language-model",
+      "size_estimate": "~400MB",
+      "recommended": false,
+      "tags": ["portuguese", "bert", "nlp"]
+    },
+    {
+      "name": "BioMistral/BioMistral-7B",
+      "description": "Large language model specialized for medical and biological domains",
+      "type": "medical",
+      "size_estimate": "~4GB",
+      "recommended": false,
+      "tags": ["medical", "biology", "large", "specialized"]
+    },
+    {
+      "name": "microsoft/BioGPT-Large",
+      "description": "Large GPT model trained on biomedical literature",
+      "type": "medical",
+      "size_estimate": "~1.5GB",
+      "recommended": false,
+      "tags": ["medical", "biology", "gpt", "biomedical"]
+    },
+    {
+      "name": "allenai/scibert_scivocab_uncased",
+      "description": "BERT model pre-trained on scientific publications",
+      "type": "scientific",
+      "size_estimate": "~400MB",
+      "recommended": false,
+      "tags": ["scientific", "bert", "research", "papers"]
+    },
+    {
+      "name": "gpt2",
+      "description": "OpenAI's GPT-2 base model for text generation",
+      "type": "text-generation",
+      "size_estimate": "~500MB",
+      "recommended": true,
+      "tags": ["text-generation", "openai", "popular"]
+    }
+  ],
+  "search_categories": [
+    {
+      "name": "conversational",
+      "description": "Models for dialogue and conversation",
+      "tags": ["conversational", "chat", "dialogue"]
+    },
+    {
+      "name": "text-generation", 
+      "description": "Models for text generation and completion",
+      "tags": ["text-generation", "completion", "writing"]
+    },
+    {
+      "name": "medical",
+      "description": "Models specialized for medical and healthcare applications",
+      "tags": ["medical", "healthcare", "biology", "biomedical"]
+    },
+    {
+      "name": "portuguese",
+      "description": "Models optimized for Portuguese language",
+      "tags": ["portuguese", "brasil", "pt-br"]
+    },
+    {
+      "name": "scientific",
+      "description": "Models trained on scientific literature",
+      "tags": ["scientific", "research", "academic", "papers"]
+    }
+  ]
+}

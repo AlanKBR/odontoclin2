@@ -1,0 +1,276 @@
+﻿{% extends "base.html" %}
+{% block title %}Agenda{% endblock title %}
+{% block extra_css %}
+  <link href="{{ url_for('agenda.static', filename='bootstrap.min.css') }}" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('agenda.static', filename='vendor/flatpickr/flatpickr.min.css') }}">
+  <link href="{{ url_for('agenda.static', filename='calendar-theme.css') }}" rel="stylesheet">
+  <link id="theme-override" rel="stylesheet">
+  <style>
+    /* Aplicar destaque forte de feriado apenas no tema claro */
+    body:not(.theme-dark) .fc-day-holiday,
+    body:not(.theme-dark) .fc-holiday-bg {
+      background: #ffe8e8 !important;
+    }
+    /* Mini/main empty-day overlay (sem eventos) apenas no tema claro */
+    body:not(.theme-dark) .fc-empty-bg {
+      background: #fff3cd !important; /* bootstrap warning bg */
+      opacity: 0.6 !important;
+      border-radius: 4px;
+      pointer-events: none;
+    }
+    body:not(.theme-dark) .fc-day-other .fc-empty-bg {
+      opacity: 0.35 !important;
+    }
+
+    .fc-daygrid-day.fc-day-holiday .fc-daygrid-day-number::after {
+      content: '★';
+      color: #dc2626;
+      font-size: 0.7rem;
+      margin-left: 4px;
+    }
+
+  </style>
+  <style>
+    #dentistsSidebar {
+      position: fixed;
+      /* Anchor to the right of the app sidebar (expanded) */
+      left: calc(var(--sidebar-width) + 12px);
+      top: 12px;
+      width: 260px;
+      max-height: calc(100vh - 24px);
+      overflow: auto;
+      background: var(--bs-card-bg);
+      border: 1px solid var(--bs-border-color);
+      border-radius: .5rem;
+      box-shadow: var(--bs-box-shadow-sm);
+      z-index: 1200;
+    }
+
+    /* When the sidebar is collapsed, shift dentistsSidebar accordingly */
+    .modern-sidebar.collapsed + .main-content #dentistsSidebar {
+      left: calc(var(--sidebar-collapsed-width) + 12px);
+    }
+
+    #dentistsSidebar h6 {
+      margin: 0 0 8px 0;
+    }
+
+    .dentist-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 4px 0;
+    }
+
+    .dentist-color {
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      border: 1px solid rgba(0, 0, 0, .25);
+      flex: 0 0 14px;
+    }
+
+    .dentist-list {
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    .dentist-list label {
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .dup-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+    }
+
+    .dup-group .btn-compact {
+      padding: .15rem .35rem;
+      line-height: 1.1;
+      font-size: .8rem;
+    }
+
+    #calendar {
+      margin-left: 288px;
+    }
+
+    #filterNotice {
+      margin-left: 288px;
+      margin-top: 8px;
+      margin-bottom: 0;
+  display: none; /* hidden by default; JS will show with a small delay if needed */
+    }
+
+    .dentist-rightbar {
+      border-right: 6px solid transparent;
+    }
+
+    .dentist-leftbar {
+      border-left: 2px solid transparent;
+    }
+
+    @media (max-width: 992px) {
+      #dentistsSidebar {
+        position: static;
+        width: auto;
+        max-height: none;
+        margin: 8px;
+      }
+
+      #calendar {
+        margin-left: 0;
+      }
+
+      #filterNotice {
+        margin-left: 0;
+      }
+    }
+
+  </style>
+  <style>
+    /* Mini calendário estilo compacto */
+    #miniCalendar {
+      margin: 6px 4px 10px 4px;
+    }
+
+    #miniCalendar .fc {
+      font-size: 12px;
+    }
+
+    #miniCalendar .fc-toolbar {
+      padding: 0;
+      margin: 0 0 4px 0;
+    }
+
+    #miniCalendar .fc-toolbar-title {
+      font-size: 0.95rem;
+    }
+
+    #miniCalendar .fc-button {
+      padding: .1rem .35rem;
+      font-size: .8rem;
+    }
+
+    #miniCalendar .fc-daygrid-day-number {
+      font-size: .75rem;
+      padding: 0;
+      text-decoration: none !important;
+    }
+
+    #miniCalendar .fc-daygrid-day-number:hover {
+      text-decoration: none !important;
+    }
+
+    #miniCalendar .fc-daygrid-day {
+      cursor: pointer;
+      padding: 0 !important;
+    }
+
+    /* tornar os dias quadrados (altura = largura) usando aspect-ratio */
+    #miniCalendar .fc-daygrid-day-frame {
+      aspect-ratio: 1 / 1;
+      display: block;
+      width: 100%;
+      position: relative;
+    }
+
+    /* centralizar o número no meio do quadrado e não bloquear cliques nos eventos */
+    #miniCalendar .fc-daygrid-day-top {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0;
+      margin: 0;
+      pointer-events: none;
+    }
+
+    /* posicionar eventos do mini sem quebrar o quadrado */
+    #miniCalendar .fc-daygrid-day-bottom {
+      display: none !important;
+    }
+
+    /* esconder render padrão de eventos no mini para não deslocar layout */
+    #miniCalendar .fc-daygrid-day-events,
+    #miniCalendar .fc-daygrid-day-bottom {
+      display: none !important;
+    }
+
+    /* container de indicadores (barrinhas) no rodapé de cada dia */
+    #miniCalendar .mini-indicators {
+      position: absolute;
+      left: 4px;
+      right: 4px;
+      bottom: 4px;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      pointer-events: none;
+    }
+
+    #miniCalendar .mini-indicators .bar {
+      height: 3px;
+      width: 100%;
+      border-radius: 2px;
+      background: var(--bs-primary);
+    }
+
+    /* evitar alturas fixas interferirem */
+    #miniCalendar .fc-scrollgrid,
+    #miniCalendar .fc-scrollgrid-sync-table,
+    #miniCalendar .fc-daygrid-body,
+    #miniCalendar .fc-view-harness,
+    #miniCalendar .fc-view-harness-active {
+      height: auto !important;
+    }
+
+    /* destaque do dia selecionado no mini */
+    #miniCalendar .mini-selected .fc-daygrid-day-frame {
+      outline: 2px solid var(--bs-primary);
+      outline-offset: -2px;
+      border-radius: 4px;
+    }
+
+    /* destaque do "hoje" no mini (similar ao FullCalendar, mas visível no compacto) */
+    #miniCalendar .fc-day-today .fc-daygrid-day-frame {
+      background-color: rgba(13, 110, 253, .08);
+      border-radius: 4px;
+    }
+
+  </style>
+{% endblock extra_css %}
+{% block content %}
+  <script>
+    window.__AGENDA_BASE__ = {{ url_for('agenda.index') | tojson }}.replace(/\/$/, '');
+  </script>
+  <aside id="dentistsSidebar" class="card shadow-sm small">
+    <div class="card-header py-2 d-flex align-items-center justify-content-between">
+      <span class="fw-semibold">Agenda</span>
+    </div>
+    <div class="px-2 pt-2" id="miniCalendar"></div>
+    <div class="card-header py-2 border-top"><span class="fw-semibold">Dentistas</span></div>
+    <div class="card-body p-2">
+      <div class="form-check mb-2">
+        <input type="checkbox" class="form-check-input" id="dent_all">
+        <label for="dent_all" class="form-check-label">Todos (sem dentista)</label>
+      </div>
+      <div id="dentistsContainer" class="small">
+        <div class="text-muted">Carregando...</div>
+      </div>
+    </div>
+  </aside>
+  <div id="filterNotice" class="alert alert-info py-1 px-2 small">Nenhuma opção marcada: mostrando apenas eventos com dentista inválido (excluído). Marque algum dentista ou "Todos (sem dentista)" para ver mais.</div>
+  <div id="calendar"></div>
+  <div id="popover-container"></div>
+  <div id="contextmenu-container"></div>
+  <div id="settingsmenu-container"></div>
+  <script src="{{ url_for('agenda.static', filename='fullcalendar/fullcalendar.global.min.js') }}"></script>
+  <script src="{{ url_for('agenda.static', filename='bootstrap.bundle.min.js') }}"></script>
+  <script src="{{ url_for('agenda.static', filename='vendor/flatpickr/flatpickr.min.js') }}"></script>
+  <script src="{{ url_for('agenda.static', filename='vendor/flatpickr/l10n/pt.js') }}"></script>
+  <script src="{{ url_for('agenda.static', filename='app.js') }}"></script>
+{% endblock content %}

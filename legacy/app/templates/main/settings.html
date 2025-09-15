@@ -1,0 +1,388 @@
+{% extends "base.html" %}
+{% block title %}
+    Configurações
+{% endblock title %}
+{% block content %}
+    <div class="container mt-4">
+        <h2>Configurações</h2>
+        <hr>
+        <div class="row">
+            <div class="col-md-3">
+                <div class="list-group">
+                    <a href="#clinica"
+                       class="list-group-item list-group-item-action active"
+                       data-bs-toggle="list">Dados da Clínica</a>
+                    <a href="#appearance"
+                       class="list-group-item list-group-item-action"
+                       data-bs-toggle="list">Aparência</a>
+                    <a href="#account"
+                       class="list-group-item list-group-item-action"
+                       data-bs-toggle="list">Conta</a>
+                    <a href="#notifications"
+                       class="list-group-item list-group-item-action"
+                       data-bs-toggle="list">Notificações</a>
+                </div>
+            </div>
+            <div class="col-md-9">
+                <div class="tab-content">
+                    <!-- Nova aba: Dados da Clínica -->
+                    <div class="tab-pane fade show active" id="clinica">
+                        <div class="card">
+                            <div class="card-header">
+                                <h4>
+                                    <i class="bi bi-building"></i> Informações da Clínica
+                                </h4>
+                            </div>
+                            <div class="card-body">
+                                <form method="post">
+                                    {{ form.hidden_tag() }}
+                                    <div class="row mb-3">
+                                        <div class="col-md-8">
+                                            <label for="nome" class="form-label">Nome da Clínica *</label>
+                                            {{ form.nome(class="form-control", id="nome", placeholder="Nome da sua clínica") }}
+                                            {% if form.nome.errors %}
+                                                <div class="text-danger">
+                                                    {% for error in form.nome.errors %}<small>{{ error }}</small>{% endfor %}
+                                                </div>
+                                            {% endif %}
+                                        </div>
+                                        <div class="col-md-4">
+                                            <label for="cro_clinica" class="form-label">CRO da Clínica</label>
+                                            {{ form.cro_clinica(class="form-control", id="cro_clinica", placeholder="Ex: CRO-SP-123456") }}
+                                            {% if form.cro_clinica.errors %}
+                                                <div class="text-danger">
+                                                    {% for error in form.cro_clinica.errors %}<small>{{ error }}</small>{% endfor %}
+                                                </div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                    <div class="row mb-3">
+                                        <div class="col-md-12">
+                                            <label for="endereco" class="form-label">Endereço</label>
+                                            {{ form.endereco(class="form-control", id="endereco", rows="2", placeholder="Endereço completo da clínica") }}
+                                            {% if form.endereco.errors %}
+                                                <div class="text-danger">
+                                                    {% for error in form.endereco.errors %}<small>{{ error }}</small>{% endfor %}
+                                                </div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                    <div class="row mb-3">
+                                        <div class="col-md-6">
+                                            <label for="telefone" class="form-label">Telefone</label>
+                                            {{ form.telefone(class="form-control", id="telefone", placeholder="(11) 0000-0000") }}
+                                            {% if form.telefone.errors %}
+                                                <div class="text-danger">
+                                                    {% for error in form.telefone.errors %}<small>{{ error }}</small>{% endfor %}
+                                                </div>
+                                            {% endif %}
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label for="celular" class="form-label">Celular/WhatsApp</label>
+                                            {{ form.celular(class="form-control", id="celular", placeholder="(11) 90000-0000") }}
+                                            {% if form.celular.errors %}
+                                                <div class="text-danger">
+                                                    {% for error in form.celular.errors %}<small>{{ error }}</small>{% endfor %}
+                                                </div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                    <div class="row mb-3">
+                                        <div class="col-md-6">
+                                            <label for="email" class="form-label">E-mail</label>
+                                            {{ form.email(class="form-control", id="email", placeholder="contato@clinica.com.br") }}
+                                            {% if form.email.errors %}
+                                                <div class="text-danger">
+                                                    {% for error in form.email.errors %}<small>{{ error }}</small>{% endfor %}
+                                                </div>
+                                            {% endif %}
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label for="site" class="form-label">Site</label>
+                                            {{ form.site(class="form-control", id="site", placeholder="www.clinica.com.br") }}
+                                            {% if form.site.errors %}
+                                                <div class="text-danger">
+                                                    {% for error in form.site.errors %}<small>{{ error }}</small>{% endfor %}
+                                                </div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                    <div class="row mb-3">
+                                        <div class="col-md-4">
+                                            <label for="cep" class="form-label">CEP</label>
+                                            {{ form.cep(class="form-control", id="cep", placeholder="00000-000") }}
+                                            {% if form.cep.errors %}
+                                                <div class="text-danger">
+                                                    {% for error in form.cep.errors %}<small>{{ error }}</small>{% endfor %}
+                                                </div>
+                                            {% endif %}
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label for="cidade" class="form-label">Cidade</label>
+                                            {{ form.cidade(class="form-control", id="cidade", placeholder="São Paulo") }}
+                                            {% if form.cidade.errors %}
+                                                <div class="text-danger">
+                                                    {% for error in form.cidade.errors %}<small>{{ error }}</small>{% endfor %}
+                                                </div>
+                                            {% endif %}
+                                        </div>
+                                        <div class="col-md-2">
+                                            <label for="estado" class="form-label">Estado</label>
+                                            {{ form.estado(class="form-control", id="estado", placeholder="SP") }}
+                                            {% if form.estado.errors %}
+                                                <div class="text-danger">
+                                                    {% for error in form.estado.errors %}<small>{{ error }}</small>{% endfor %}
+                                                </div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                    <div class="row mb-3">
+                                        <div class="col-md-6">
+                                            <label for="cnpj" class="form-label">CNPJ</label>
+                                            {{ form.cnpj(class="form-control", id="cnpj", placeholder="00.000.000/0000-00") }}
+                                            {% if form.cnpj.errors %}
+                                                <div class="text-danger">
+                                                    {% for error in form.cnpj.errors %}<small>{{ error }}</small>{% endfor %}
+                                                </div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                    <hr>
+                                    <!-- Upload de Logo -->
+                                    <div class="mb-4">
+                                        <h5>
+                                            <i class="bi bi-image"></i> Logo da Clínica
+                                        </h5>
+                                        <!-- Prévia do logo atual se existir -->
+                                        <div class="row mb-3">
+                                            <div class="col-12">
+                                                <label class="form-label">Logo Atual:</label>
+                                                <div class="border rounded p-3 bg-light text-center flex-logo-preview">
+                                                    <img src="{{ url_for('main.uploaded_logo', filename='clinic_logo.png') }}"
+                                                         alt="Logo da Clínica"
+                                                         class="img-fluid"
+                                                         height="100" width="300"
+                                                         onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+                                                    <div class="logo-placeholder d-none">
+                                                        <i class="bi bi-image logo-icon"></i>
+                                                        <p class="mb-0 mt-2">Nenhum logo definido</p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <form action="{{ url_for("main.upload_logo") }}"
+                                              method="post"
+                                              enctype="multipart/form-data">
+                                            <div class="row">
+                                                <div class="col-md-8">
+                                                    <label for="logoUpload" class="form-label">Alterar logo da clínica (formato PNG)</label>
+                                                    <input class="form-control"
+                                                           type="file"
+                                                           id="logoUpload"
+                                                           name="logo"
+                                                           accept="image/png">
+                                                    <div class="form-text">Recomendado: 300x100 pixels, formato PNG com fundo transparente</div>
+                                                </div>
+                                                <div class="col-md-4 d-flex align-items-end">
+                                                    <button type="submit" class="btn btn-outline-primary">
+                                                        <i class="bi bi-upload"></i> Enviar Logo
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </form>
+                                    </div>
+                                    <hr>
+                                    <div class="d-flex justify-content-end">{{ form.submit(class="btn btn-primary") }}</div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="tab-pane fade" id="appearance">
+                        <div class="card">
+                            <div class="card-header">
+                                <h4>Aparência</h4>
+                            </div>
+                            <div class="card-body">
+                                <h5>Tema</h5>
+                                <div class="form-check form-switch mb-3">
+                                    <input class="form-check-input" type="checkbox" id="darkModeToggle">
+                                    <label class="form-check-label" for="darkModeToggle">Modo Escuro</label>
+                                </div>
+                                <div class="d-flex mt-4">
+                                    <div class="theme-preview light-theme me-4">
+                                        <div class="card theme-card" onclick="setLightTheme()">
+                                            <div class="card-body text-center">
+                                                <div class="theme-sample">
+                                                    <div class="theme-header"></div>
+                                                    <div class="theme-content"></div>
+                                                </div>
+                                                <p class="mt-2 mb-0">Tema Claro</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="theme-preview dark-theme">
+                                        <div class="card theme-card" onclick="setDarkTheme()">
+                                            <div class="card-body text-center">
+                                                <div class="theme-sample dark">
+                                                    <div class="theme-header"></div>
+                                                    <div class="theme-content"></div>
+                                                </div>
+                                                <p class="mt-2 mb-0">Tema Escuro</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="tab-pane fade" id="account">
+                        <div class="card">
+                            <div class="card-header">
+                                <h4>Configurações da Conta</h4>
+                            </div>
+                            <div class="card-body">
+                                <p>Opções de configuração da conta serão adicionadas aqui.</p>
+                                <div class="alert alert-info">
+                                    <i class="bi bi-info-circle"></i>
+                                    As configurações de logo da clínica foram movidas para a aba "Dados da Clínica".
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="tab-pane fade" id="notifications">
+                        <div class="card">
+                            <div class="card-header">
+                                <h4>Configurações de Notificações</h4>
+                            </div>
+                            <div class="card-body">
+                                <p>Opções de configuração de notificações serão adicionadas aqui.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+        <style>
+    .flex-logo-preview {
+        min-height: 120px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    .logo-placeholder {
+        color: #6c757d;
+    }
+    .logo-icon {
+        font-size: 2rem;
+    }
+    .theme-preview .theme-card {
+        cursor: pointer;
+        transition: transform 0.2s;
+        width: 150px;
+    }
+
+    .theme-preview .theme-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+
+    .theme-sample {
+        width: 100%;
+        height: 80px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        overflow: hidden;
+    }
+
+    .theme-sample .theme-header {
+        height: 20px;
+        background-color: #f8f9fa;
+        border-bottom: 1px solid #ddd;
+    }
+
+    .theme-sample .theme-content {
+        height: 60px;
+        background-color: #fff;
+    }
+
+    .theme-sample.dark .theme-header {
+        background-color: #1e1e1e;
+        border-bottom: 1px solid #333;
+    }
+
+    .theme-sample.dark .theme-content {
+        background-color: #121212;
+    }
+    </style>
+    <!-- Não precisa do script aqui, pois estamos usando o script global theme-toggle.js -->
+{% endblock content %}
+{% block extra_js %}
+    <script nonce="{{ csp_nonce() }}">
+document.addEventListener('DOMContentLoaded', function() {
+    // Máscara para telefone
+    const telefoneInput = document.getElementById('telefone');
+    const celularInput = document.getElementById('celular');
+    
+    function aplicarMascaraTelefone(input) {
+        input.addEventListener('input', function(e) {
+            let value = e.target.value.replace(/\D/g, '');
+            if (value.length > 10) {
+                value = value.substring(0, 11);
+            }
+            if (value.length > 10) {
+                value = value.replace(/^(\d{2})(\d{5})(\d{4})/, '($1) $2-$3');
+            } else if (value.length > 6) {
+                value = value.replace(/^(\d{2})(\d{4})(\d{0,4})/, '($1) $2-$3');
+            } else if (value.length > 2) {
+                value = value.replace(/^(\d{2})(\d{0,4})/, '($1) $2');
+            }
+            e.target.value = value;
+        });
+    }
+    
+    if (telefoneInput) aplicarMascaraTelefone(telefoneInput);
+    if (celularInput) aplicarMascaraTelefone(celularInput);
+    
+    // Máscara para CEP
+    const cepInput = document.getElementById('cep');
+    if (cepInput) {
+        cepInput.addEventListener('input', function(e) {
+            let value = e.target.value.replace(/\D/g, '');
+            if (value.length > 8) value = value.substring(0, 8);
+            if (value.length > 5) {
+                value = value.replace(/^(\d{5})(\d{0,3})/, '$1-$2');
+            }
+            e.target.value = value;
+        });
+    }
+    
+    // Máscara para CNPJ
+    const cnpjInput = document.getElementById('cnpj');
+    if (cnpjInput) {
+        cnpjInput.addEventListener('input', function(e) {
+            let value = e.target.value.replace(/\D/g, '');
+            if (value.length > 14) value = value.substring(0, 14);
+            if (value.length > 12) {
+                value = value.replace(/^(\d{2})(\d{3})(\d{3})(\d{4})(\d{0,2})/, '$1.$2.$3/$4-$5');
+            } else if (value.length > 8) {
+                value = value.replace(/^(\d{2})(\d{3})(\d{3})(\d{0,4})/, '$1.$2.$3/$4');
+            } else if (value.length > 5) {
+                value = value.replace(/^(\d{2})(\d{3})(\d{0,3})/, '$1.$2.$3');
+            } else if (value.length > 2) {
+                value = value.replace(/^(\d{2})(\d{0,3})/, '$1.$2');
+            }
+            e.target.value = value;
+        });
+    }
+    
+    // Converter estado para maiúsculo
+    const estadoInput = document.getElementById('estado');
+    if (estadoInput) {
+        estadoInput.addEventListener('input', function(e) {
+            e.target.value = e.target.value.toUpperCase();
+        });
+    }
+});
+    </script>
+{% endblock extra_js %}

@@ -1,0 +1,141 @@
+{% extends "mobile/base.html" %}
+{% block title %}
+    Dashboard - OdontoClinic
+{% endblock title %}
+{% block header_title %}
+    Dashboard
+{% endblock header_title %}
+{% block content %}
+    <div class="mobile-grid">
+        <!-- Estatísticas Rápidas -->
+        <div class="mobile-card card">
+            <div class="card-body text-center">
+                <i class="bi bi-people text-primary icon-2rem"></i>
+                <h3 class="card-title mt-2">{{ pacientes_count or 0 }}</h3>
+                <p class="card-text text-muted">Pacientes Cadastrados</p>
+            </div>
+        </div>
+        <div class="mobile-card card">
+            <div class="card-body text-center">
+                <i class="bi bi-calendar-event text-success icon-2rem"></i>
+                <h3 class="card-title mt-2">{{ agendamentos_hoje or 0 }}</h3>
+                <p class="card-text text-muted">Agendamentos Hoje</p>
+            </div>
+        </div>
+        <div class="mobile-card card">
+            <div class="card-body text-center">
+                <i class="bi bi-tools text-warning icon-2rem"></i>
+                <h3 class="card-title mt-2">{{ tratamentos_andamento or 0 }}</h3>
+                <p class="card-text text-muted">Tratamentos em Andamento</p>
+            </div>
+        </div>
+        <div class="mobile-card card">
+            <div class="card-body text-center">
+                <i class="bi bi-file-medical text-info icon-2rem"></i>
+                <h3 class="card-title mt-2">{{ receitas_mes or 0 }}</h3>
+                <p class="card-text text-muted">Receitas Este Mês</p>
+            </div>
+        </div>
+    </div>
+    <!-- Ações Rápidas -->
+    <div class="mt-4">
+        <h5 class="mb-3">Ações Rápidas</h5>
+        <div class="mobile-grid">
+            <a href="{{ url_for("pacientes.formulario_paciente") }}"
+               class="btn btn-primary mobile-btn">
+                <i class="bi bi-person-plus me-2"></i>
+                Novo Paciente
+            </a>
+            <a href="{{ url_for("receitas.formulario_receita") }}"
+               class="btn btn-success mobile-btn">
+                <i class="bi bi-file-medical me-2"></i>
+                Nova Receita
+            </a>
+            <a href="{{ url_for("pacientes.lista_pacientes") }}"
+               class="btn btn-info mobile-btn">
+                <i class="bi bi-search me-2"></i>
+                Buscar Paciente
+            </a>
+            <a href="{{ url_for("tratamentos.index") }}"
+               class="btn btn-warning mobile-btn">
+                <i class="bi bi-tools me-2"></i>
+                Ver Tratamentos
+            </a>
+        </div>
+    </div>
+    <!-- Últimas Atividades -->
+    <div class="mt-4">
+        <h5 class="mb-3">Últimas Atividades</h5>
+        <div class="mobile-card card">
+            <div class="card-body">
+                {% if ultimas_atividades %}
+                    <div class="list-group list-group-flush">
+                        {% for atividade in ultimas_atividades %}
+                            <div class="list-group-item d-flex justify-content-between align-items-start px-0">
+                                <div class="me-auto">
+                                    <div class="fw-bold">{{ atividade.titulo }}</div>
+                                    <small class="text-muted">{{ atividade.descricao }}</small>
+                                </div>
+                                <small class="text-muted">{{ atividade.data.strftime("%d/%m") if atividade.data else '' }}</small>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="text-center text-muted py-4">
+                        <i class="bi bi-inbox icon-2rem"></i>
+                        <p class="mt-2 mb-0">Nenhuma atividade recente</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    <!-- Agendamentos de Hoje -->
+    <div class="mt-4">
+        <h5 class="mb-3">Agendamentos de Hoje</h5>
+        <div class="mobile-card card">
+            <div class="card-body">
+                {% if agendamentos_hoje_lista %}
+                    <div class="list-group list-group-flush">
+                        {% for agendamento in agendamentos_hoje_lista %}
+                            <div class="list-group-item d-flex justify-content-between align-items-center px-0">
+                                <div>
+                                    <div class="fw-bold">{{ agendamento.paciente_nome }}</div>
+                                    <small class="text-muted">{{ agendamento.procedimento }}</small>
+                                </div>
+                                <span class="badge bg-primary rounded-pill">{{ agendamento.horario }}</span>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="text-center text-muted py-4">
+                        <i class="bi bi-calendar-x icon-2rem"></i>
+                        <p class="mt-2 mb-0">Nenhum agendamento para hoje</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+{% endblock content %}
+    <style>
+    .icon-2rem {
+        font-size: 2rem;
+    }
+    </style>
+{% block scripts %}
+    <script nonce="{{ csp_nonce() }}">
+    // Adicionar qualquer JavaScript específico para o dashboard mobile
+    document.addEventListener('DOMContentLoaded', function () {
+        // Animação simples para os cards de estatísticas
+        const cards = document.querySelectorAll('.mobile-card');
+        cards.forEach((card, index) => {
+            card.style.opacity = '0';
+            card.style.transform = 'translateY(20px)';
+            setTimeout(() => {
+                card.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
+                card.style.opacity = '1';
+                card.style.transform = 'translateY(0)';
+            }, index * 100);
+        });
+    });
+    </script>
+{% endblock scripts %}

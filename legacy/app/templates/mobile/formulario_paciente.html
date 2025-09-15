@@ -1,0 +1,306 @@
+{% extends "mobile/base.html" %}
+{% block title %}
+    {{ titulo }}
+{% endblock title %}
+{% block content %}
+    <div class="mobile-form-container">
+        <div class="mobile-form-header">
+            <h2>{{ titulo }}</h2>
+            {% if titulo == "Editar Paciente" %}
+                <a href="{{ url_for('pacientes.visualizar_paciente', paciente_id=form.id.data or 0) }}"
+                   class="btn-back">
+                    <i class="fas fa-arrow-left"></i>
+                    Voltar
+                </a>
+            {% else %}
+                <a href="{{ url_for("pacientes.listar_pacientes") }}" class="btn-back">
+                    <i class="fas fa-arrow-left"></i>
+                    Voltar
+                </a>
+            {% endif %}
+        </div>
+        <form method="post" class="mobile-form">
+            {{ form.hidden_tag() if form.hidden_tag }}
+            <div class="form-section">
+                <h3>
+                    <i class="fas fa-user"></i> Dados Pessoais
+                </h3>
+                <div class="form-group">
+                    {{ form.nome.label(class="form-label") }}
+                    {{ form.nome(class="form-control") }}
+                    {% if form.nome.errors %}<div class="field-error">{{ form.nome.errors[0] }}</div>{% endif %}
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        {{ form.data_nascimento.label(class="form-label") }}
+                        {{ form.data_nascimento(class="form-control", placeholder="DD/MM/AAAA") }}
+                        {% if form.data_nascimento.errors %}<div class="field-error">{{ form.data_nascimento.errors[0] }}</div>{% endif %}
+                    </div>
+                    <div class="form-group">
+                        {{ form.sexo.label(class="form-label") }}
+                        {{ form.sexo(class="form-control") }}
+                        {% if form.sexo.errors %}<div class="field-error">{{ form.sexo.errors[0] }}</div>{% endif %}
+                    </div>
+                </div>
+                <div class="form-group">
+                    {{ form.cpf.label(class="form-label") }}
+                    {{ form.cpf(class="form-control", placeholder="000.000.000-00") }}
+                    {% if form.cpf.errors %}<div class="field-error">{{ form.cpf.errors[0] }}</div>{% endif %}
+                </div>
+                <div class="form-group">
+                    {{ form.profissao.label(class="form-label") }}
+                    {{ form.profissao(class="form-control") }}
+                    {% if form.profissao.errors %}<div class="field-error">{{ form.profissao.errors[0] }}</div>{% endif %}
+                </div>
+            </div>
+            <div class="form-section">
+                <h3>
+                    <i class="fas fa-phone"></i> Contato
+                </h3>
+                <div class="form-group">
+                    {{ form.telefone.label(class="form-label") }}
+                    {{ form.telefone(class="form-control", placeholder="(00) 0000-0000") }}
+                    {% if form.telefone.errors %}<div class="field-error">{{ form.telefone.errors[0] }}</div>{% endif %}
+                </div>
+                <div class="form-group">
+                    {{ form.celular.label(class="form-label") }}
+                    {{ form.celular(class="form-control", placeholder="(00) 00000-0000") }}
+                    {% if form.celular.errors %}<div class="field-error">{{ form.celular.errors[0] }}</div>{% endif %}
+                </div>
+                <div class="form-group">
+                    {{ form.email.label(class="form-label") }}
+                    {{ form.email(class="form-control", placeholder="email@exemplo.com") }}
+                    {% if form.email.errors %}<div class="field-error">{{ form.email.errors[0] }}</div>{% endif %}
+                </div>
+            </div>
+            <div class="form-section">
+                <h3>
+                    <i class="fas fa-map-marker-alt"></i> Endereço
+                </h3>
+                <div class="form-group">
+                    {{ form.endereco.label(class="form-label") }}
+                    {{ form.endereco(class="form-control") }}
+                    {% if form.endereco.errors %}<div class="field-error">{{ form.endereco.errors[0] }}</div>{% endif %}
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        {{ form.bairro.label(class="form-label") }}
+                        {{ form.bairro(class="form-control") }}
+                        {% if form.bairro.errors %}<div class="field-error">{{ form.bairro.errors[0] }}</div>{% endif %}
+                    </div>
+                    <div class="form-group">
+                        {{ form.cep.label(class="form-label") }}
+                        {{ form.cep(class="form-control", placeholder="00000-000") }}
+                        {% if form.cep.errors %}<div class="field-error">{{ form.cep.errors[0] }}</div>{% endif %}
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        {{ form.cidade.label(class="form-label") }}
+                        {{ form.cidade(class="form-control") }}
+                        {% if form.cidade.errors %}<div class="field-error">{{ form.cidade.errors[0] }}</div>{% endif %}
+                    </div>
+                    <div class="form-group">
+                        {{ form.estado.label(class="form-label") }}
+                        {{ form.estado(class="form-control") }}
+                        {% if form.estado.errors %}<div class="field-error">{{ form.estado.errors[0] }}</div>{% endif %}
+                    </div>
+                </div>
+            </div>
+            <div class="form-actions">
+                <button type="submit" class="btn-primary">
+                    <i class="fas fa-save"></i>
+                    {% if titulo == "Editar Paciente" %}
+                        Atualizar
+                    {% else %}
+                        Cadastrar
+                    {% endif %}
+                </button>
+                {% if titulo == "Editar Paciente" %}
+                    <a href="{{ url_for('pacientes.visualizar_paciente', paciente_id=form.id.data or 0) }}"
+                       class="btn-secondary">
+                        <i class="fas fa-times"></i>
+                        Cancelar
+                    </a>
+                {% else %}
+                    <a href="{{ url_for("pacientes.listar_pacientes") }}"
+                       class="btn-secondary">
+                        <i class="fas fa-times"></i>
+                        Cancelar
+                    </a>
+                {% endif %}
+            </div>
+        </form>
+    </div>
+    <style>
+    .mobile-form-container {
+        padding: 1rem;
+        max-width: 100%;
+    }
+
+    .mobile-form-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1.5rem;
+        padding-bottom: 1rem;
+        border-bottom: 2px solid #e9ecef;
+    }
+
+    .mobile-form-header h2 {
+        margin: 0;
+        color: #2c3e50;
+        font-size: 1.5rem;
+    }
+
+    .btn-back {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.5rem 1rem;
+        background: #6c757d;
+        color: white;
+        text-decoration: none;
+        border-radius: 0.375rem;
+        font-size: 0.875rem;
+    }
+
+    .btn-back:hover {
+        background: #5a6268;
+        color: white;
+        text-decoration: none;
+    }
+
+    .mobile-form {
+        display: flex;
+        flex-direction: column;
+        gap: 1.5rem;
+    }
+
+    .form-section {
+        background: white;
+        border-radius: 0.5rem;
+        padding: 1.5rem;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    .form-section h3 {
+        margin: 0 0 1rem 0;
+        color: #2c3e50;
+        font-size: 1.1rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding-bottom: 0.5rem;
+        border-bottom: 1px solid #e9ecef;
+    }
+
+    .form-section h3 i {
+        color: #007bff;
+    }
+
+    .form-group {
+        margin-bottom: 1rem;
+    }
+
+    .form-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1rem;
+    }
+
+    .form-label {
+        display: block;
+        margin-bottom: 0.25rem;
+        font-weight: 500;
+        color: #495057;
+        font-size: 0.875rem;
+    }
+
+    .form-control {
+        width: 100%;
+        padding: 0.75rem;
+        border: 1px solid #ced4da;
+        border-radius: 0.375rem;
+        font-size: 1rem;
+        background: #fff;
+        box-sizing: border-box;
+    }
+
+    .form-control:focus {
+        outline: none;
+        border-color: #007bff;
+        box-shadow: 0 0 0 0.125rem rgba(0, 123, 255, 0.25);
+    }
+
+    .field-error {
+        color: #dc3545;
+        font-size: 0.75rem;
+        margin-top: 0.25rem;
+    }
+
+    .form-actions {
+        display: flex;
+        gap: 1rem;
+        margin-top: 2rem;
+        padding: 1rem;
+        background: #f8f9fa;
+        border-radius: 0.5rem;
+    }
+
+    .btn-primary,
+    .btn-secondary {
+        flex: 1;
+        padding: 0.75rem 1rem;
+        border: none;
+        border-radius: 0.375rem;
+        font-size: 1rem;
+        text-decoration: none;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+    .btn-primary {
+        background: #007bff;
+        color: white;
+    }
+
+    .btn-primary:hover {
+        background: #0056b3;
+        color: white;
+        text-decoration: none;
+    }
+
+    .btn-secondary {
+        background: #6c757d;
+        color: white;
+    }
+
+    .btn-secondary:hover {
+        background: #5a6268;
+        color: white;
+        text-decoration: none;
+    }
+
+    /* Responsive adjustments */
+    @media (max-width: 576px) {
+        .form-row {
+            grid-template-columns: 1fr;
+        }
+
+        .form-actions {
+            flex-direction: column;
+        }
+
+        .mobile-form-header {
+            flex-direction: column;
+            gap: 1rem;
+            text-align: center;
+        }
+    }
+    </style>
+{% endblock content %}

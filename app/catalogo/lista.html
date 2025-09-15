@@ -1,0 +1,36 @@
+{% extends 'core/base.html' %}
+{% block title %}Catálogo de Tratamentos{% endblock %}
+{% block content %}
+<h1>Catálogo de Tratamentos</h1>
+<p>Lista de categorias.</p>
+{% if g.user and g.user.cargo in ['admin','gerente'] %}
+<p><a class="btn btn-sm btn-primary" href="{{ url_for('catalogo.nova_categoria') }}">Nova Categoria</a></p>
+{% endif %}
+<table class="table table-sm">
+    <thead>
+        <tr>
+            <th>Categoria</th>
+            <th>Qtd Tratamentos</th>
+            <th>Ações</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for c in categorias %}
+        <tr>
+            <td><a href="{{ url_for('catalogo.ver_categoria', cat_id=c.id) }}">{{ c.nome }}</a></td>
+            <td>{{ c.tratamentos.count() }}</td>
+            <td>
+                {% if g.user and g.user.cargo in ['admin','gerente'] %}
+                <a class="btn btn-sm btn-outline-secondary"
+                    href="{{ url_for('catalogo.editar_categoria', cat_id=c.id) }}">Editar</a>
+                {% endif %}
+            </td>
+        </tr>
+        {% else %}
+        <tr>
+            <td colspan="2" class="text-muted">Nenhuma categoria cadastrada.</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}

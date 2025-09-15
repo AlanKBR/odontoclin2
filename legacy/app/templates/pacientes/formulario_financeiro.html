@@ -1,0 +1,121 @@
+{% extends "pacientes/visualizar_paciente.html" %}
+{% block conteudo_aba %}
+    <div class="tab-pane fade show active">
+        <div class="card shadow">
+            <div class="card-header">
+                <h5 class="mb-0">Novo Lançamento Financeiro</h5>
+            </div>
+            <div class="card-body">
+                <form method="post">
+                    {{ form.hidden_tag() }}
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="descricao" class="form-label">Descrição *</label>
+                            {{ form.descricao(class="form-control", id="descricao", placeholder="Descrição do lançamento") }}
+                            {% if form.descricao.errors %}
+                                <div class="text-danger">
+                                    {% for error in form.descricao.errors %}<small>{{ error }}</small>{% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6">
+                            <label for="valor" class="form-label">Valor (R$) *</label>
+                            {{ form.valor(class="form-control", id="valor", placeholder="0.00") }}
+                            {% if form.valor.errors %}
+                                <div class="text-danger">
+                                    {% for error in form.valor.errors %}<small>{{ error }}</small>{% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-4">
+                            <label for="tipo" class="form-label">Tipo *</label>
+                            {{ form.tipo(class="form-select", id="tipo") }}
+                            {% if form.tipo.errors %}
+                                <div class="text-danger">
+                                    {% for error in form.tipo.errors %}<small>{{ error }}</small>{% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-4">
+                            <label for="forma_pagamento" class="form-label">Forma de Pagamento *</label>
+                            {{ form.forma_pagamento(class="form-select", id="forma_pagamento") }}
+                            {% if form.forma_pagamento.errors %}
+                                <div class="text-danger">
+                                    {% for error in form.forma_pagamento.errors %}<small>{{ error }}</small>{% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-4">
+                            <label for="status" class="form-label">Status *</label>
+                            {{ form.status(class="form-select", id="status") }}
+                            {% if form.status.errors %}
+                                <div class="text-danger">
+                                    {% for error in form.status.errors %}<small>{{ error }}</small>{% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="data_pagamento" class="form-label">Data de Pagamento</label>
+                            {{ form.data_pagamento(class="form-control", id="data_pagamento", type="date") }}
+                            {% if form.data_pagamento.errors %}
+                                <div class="text-danger">
+                                    {% for error in form.data_pagamento.errors %}<small>{{ error }}</small>{% endfor %}
+                                </div>
+                            {% endif %}
+                            <div class="form-text">Deixe em branco para pagamentos pendentes</div>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="plano_id" class="form-label">Plano de Tratamento</label>
+                            {{ form.plano_id(class="form-select", id="plano_id") }}
+                            <div class="form-text">Relacionar o pagamento a um plano específico (opcional)</div>
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-12">
+                            <label for="observacoes" class="form-label">Observações</label>
+                            {{ form.observacoes(class="form-control", id="observacoes", rows=3) }}
+                            {% if form.observacoes.errors %}
+                                <div class="text-danger">
+                                    {% for error in form.observacoes.errors %}<small>{{ error }}</small>{% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="d-flex justify-content-between mt-4">
+                        <a href="{{ url_for('pacientes.listar_financeiro', paciente_id=paciente.id) }}"
+                           class="btn btn-secondary">
+                            <i class="bi bi-arrow-left"></i> Voltar
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-save"></i> Salvar Lançamento
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+{% endblock content %}
+{% block extra_js %}
+    {{ super() }}
+    <script>
+    // Formatação do campo de valor para formato monetário
+    document.addEventListener('DOMContentLoaded', function() {
+        const valorInput = document.getElementById('valor');
+        if (valorInput) {
+            valorInput.addEventListener('input', function(e) {
+                let value = e.target.value.replace(/[^\d]/g, '');
+                if (value.length > 0) {
+                    value = parseInt(value) / 100;
+                    e.target.value = value.toFixed(2);
+                } else {
+                    e.target.value = '';
+                }
+            });
+        }
+    });
+    </script>
+{% endblock extra_js %}

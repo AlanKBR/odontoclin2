@@ -1,0 +1,246 @@
+{% extends "mobile/base.html" %}
+{% block title %}
+    {{ paciente.nome }} - OdontoClinic
+{% endblock title %}
+{% block header_title %}
+    {{ paciente.nome }}
+{% endblock header_title %}
+{% block content %}
+    <!-- Informações básicas do paciente -->
+    <div class="mobile-card card mb-3">
+        <div class="card-body">
+            <div class="d-flex justify-content-between align-items-start mb-3">
+                <div>
+                    <h5 class="card-title mb-1">{{ paciente.nome }}</h5>
+                    <div class="text-muted small">
+                        {% if paciente.data_nascimento %}
+                            <div>
+                                <i class="bi bi-calendar me-1"></i>{{ paciente.data_nascimento.strftime("%d/%m/%Y") }}
+                            </div>
+                        {% endif %}
+                        {% if paciente.sexo %}
+                            <div>
+                                <i class="bi bi-person me-1"></i>{{ paciente.sexo }}
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="dropdown">
+                    <button class="btn btn-sm btn-outline-primary"
+                            type="button"
+                            data-bs-toggle="dropdown">
+                        <i class="bi bi-three-dots-vertical"></i>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end">
+                        <li>
+                            <a class="dropdown-item"
+                               href="{{ url_for('pacientes.editar_paciente', paciente_id=paciente.id) }}">
+                                <i class="bi bi-pencil me-2"></i>Editar
+                            </a>
+                        </li>
+                        <li>
+                            <hr class="dropdown-divider">
+                        </li>
+                        <li>
+                            <a class="dropdown-item text-danger"
+                               href="#"
+                               onclick="confirmarExclusao()">
+                                <i class="bi bi-trash me-2"></i>Excluir
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            <!-- Contatos -->
+            <div class="mb-3">
+                {% if paciente.celular %}
+                    <div class="d-flex align-items-center justify-content-between mb-2">
+                        <span><i class="bi bi-telephone me-2"></i>{{ paciente.celular }}</span>
+                        <div>
+                            <a href="tel:{{ paciente.celular }}"
+                               class="btn btn-sm btn-outline-primary me-1">
+                                <i class="bi bi-telephone"></i>
+                            </a>
+                            <a href="https://wa.me/{{ paciente.celular | replace('(', '') | replace(')', '') | replace(' ', '') | replace('-', '') }}"
+                               target="_blank"
+                               class="btn btn-sm btn-outline-success">
+                                <i class="bi bi-whatsapp"></i>
+                            </a>
+                        </div>
+                    </div>
+                {% endif %}
+                {% if paciente.email %}
+                    <div class="d-flex align-items-center justify-content-between mb-2">
+                        <span><i class="bi bi-envelope me-2"></i>{{ paciente.email }}</span>
+                        <a href="mailto:{{ paciente.email }}"
+                           class="btn btn-sm btn-outline-primary">
+                            <i class="bi bi-envelope"></i>
+                        </a>
+                    </div>
+                {% endif %}
+            </div>
+            <!-- Documentos -->
+            {% if paciente.cpf %}
+                <div class="mb-2">
+                    <small class="text-muted">CPF:</small> {{ paciente.cpf }}
+                </div>
+            {% endif %}
+        </div>
+    </div>
+    <!-- Ações rápidas -->
+    <div class="mobile-grid mb-4">
+        <a href="{{ url_for('pacientes.editar_ficha', paciente_id=paciente.id) }}"
+           class="btn btn-primary mobile-btn">
+            <i class="bi bi-file-person me-2"></i>
+            Ficha
+        </a>
+        <a href="{{ url_for('pacientes.editar_anamnese', paciente_id=paciente.id) }}"
+           class="btn btn-success mobile-btn">
+            <i class="bi bi-clipboard-heart me-2"></i>
+            Anamnese
+        </a>
+        <a href="{{ url_for('pacientes.listar_planos', paciente_id=paciente.id) }}"
+           class="btn btn-info mobile-btn">
+            <i class="bi bi-card-checklist me-2"></i>
+            Planos
+        </a>
+        <a href="{{ url_for('pacientes.listar_historico', paciente_id=paciente.id) }}"
+           class="btn btn-warning mobile-btn">
+            <i class="bi bi-clock-history me-2"></i>
+            Histórico
+        </a>
+    </div>
+    <!-- Informações adicionais -->
+    <div class="mobile-card card mb-3">
+        <div class="card-header">
+            <h6 class="mb-0">Informações Pessoais</h6>
+        </div>
+        <div class="card-body">
+            {% if paciente.endereco %}
+                <div class="mb-2">
+                    <small class="text-muted">Endereço:</small>
+                    <br>
+                    {{ paciente.endereco }}
+                    {% if paciente.bairro %}, {{ paciente.bairro }}{% endif %}
+                    {% if paciente.cidade %}
+                        <br>
+                        {{ paciente.cidade }}
+                    {% endif %}
+                    {% if paciente.estado %}- {{ paciente.estado }}{% endif %}
+                    {% if paciente.cep %}
+                        <br>
+                        CEP: {{ paciente.cep }}
+                    {% endif %}
+                </div>
+            {% endif %}
+            {% if paciente.profissao %}
+                <div class="mb-2">
+                    <small class="text-muted">Profissão:</small> {{ paciente.profissao }}
+                </div>
+            {% endif %}
+        </div>
+    </div>
+    <!-- Ficha médica resumida -->
+    {% if paciente.ficha %}
+        <div class="mobile-card card mb-3">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h6 class="mb-0">Ficha Médica</h6>
+                <a href="{{ url_for('pacientes.editar_ficha', paciente_id=paciente.id) }}"
+                   class="btn btn-sm btn-outline-primary">
+                    <i class="bi bi-pencil"></i>
+                </a>
+            </div>
+            <div class="card-body">
+                {% if paciente.ficha.convenio %}
+                    <div class="mb-2">
+                        <small class="text-muted">Convênio:</small> {{ paciente.ficha.convenio }}
+                        {% if paciente.ficha.numero_convenio %}({{ paciente.ficha.numero_convenio }}){% endif %}
+                    </div>
+                {% endif %}
+                {% if paciente.ficha.contato_emergencia %}
+                    <div class="mb-2">
+                        <small class="text-muted">Contato de Emergência:</small> {{ paciente.ficha.contato_emergencia }}
+                    </div>
+                {% endif %}
+                {% if paciente.ficha.alergias %}
+                    <div class="mb-2">
+                        <small class="text-muted">Alergias:</small> {{ paciente.ficha.alergias }}
+                    </div>
+                {% endif %}
+                {% if not paciente.ficha.convenio and not paciente.ficha.contato_emergencia and not paciente.ficha.alergias %}
+                    <p class="text-muted mb-0">Nenhuma informação médica cadastrada</p>
+                {% endif %}
+            </div>
+        </div>
+    {% endif %}
+    <!-- Último tratamento -->
+    {% if paciente.ultimo_tratamento %}
+        <div class="mobile-card card mb-3">
+            <div class="card-header">
+                <h6 class="mb-0">Último Tratamento</h6>
+            </div>
+            <div class="card-body">
+                <div class="mb-2">
+                    <strong>{{ paciente.ultimo_tratamento.descricao or 'Tratamento' }}</strong>
+                </div>
+                <div class="text-muted small">
+                    <div>
+                        <i class="bi bi-calendar me-1"></i>{{ paciente.ultimo_tratamento.data.strftime("%d/%m/%Y") if
+                        paciente.ultimo_tratamento.data else 'Data não informada' }}
+                    </div>
+                    <div>
+                        <i class="bi bi-check-circle me-1"></i>{{ paciente.ultimo_tratamento.status or 'Status não informado'
+                        }}
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% endif %}
+    <!-- Modal de confirmação de exclusão -->
+    <div class="modal fade" id="deleteModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Confirmar Exclusão</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p>
+                        Tem certeza que deseja excluir o paciente <strong>{{ paciente.nome }}</strong>?
+                    </p>
+                    <p class="text-danger small">Esta ação não pode ser desfeita!</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <form method="post"
+                          action="{{ url_for('pacientes.excluir_paciente', paciente_id=paciente.id) }}"
+                          class="d-inline">
+                        <button type="submit" class="btn btn-danger">Excluir</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock content %}
+{% block scripts %}
+    <script nonce="{{ csp_nonce() }}">
+    function confirmarExclusao() {
+        const modal = new bootstrap.Modal(document.getElementById('deleteModal'));
+        modal.show();
+    }
+
+    // Animação de entrada para os cards
+    document.addEventListener('DOMContentLoaded', function () {
+        const cards = document.querySelectorAll('.mobile-card');
+        cards.forEach((card, index) => {
+            card.style.opacity = '0';
+            card.style.transform = 'translateY(20px)';
+            setTimeout(() => {
+                card.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
+                card.style.opacity = '1';
+                card.style.transform = 'translateY(0)';
+            }, index * 100);
+        });
+    });
+    </script>
+{% endblock scripts %}

@@ -1,0 +1,52 @@
+/* Tema Alto Contraste */
+body {
+    background: #ffffff;
+    color: #000000;
+}
+
+#calendar {
+    background: #ffffff;
+    border: 3px solid #000000;
+    box-shadow: none;
+}
+
+.fc-button {
+    background: #000000;
+    color: #ffffff;
+    border: 3px solid #000000;
+}
+
+.fc-button:hover,
+.fc-button:focus {
+    background: #222222;
+}
+
+.fc-toolbar-title {
+    color: #000000;
+}
+
+.fc-daygrid-day.fc-day-today {
+    background: #fff1a8;
+}
+
+/* Preserve event colors; only strengthen outlines if needed */
+.fc-event {
+    border-width: 2px;
+}
+
+.fc-list-event {
+    background: #ffffff;
+    color: #000000;
+    border-left: 6px solid #000000;
+}
+
+.popover .popover-header,
+.popover .popover-body {
+    background: #ffffff;
+    color: #000000;
+}
+
+#settingsMenu .btn.active {
+    background: #000000;
+    color: #ffffff;
+}

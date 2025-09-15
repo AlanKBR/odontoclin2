@@ -1,0 +1,164 @@
+{% extends "base.html" %}
+{% block title %}
+    Histórico de Atestados
+{% endblock title %}
+{% block head %}
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='css/atestados.css') }}">
+{% endblock head %}
+{% block content %}
+    <div class="atestados-container">
+        <header class="page-header">
+            <h1>Histórico de Atestados</h1>
+            <p class="subtitle">Consulte todos os atestados emitidos</p>
+            <div class="header-actions">
+                <a href="{{ url_for("atestados.gerar_atestado") }}" class="btn-primary">
+                    <i class="icon-plus"></i>
+                    Novo Atestado
+                </a>
+            </div>
+        </header>
+        <div class="table-container">
+            {% if atestados_dados %}
+                <table class="atestados-table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Data de Emissão</th>
+                            <th>Paciente</th>
+                            <th>CPF</th>
+                            <th>Dentista</th>
+                            <th>CRO</th>
+                            <th>CID-10</th>
+                            <th>Local</th>
+                            <th>Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in atestados_dados %}
+                            <tr>
+                                <td>{{ item.atestado.id }}</td>
+                                <td>{{ item.atestado.data_emissao.strftime("%d/%m/%Y %H:%M") }}</td>
+                                <td>{{ item.paciente.nome if item.paciente else 'N/A' }}</td>
+                                <td>{{ item.paciente.cpf if item.paciente and item.paciente.cpf else 'N/A' }}</td>
+                                <td>{{ item.dentista.nome_completo if item.dentista else 'N/A' }}</td>
+                                <td>{{ item.dentista.cro if item.dentista and item.dentista.cro else 'N/A' }}</td>
+                                <td>
+                                    <span class="cid-code">{{ item.atestado.cid_codigo }}</span>
+                                    <span class="cid-description">{{ item.atestado.cid_descricao }}</span>
+                                </td>
+                                <td>{{ item.atestado.local_emissao or 'N/A' }}</td>
+                                <td>
+                                    <div class="action-buttons">
+                                        <button class="btn-small btn-info"
+                                                onclick="visualizarAtestado({{ item.atestado.id }})">
+                                            <i class="icon-eye"></i>
+                                            Ver
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            {% else %}
+                <div class="empty-state">
+                    <div class="empty-icon">📄</div>
+                    <h3>Nenhum atestado encontrado</h3>
+                    <p>Você ainda não emitiu nenhum atestado.</p>
+                    <a href="{{ url_for("atestados.gerar_atestado") }}" class="btn-primary">Emitir Primeiro Atestado</a>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+    <!-- Modal para visualizar detalhes do atestado -->
+    <div id="atestadoModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Detalhes do Atestado</h3>
+                <span class="close">×</span>
+            </div>
+            <div class="modal-body" id="atestadoDetails">
+                <!-- Conteúdo será carregado via JavaScript -->
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-secondary" onclick="fecharModal()">Fechar</button>
+            </div>
+        </div>
+    </div>
+    <script>
+function visualizarAtestado(atestadoId) {
+    // Buscar dados do atestado na tabela
+    const row = document.querySelector(`tr:has(td:first-child:contains('${atestadoId}'))`);
+    if (!row) return;
+    
+    const cells = row.querySelectorAll('td');
+    const detalhes = `
+        <div class="atestado-detalhes">
+            <div class="detail-row">
+                <strong>ID do Atestado:</strong> ${cells[0].textContent}
+            </div>
+            <div class="detail-row">
+                <strong>Data de Emissão:</strong> ${cells[1].textContent}
+            </div>
+            <div class="detail-row">
+                <strong>Paciente:</strong> ${cells[2].textContent}
+            </div>
+            <div class="detail-row">
+                <strong>CPF:</strong> ${cells[3].textContent}
+            </div>
+            <div class="detail-row">
+                <strong>Dentista:</strong> ${cells[4].textContent}
+            </div>
+            <div class="detail-row">
+                <strong>CRO:</strong> ${cells[5].textContent}
+            </div>
+            <div class="detail-row">
+                <strong>CID-10:</strong> ${cells[6].textContent}
+            </div>
+            <div class="detail-row">
+                <strong>Local de Emissão:</strong> ${cells[7].textContent}
+            </div>
+        </div>
+    `;
+    
+    document.getElementById('atestadoDetails').innerHTML = detalhes;
+    document.getElementById('atestadoModal').style.display = 'block';
+}
+
+function fecharModal() {
+    document.getElementById('atestadoModal').style.display = 'none';
+}
+
+// Fechar modal ao clicar no X ou fora do modal
+document.addEventListener('DOMContentLoaded', function() {
+    const modal = document.getElementById('atestadoModal');
+    const closeBtn = document.querySelector('.close');
+    
+    closeBtn.onclick = fecharModal;
+    
+    window.onclick = function(event) {
+        if (event.target == modal) {
+            fecharModal();
+        }
+    }
+});
+
+// Melhorar a função de busca na tabela
+document.addEventListener('DOMContentLoaded', function() {
+    // Implementar busca básica se necessário
+    const searchInput = document.getElementById('searchInput');
+    if (searchInput) {
+        searchInput.addEventListener('input', function() {
+            const filter = this.value.toLowerCase();
+            const rows = document.querySelectorAll('.atestados-table tbody tr');
+            
+            rows.forEach(row => {
+                const text = row.textContent.toLowerCase();
+                row.style.display = text.includes(filter) ? '' : 'none';
+            });
+        });
+    }
+});
+    </script>
+{% endblock content %}

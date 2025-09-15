@@ -1,0 +1,24 @@
+{% extends 'core/base.html' %}
+{% block content %}
+<h1>Dashboard de Pacientes</h1>
+<form method="get" class="form-inline" style="margin-bottom:1rem">
+    <label for="inicio">Início:</label>
+    <input id="inicio" name="inicio" value="{{ inicio or '' }}" placeholder="dd/mm/aaaa" />
+    <label for="fim">Fim:</label>
+    <input id="fim" name="fim" value="{{ fim or '' }}" placeholder="dd/mm/aaaa" />
+    <button type="submit">Filtrar</button>
+    <a href="{{ url_for('pacientes.dashboard') }}">Limpar</a>
+    {% if saldo_global_filtrado is not none %}
+    <span class="metric" style="margin-left:1rem">
+        <strong>Saldo filtrado (R$):</strong>
+        {{ '%.2f'|format(saldo_global_filtrado) }}
+    </span>
+    {% endif %}
+</form>
+<div class="metrics">
+    <div class="metric"><strong>Pacientes ativos:</strong> {{ total_pacientes }}</div>
+    <div class="metric"><strong>Procedimentos pendentes:</strong> {{ procedimentos_pendentes }}</div>
+    <div class="metric"><strong>Procedimentos realizados:</strong> {{ procedimentos_realizados }}</div>
+    <div class="metric"><strong>Saldo global (R$):</strong> {{ '%.2f'|format(saldo_global) }}</div>
+</div>
+{% endblock %}

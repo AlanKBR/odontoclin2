@@ -1,0 +1,197 @@
+{% extends "base.html" %}
+{% block title %}
+    Lista de Pacientes
+{% endblock title %}
+{% block content %}
+    <style>
+    .no-patients-icon {
+        font-size: 3rem;
+    }
+    </style>
+    <div class="container-fluid py-4">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2 class="h3">Lista de Pacientes</h2>
+            <a href="{{ url_for("pacientes.novo_paciente") }}"
+               class="btn btn-primary">
+                <i class="bi bi-person-plus"></i> Novo Paciente
+            </a>
+        </div>
+        <!-- Filtro de busca -->
+        <div class="card shadow mb-4">
+            <div class="card-body">
+                <form method="get"
+                      action="{{ url_for("pacientes.listar_pacientes") }}"
+                      class="row g-3 align-items-center">
+                    <div class="col-md-10">
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="bi bi-search"></i></span>
+                            <input type="text"
+                                   class="form-control"
+                                   name="busca"
+                                   placeholder="Buscar por nome, CPF ou telefone..."
+                                   value="{{ busca }}">
+                        </div>
+                    </div>
+                    <div class="col-md-2">
+                        <button type="submit" class="btn btn-primary w-100">Buscar</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        <div class="card shadow">
+            <div class="card-body">
+                {% if pacientes.items %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Nome</th>
+                                    <th>CPF</th>
+                                    <th>Telefone</th>
+                                    <th>Cidade</th>
+                                    <th>Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for paciente in pacientes.items %}
+                                    <tr>
+                                        <td>
+                                            <a href="{{ url_for('pacientes.visualizar_paciente', paciente_id=paciente.id) }}">{{ paciente.nome }}</a>
+                                        </td>
+                                        <td>{{ paciente.cpf }}</td>
+                                        <td>{{ paciente.celular }}</td>
+                                        <td>{{ paciente.cidade if paciente.cidade else '-' }}</td>
+                                        <td>
+                                            <a href="https://wa.me/{{ paciente.celular | replace('(', '') | replace(')', '') | replace(' ', '') | replace('-', '') }}"
+                                               target="_blank"
+                                               class="btn btn-sm btn-outline-success me-1"
+                                               title="WhatsApp">
+                                                <i class="bi bi-whatsapp"></i>
+                                            </a>
+                                            <button type="button"
+                                                    class="btn btn-sm btn-outline-danger"
+                                                    data-bs-toggle="modal"
+                                                    data-bs-target="#deleteModal{{ paciente.id }}">
+                                                <i class="bi bi-trash"></i> Excluir
+                                            </button>
+                                            <!-- Modal de confirmação de exclusão -->
+                                            <div class="modal fade"
+                                                 id="deleteModal{{ paciente.id }}"
+                                                 tabindex="-1"
+                                                 aria-labelledby="deleteModalLabel{{ paciente.id }}"
+                                                 aria-hidden="true">
+                                                <div class="modal-dialog">
+                                                    <div class="modal-content">
+                                                        <div class="modal-header">
+                                                            <h5 class="modal-title" id="deleteModalLabel{{ paciente.id }}">Confirmar exclusão</h5>
+                                                            <button type="button"
+                                                                    class="btn-close"
+                                                                    data-bs-dismiss="modal"
+                                                                    aria-label="Close"></button>
+                                                        </div>
+                                                        <div class="modal-body">
+                                                            Tem certeza que deseja excluir o paciente <strong>{{ paciente.nome }}</strong>? Esta ação não pode ser desfeita e todos os dados relacionados ao paciente serão removidos.
+                                                        </div>
+                                                        <div class="modal-footer">
+                                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                                                            <form method="post"
+                                                                  class="form-confirm-delete"
+                                                                  action="{{ url_for('pacientes.excluir_paciente', paciente_id=paciente.id) }}">
+                                                                <button type="submit" class="btn btn-danger btn-confirm-delete">Excluir</button>
+                                                            </form>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    <!-- Paginação -->
+                    <nav aria-label="Page navigation">
+                        <ul class="pagination justify-content-center">
+                            {% if pacientes.has_prev %}
+                                <li class="page-item">
+                                    <a class="page-link"
+                                       href="{{ url_for('pacientes.listar_pacientes', page=pacientes.prev_num, busca=busca) }}">Anterior</a>
+                                </li>
+                            {% else %}
+                                <li class="page-item disabled">
+                                    <a class="page-link" href="#">Anterior</a>
+                                </li>
+                            {% endif %}
+                            {% for page_num in pacientes.iter_pages(left_edge=1, right_edge=1, left_current=2, right_current=2)
+                                %}
+                                {% if page_num %}
+                                    {% if page_num == pacientes.page %}
+                                        <li class="page-item active">
+                                            <a class="page-link"
+                                               href="{{ url_for('pacientes.listar_pacientes', page=page_num, busca=busca) }}">{{ page_num
+                                            }}</a>
+                                        </li>
+                                    {% else %}
+                                        <li class="page-item">
+                                            <a class="page-link"
+                                               href="{{ url_for('pacientes.listar_pacientes', page=page_num, busca=busca) }}">{{ page_num
+                                            }}</a>
+                                        </li>
+                                    {% endif %}
+                                {% else %}
+                                    <li class="page-item disabled">
+                                        <a class="page-link" href="#">...</a>
+                                    </li>
+                                {% endif %}
+                            {% endfor %}
+                            {% if pacientes.has_next %}
+                                <li class="page-item">
+                                    <a class="page-link"
+                                       href="{{ url_for('pacientes.listar_pacientes', page=pacientes.next_num, busca=busca) }}">Próximo</a>
+                                </li>
+                            {% else %}
+                                <li class="page-item disabled">
+                                    <a class="page-link" href="#">Próximo</a>
+                                </li>
+                            {% endif %}
+                        </ul>
+                    </nav>
+                {% else %}
+                    <div class="text-center py-5">
+                        <i class="bi bi-search mb-3 no-patients-icon"></i>
+                        <p class="lead">Nenhum paciente encontrado.</p>
+                        {% if busca %}
+                            <p>
+                                Tente refinar sua busca ou <a href="{{ url_for("pacientes.listar_pacientes") }}">limpar o filtro</a>.
+                            </p>
+                        {% else %}
+                            <p>
+                                Comece <a href="{{ url_for("pacientes.novo_paciente") }}">cadastrando um novo
+                                paciente</a>.
+                            </p>
+                        {% endif %}
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+{% endblock content %}
+{% block extra_js %}
+    {{ super() }}
+    <script nonce="{{ csp_nonce() if csp_nonce else '' }}">
+// Script para desabilitar botão de exclusão e mostrar spinner
+document.addEventListener('DOMContentLoaded', function () {
+    const deleteForms = document.querySelectorAll('.form-confirm-delete');
+    deleteForms.forEach(form => {
+        form.addEventListener('submit', function(event) {
+            const submitButton = form.querySelector('.btn-confirm-delete');
+            if (submitButton) {
+                submitButton.disabled = true;
+                submitButton.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Excluindo...';
+            }
+            // Permite que o formulário seja enviado normalmente
+        });
+    });
+});
+    </script>
+{% endblock extra_js %}

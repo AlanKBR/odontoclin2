@@ -1,0 +1,17 @@
+<table id="tabela-procedimentos">
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>Descrição</th>
+            <th>Dente</th>
+            <th>Valor</th>
+            <th>Status</th>
+            <th>Ações</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for p in procedimentos %}
+        {% include 'pacientes/partials/_procedimento_row.html' %}
+        {% endfor %}
+    </tbody>
+</table>

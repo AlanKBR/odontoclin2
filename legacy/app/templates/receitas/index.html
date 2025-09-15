@@ -1,0 +1,101 @@
+{% extends "base.html" %}
+{% block title %}
+    Receitas | OdontoClinic
+{% endblock title %}
+{% block content %}
+    <div class="container-fluid">
+        <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+            <h1 class="h2">
+                <i class="bi bi-prescription2"></i> Receitas
+            </h1>
+            <div class="btn-toolbar mb-2 mb-md-0">
+                <div class="btn-group me-2">
+                    <a href="{{ url_for("receitas.nova_receita") }}"
+                       class="btn btn-sm btn-outline-primary">
+                        <i class="bi bi-plus-lg"></i> Nova Receita
+                    </a>
+                    <a href="{{ url_for("receitas.listar_medicamentos") }}"
+                       class="btn btn-sm btn-outline-secondary">
+                        <i class="bi bi-capsule"></i> Medicamentos
+                    </a>
+                    <a href="{{ url_for("receitas.listar_modelos") }}"
+                       class="btn btn-sm btn-outline-secondary">
+                        <i class="bi bi-save"></i> Modelos Salvos
+                    </a>
+                </div>
+            </div>
+        </div>
+        <div class="row mb-4">
+            <div class="col-lg-12">
+                <div class="card">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="card-title mb-0">
+                            <i class="bi bi-info-circle"></i> Sobre o Módulo de Receitas
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <p>Este módulo permite criar receitas médicas odontológicas para seus pacientes de forma rápida e fácil.</p>
+                        <p>Recursos disponíveis:</p>
+                        <ul>
+                            <li>Acesso a uma base de dados de medicamentos comuns em odontologia</li>
+                            <li>Visualização da posologia recomendada</li>
+                            <li>Criação de modelos personalizados de receitas</li>
+                            <li>Facilidade de impressão das receitas</li>
+                        </ul>
+                        <div class="text-center mt-4">
+                            <a href="{{ url_for("receitas.nova_receita") }}" class="btn btn-primary">
+                                <i class="bi bi-plus-lg"></i> Criar Nova Receita
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-lg-6">
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0">
+                            <i class="bi bi-search"></i> Buscar Medicamentos
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <p>Encontre rapidamente medicamentos por nome ou princípio ativo:</p>
+                        <form action="{{ url_for("receitas.buscar_medicamentos") }}" method="get">
+                            <div class="input-group mb-3">
+                                <input type="text"
+                                       class="form-control"
+                                       name="termo"
+                                       placeholder="Digite o nome ou princípio ativo..."
+                                       required>
+                                <button class="btn btn-outline-secondary" type="submit">Buscar</button>
+                            </div>
+                        </form>
+                        <div class="text-center mt-3">
+                            <a href="{{ url_for("receitas.listar_medicamentos") }}"
+                               class="btn btn-sm btn-outline-primary">Ver Todos os Medicamentos</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-6">
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0">
+                            <i class="bi bi-save"></i> Meus Modelos
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <p>Acesse seus modelos de receitas salvos:</p>
+                        <div class="text-center">
+                            <a href="{{ url_for("receitas.listar_modelos") }}"
+                               class="btn btn-outline-primary">
+                                <i class="bi bi-collection"></i> Ver Meus Modelos
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock content %}

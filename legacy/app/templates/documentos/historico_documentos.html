@@ -1,0 +1,196 @@
+{% extends "base.html" %}
+{% block title %}
+    Histórico de Documentos | OdontoClinic
+{% endblock title %}
+{% block extra_css %}
+    <style nonce="{{ csp_nonce() }}">
+    .section-header {
+        border-bottom: 3px solid #007bff;
+        padding-bottom: 0.5rem;
+        margin-bottom: 2rem;
+    }
+    
+    .section-header h1 {
+        color: #333;
+        font-weight: 600;
+    }
+    
+    .document-badge {
+        font-size: 0.8rem;
+        padding: 0.25rem 0.5rem;
+    }
+    
+    .table-hover tbody tr:hover {
+        background-color: rgba(0, 123, 255, 0.1);
+    }
+    
+    .btn-sm {
+        padding: 0.25rem 0.5rem;
+        font-size: 0.875rem;
+    }
+    
+    .empty-state {
+        padding: 3rem;
+        text-align: center;
+        color: #6c757d;
+    }
+    
+    .empty-state i {
+        font-size: 4rem;
+        margin-bottom: 1rem;
+        opacity: 0.5;
+    }
+    </style>
+{% endblock extra_css %}
+{% block content %}
+    <div class="container-fluid py-4">
+        <!-- Cabeçalho da página -->
+        <div class="section-header">
+            <div class="row align-items-center">
+                <div class="col-md-8">
+                    <h1>
+                        <i class="fas fa-history me-3"></i>Histórico de Documentos
+                    </h1>
+                    <p class="lead mb-0">Visualize e baixe documentos gerados anteriormente</p>
+                </div>
+                <div class="col-md-4 text-end">
+                    <a href="{{ url_for("documentos.index") }}"
+                       class="btn btn-outline-secondary">
+                        <i class="fas fa-arrow-left me-2"></i>Voltar
+                    </a>
+                    <a href="{{ url_for("documentos.index") }}" class="btn btn-primary">
+                        <i class="fas fa-plus me-2"></i>Novo Documento
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% if documentos %}
+            <div class="card">
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Tipo de Documento</th>
+                                    <th>Paciente</th>
+                                    <th>Dentista</th>
+                                    <th>Data de Emissão</th>
+                                    <th>Local</th>
+                                    <th class="text-center">Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for documento in documentos %}
+                                    <tr>
+                                        <td>
+                                            <span class="badge bg-secondary">#{{ documento.id }}</span>
+                                        </td>
+                                        <td>
+                                            <!-- Badge colorido baseado no tipo -->
+                                            {% set badge_class = "bg-primary" %}
+                                            {% if "autorizacao" in documento.tipo_documento %}
+                                                {% set badge_class = "bg-success" %}
+                                            {% elif "interrupcao" in documento.tipo_documento %}
+                                                {% set badge_class = "bg-warning" %}
+                                            {% elif "exames" in documento.tipo_documento %}
+                                                {% set badge_class = "bg-info" %}
+                                            {% elif "encaminhamento" in documento.tipo_documento %}
+                                                {% set badge_class = "bg-secondary" %}
+                                            {% elif "instrucoes" in documento.tipo_documento %}
+                                                {% set badge_class = "bg-primary" %}
+                                            {% elif "contrato" in documento.tipo_documento %}
+                                                {% set badge_class = "bg-dark" %}
+                                            {% endif %}
+                                            <span class="badge document-badge {{ badge_class }}">{{ documento.titulo_documento }}</span>
+                                        </td>
+                                        <td>
+                                            <div>
+                                                <strong>{{ documento.nome_paciente }}</strong>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <div>
+                                                <strong>{{ documento.nome_dentista }}</strong>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <div>{{ documento.data_emissao.strftime("%d/%m/%Y") }}</div>
+                                            <small class="text-muted">{{ documento.data_emissao.strftime("%H:%M") }}</small>
+                                        </td>
+                                        <td>
+                                            <small class="text-muted">{{ documento.local_emissao or 'Não informado' }}</small>
+                                        </td>
+                                        <td class="text-center">
+                                            <div class="btn-group btn-group-sm">
+                                                <a href="{{ url_for('documentos.gerar_html', documento_id=documento.id) }}"
+                                                   class="btn btn-outline-success btn-sm"
+                                                   title="Ver HTML / Imprimir"
+                                                   target="_blank">
+                                                    <i class="fas fa-eye"></i>
+                                                </a>
+                                                <a href="{{ url_for('documentos.gerar_pdf', documento_id=documento.id) }}"
+                                                   class="btn btn-outline-primary btn-sm"
+                                                   title="Baixar PDF">
+                                                    <i class="fas fa-download"></i>
+                                                </a>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <!-- Informações adicionais -->
+            <div class="row mt-4">
+                <div class="col-md-12">
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>
+                        <strong>Dica:</strong> Clique no botão de download para baixar novamente qualquer documento em PDF.
+                        Os documentos ficam armazenados permanentemente no sistema.
+                    </div>
+                </div>
+            </div>
+        {% else %}
+            <!-- Estado vazio -->
+            <div class="card">
+                <div class="card-body">
+                    <div class="empty-state">
+                        <i class="fas fa-file-alt"></i>
+                        <h4>Nenhum documento encontrado</h4>
+                        <p>Ainda não há documentos gerados no sistema.</p>
+                        <a href="{{ url_for("documentos.index") }}" class="btn btn-primary">
+                            <i class="fas fa-plus me-2"></i>Gerar Primeiro Documento
+                        </a>
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+{% endblock content %}
+{% block extra_js %}
+    <script nonce="{{ csp_nonce() }}">
+    document.addEventListener('DOMContentLoaded', function() {
+        // Adicionar tooltip nos botões
+        const tooltips = document.querySelectorAll('[title]');
+        tooltips.forEach(function(element) {
+            new bootstrap.Tooltip(element);
+        });
+        
+        // Animação de entrada para as linhas da tabela
+        const rows = document.querySelectorAll('tbody tr');
+        rows.forEach((row, index) => {
+            row.style.opacity = '0';
+            row.style.transform = 'translateX(-20px)';
+            
+            setTimeout(() => {
+                row.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
+                row.style.opacity = '1';
+                row.style.transform = 'translateX(0)';
+            }, index * 50);
+        });
+    });
+    </script>
+{% endblock extra_js %}

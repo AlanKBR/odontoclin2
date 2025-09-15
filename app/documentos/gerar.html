@@ -1,0 +1,86 @@
+{% extends 'core/base.html' %}
+{% block title %}Gerar Documento{% endblock %}
+{% block content %}
+<h1>Gerar: {{ config.titulo }}</h1>
+<form method="post">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <fieldset class="border rounded p-2 mb-3">
+        <legend class="fs-6">Vinculações</legend>
+        <div class="row g-2">
+            <div class="col-md-6">
+                <label class="form-label">Paciente</label>
+                <select name="paciente_id" class="form-select form-select-sm">
+                    <option value="">-- selecione --</option>
+                    {% for p in pacientes %}
+                    <option value="{{ p.id }}">{{ p.nome }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-6">
+                <label class="form-label">Tipo Assinatura</label>
+                <select name="assinatura_tipo" class="form-select form-select-sm" id="assinatura_tipo_sel">
+                    <option value="dentista">Dentista</option>
+                    <option value="clinica">Clínica</option>
+                </select>
+            </div>
+        </div>
+        <div class="row g-2 mt-2" id="dentista_row">
+            <div class="col-md-12">
+                <label class="form-label">Dentista</label>
+                <select name="dentista_id" class="form-select form-select-sm">
+                    <option value="">-- selecione --</option>
+                    {% for d in dentistas %}
+                    <option value="{{ d.id }}">{{ d.nome_completo }}{% if d.cro %} (CRO: {{ d.cro }}){% endif %}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+    </fieldset>
+    {% for campo in campos %}
+    <div class="mb-2">
+        <label class="form-label">{{ campo.label }}</label>
+        {% if campo.tipo == 'select' %}
+        <select name="{{ campo.nome }}" class="form-select">
+            <option value="">-- selecione --</option>
+            {% for op in campo.opcoes %}<option value="{{ op }}">{{ op }}</option>{% endfor %}
+        </select>
+        {% elif campo.tipo == 'textarea' %}
+        <textarea name="{{ campo.nome }}" class="form-control" rows="3"></textarea>
+        {% elif campo.tipo == 'checkbox' %}
+        {% for op in campo.opcoes %}
+        <div class="form-check">
+            <input class="form-check-input" type="checkbox" name="{{ campo.nome }}" value="{{ op }}"
+                id="chk_{{ campo.nome }}_{{ loop.index }}">
+            <label class="form-check-label" for="chk_{{ campo.nome }}_{{ loop.index }}">{{ op }}</label>
+        </div>
+        {% endfor %}
+        {% else %}
+        <input name="{{ campo.nome }}" class="form-control" />
+        {% endif %}
+    </div>
+    {% endfor %}
+    <div class="row g-2 mt-3">
+        <div class="col-md-6">
+            <label class="form-label">Local Emissão</label>
+            <input name="local_emissao" value="{{ local_padrao }}" class="form-control form-control-sm" />
+        </div>
+        <div class="col-md-6">
+            <label class="form-label">Observações</label>
+            <input name="observacoes" class="form-control form-control-sm" />
+        </div>
+    </div>
+    <button class="btn btn-success btn-sm mt-2">Gerar</button>
+    <a href="{{ url_for('documentos.index') }}" class="btn btn-secondary btn-sm mt-2">Voltar</a>
+</form>
+<script>
+    const tipoSel = document.getElementById('assinatura_tipo_sel');
+    const dentistaRow = document.getElementById('dentista_row');
+    function toggleDentista() {
+        if (tipoSel.value === 'clinica') { dentistaRow.style.display = 'none'; }
+        else { dentistaRow.style.display = 'flex'; }
+    }
+    tipoSel.addEventListener('change', toggleDentista);
+    toggleDentista();
+</script>
+{% endblock %}

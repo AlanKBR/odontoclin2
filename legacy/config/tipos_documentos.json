@@ -1,0 +1,290 @@
+{
+  "tipos_documentos": {
+    "autorizacao_imagem": {
+      "titulo": "Autorização de Uso de Imagem",
+      "descricao": "Autorização para uso de imagem em procedimentos odontológicos",
+      "campos": [
+        {
+          "nome": "finalidade",
+          "tipo": "select",
+          "label": "Finalidade",
+          "opcoes": [
+            "Documentação do tratamento",
+            "Fins educacionais e científicos",
+            "Divulgação em mídias sociais",
+            "Portfolio profissional",
+            "Apresentações e palestras"
+          ],
+          "obrigatorio": true
+        },
+        {
+          "nome": "periodo_autorizacao",
+          "tipo": "select",
+          "label": "Período de autorização",
+          "opcoes": [
+            "Durante o tratamento",
+            "1 ano após o tratamento",
+            "2 anos após o tratamento",
+            "Por tempo indeterminado"
+          ],
+          "obrigatorio": true
+        },
+        {
+          "nome": "restricoes",
+          "tipo": "textarea",
+          "label": "Restrições específicas (opcional)",
+          "obrigatorio": false
+        }
+      ],
+      "template": "Eu, {{ nome_paciente }}, portador(a) do CPF {{ cpf_paciente }}, AUTORIZO o(a) Dr(a). {{ nome_dentista }}, CRO {{ cro_dentista }}, a utilizar minha imagem para {{ finalidade }}, pelo período de {{ periodo_autorizacao }}.{% if restricoes_texto %} {{ restricoes_texto }}{% endif %}"
+    },
+    "interrupcao_tratamento_paciente": {
+      "titulo": "Comunicado de Interrupção de Tratamento (Paciente)",
+      "descricao": "Documento informando interrupção do tratamento por decisão do paciente",
+      "campos": [
+        {
+          "nome": "motivo_interrupcao",
+          "tipo": "select",
+          "label": "Motivo da interrupção",
+          "opcoes": [
+            "Decisão pessoal do paciente",
+            "Questões financeiras",
+            "Mudança de cidade/região",
+            "Insatisfação com o tratamento",
+            "Outros motivos pessoais"
+          ],
+          "obrigatorio": true
+        },
+        {
+          "nome": "tratamento_realizado",
+          "tipo": "textarea",
+          "label": "Resumo do tratamento realizado",
+          "obrigatorio": true
+        },
+        {
+          "nome": "recomendacoes",
+          "tipo": "textarea",
+          "label": "Recomendações para continuidade",
+          "obrigatorio": false
+        }
+      ],
+      "template": "Declaro que o(a) paciente {{ nome_paciente }}, CPF {{ cpf_paciente }}, comunicou sua decisão de interromper o tratamento odontológico por {{ motivo_interrupcao }}. Tratamento realizado até a data: {{ tratamento_realizado }}.{% if recomendacoes_texto %} {{ recomendacoes_texto }}{% endif %}"
+    },
+    "interrupcao_tratamento_responsavel": {
+      "titulo": "Comunicado de Interrupção de Tratamento (Responsável)",
+      "descricao": "Documento informando interrupção do tratamento por decisão do responsável",
+      "campos": [
+        {
+          "nome": "nome_responsavel",
+          "tipo": "text",
+          "label": "Nome do responsável",
+          "obrigatorio": true
+        },
+        {
+          "nome": "parentesco",
+          "tipo": "select",
+          "label": "Parentesco",
+          "opcoes": [
+            "Pai",
+            "Mãe",
+            "Responsável legal",
+            "Tutor",
+            "Avô/Avó"
+          ],
+          "obrigatorio": true
+        },
+        {
+          "nome": "motivo_interrupcao",
+          "tipo": "select",
+          "label": "Motivo da interrupção",
+          "opcoes": [
+            "Decisão do responsável",
+            "Questões financeiras",
+            "Mudança de cidade/região",
+            "Outros motivos pessoais"
+          ],
+          "obrigatorio": true
+        },
+        {
+          "nome": "tratamento_realizado",
+          "tipo": "textarea",
+          "label": "Resumo do tratamento realizado",
+          "obrigatorio": true
+        }
+      ],
+      "template": "Declaro que o(a) responsável {{ nome_responsavel }} ({{ parentesco }}) do(a) paciente {{ nome_paciente }}, comunicou a decisão de interromper o tratamento odontológico por {{ motivo_interrupcao }}. Tratamento realizado até a data: {{ tratamento_realizado }}."
+    },
+    "solicitacao_exames": {
+      "titulo": "Solicitação de Exames Laboratoriais",
+      "descricao": "Solicitação de exames complementares para diagnóstico",
+      "campos": [
+        {
+          "nome": "tipos_exames",
+          "tipo": "checkbox",
+          "label": "Tipos de exames solicitados",
+          "opcoes": [
+            "Hemograma completo",
+            "Coagulograma",
+            "Glicemia",
+            "Radiografia panorâmica",
+            "Tomografia computadorizada",
+            "Ressonância magnética",
+            "Biópsia"
+          ],
+          "obrigatorio": true
+        },
+        {
+          "nome": "indicacao_clinica",
+          "tipo": "textarea",
+          "label": "Indicação clínica",
+          "obrigatorio": true
+        },
+        {
+          "nome": "urgencia",
+          "tipo": "select",
+          "label": "Nível de urgência",
+          "opcoes": [
+            "Rotina",
+            "Urgente",
+            "Muito urgente"
+          ],
+          "obrigatorio": true
+        }
+      ],
+      "template": "Solicito os seguintes exames para o(a) paciente {{ nome_paciente }}: {{ tipos_exames }}. Indicação clínica: {{ indicacao_clinica }}. Urgência: {{ urgencia }}."
+    },
+    "encaminhamento": {
+      "titulo": "Encaminhamento Médico/Odontológico",
+      "descricao": "Encaminhamento para outro profissional ou especialidade",
+      "campos": [
+        {
+          "nome": "especialidade_destino",
+          "tipo": "select",
+          "label": "Especialidade de destino",
+          "opcoes": [
+            "Cirurgia Bucomaxilofacial",
+            "Endodontia",
+            "Periodontia",
+            "Ortodontia",
+            "Prótese Dentária",
+            "Odontopediatria",
+            "Medicina (Clínico Geral)",
+            "Cardiologia",
+            "Anestesiologia"
+          ],
+          "obrigatorio": true
+        },
+        {
+          "nome": "motivo_encaminhamento",
+          "tipo": "textarea",
+          "label": "Motivo do encaminhamento",
+          "obrigatorio": true
+        },
+        {
+          "nome": "urgencia_encaminhamento",
+          "tipo": "select",
+          "label": "Urgência",
+          "opcoes": [
+            "Rotina",
+            "Prioritário",
+            "Urgente"
+          ],
+          "obrigatorio": true
+        }
+      ],
+      "template": "Encaminho o(a) paciente {{ nome_paciente }} para avaliação em {{ especialidade_destino }}. Motivo: {{ motivo_encaminhamento }}. Urgência: {{ urgencia_encaminhamento }}."
+    },
+    "instrucoes_pos_operatorias": {
+      "titulo": "Instruções Pós-Operatórias",
+      "descricao": "Orientações para cuidados após procedimento cirúrgico",
+      "campos": [
+        {
+          "nome": "procedimento_realizado",
+          "tipo": "text",
+          "label": "Procedimento realizado",
+          "obrigatorio": true
+        },
+        {
+          "nome": "medicamentos",
+          "tipo": "textarea",
+          "label": "Medicamentos prescritos",
+          "obrigatorio": false
+        },
+        {
+          "nome": "cuidados_especiais",
+          "tipo": "checkbox",
+          "label": "Cuidados especiais",
+          "opcoes": [
+            "Aplicar gelo por 20 minutos a cada 2 horas",
+            "Evitar alimentos quentes por 24h",
+            "Não fazer bochechos vigorosos",
+            "Evitar exercícios físicos por 48h",
+            "Manter repouso relativo",
+            "Não fumar",
+            "Escovação suave na região"
+          ],
+          "obrigatorio": true
+        },
+        {
+          "nome": "retorno",
+          "tipo": "select",
+          "label": "Retorno para avaliação",
+          "opcoes": [
+            "24 horas",
+            "48 horas",
+            "1 semana",
+            "2 semanas",
+            "Conforme necessidade"
+          ],
+          "obrigatorio": true
+        }
+      ],
+      "template": "Após o procedimento de {{ procedimento_realizado }}, o(a) paciente {{ nome_paciente }} deve seguir as seguintes orientações: {{ cuidados_especiais }}.{% if medicamentos_texto %} {{ medicamentos_texto }}{% endif %} Retorno: {{ retorno }}."
+    },
+    "contrato_tratamento": {
+      "titulo": "Contrato de Tratamento Odontológico",
+      "descricao": "Contrato estabelecendo condições do tratamento",
+      "campos": [
+        {
+          "nome": "tratamento_proposto",
+          "tipo": "textarea",
+          "label": "Tratamento proposto",
+          "obrigatorio": true
+        },
+        {
+          "nome": "valor_total",
+          "tipo": "text",
+          "label": "Valor total",
+          "obrigatorio": true
+        },
+        {
+          "nome": "forma_pagamento",
+          "tipo": "select",
+          "label": "Forma de pagamento",
+          "opcoes": [
+            "À vista",
+            "Parcelado em 2x",
+            "Parcelado em 3x",
+            "Parcelado em 6x",
+            "Parcelado em 12x",
+            "Convênio/Plano"
+          ],
+          "obrigatorio": true
+        },
+        {
+          "nome": "prazo_tratamento",
+          "tipo": "text",
+          "label": "Prazo estimado do tratamento",
+          "obrigatorio": true
+        },
+        {
+          "nome": "garantia",
+          "tipo": "text",
+          "label": "Período de garantia",
+          "obrigatorio": false
+        }
+      ],
+      "template": "Contrato de prestação de serviços odontológicos entre Dr(a). {{ nome_dentista }} e o(a) paciente {{ nome_paciente }}. Tratamento: {{ tratamento_proposto }}. Valor: {{ valor_total }}. Pagamento: {{ forma_pagamento }}. Prazo: {{ prazo_tratamento }}.{% if garantia_texto %} {{ garantia_texto }}{% endif %}"
+    }
+  }
+}

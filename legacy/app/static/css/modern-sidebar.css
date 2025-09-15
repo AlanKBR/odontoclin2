@@ -1,0 +1,820 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+:root {
+    --primary-color: #2470dc;
+    --secondary-color: #64748b;
+    --background-color: #ffffff;
+    --surface-color: #f8fafc;
+    --text-primary: #1e293b;
+    --text-secondary: #64748b;
+    --border-color: #e2e8f0;
+    --hover-color: #f1f5f9;
+    --active-color: #eff6ff;
+    --shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+    --sidebar-width: 280px;
+    --sidebar-collapsed-width: 70px;
+    --transition-duration: 0.3s;
+    --transition-timing: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background-color: var(--surface-color);
+    color: var(--text-primary);
+    line-height: 1.6;
+}
+
+/* Modern Sidebar Styles */
+.modern-sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 100vh;
+    width: var(--sidebar-width);
+    background: var(--background-color);
+    border-right: 1px solid var(--border-color);
+    box-shadow: var(--shadow);
+    transition: all var(--transition-duration) var(--transition-timing);
+    z-index: 1000;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+.modern-sidebar.collapsed {
+    width: var(--sidebar-collapsed-width);
+}
+
+/* Sidebar Header */
+.sidebar-header {
+    padding: 1.5rem 1rem;
+    border-bottom: 1px solid var(--border-color);
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    background: var(--background-color);
+    min-height: 80px;
+}
+
+.sidebar-logo {
+    width: 40px;
+    height: 40px;
+    background: linear-gradient(135deg, var(--primary-color), #3b82f6);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 1.25rem;
+    font-weight: 600;
+    flex-shrink: 0;
+}
+
+.sidebar-title {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    white-space: nowrap;
+    opacity: 1;
+    transition: opacity var(--transition-duration) var(--transition-timing);
+}
+
+.modern-sidebar.collapsed .sidebar-title {
+    opacity: 0;
+    width: 0;
+}
+
+/* Toggle Button */
+.sidebar-toggle {
+    position: absolute;
+    top: 1.75rem;
+    right: -15px;
+    width: 30px;
+    height: 30px;
+    background: var(--background-color);
+    border: 1px solid var(--border-color);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: var(--shadow);
+    transition: all var(--transition-duration) var(--transition-timing);
+    z-index: 2001;
+}
+
+.sidebar-toggle:hover {
+    background: var(--hover-color);
+    transform: scale(1.1);
+}
+
+.sidebar-toggle i {
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+    transition: transform var(--transition-duration) var(--transition-timing);
+}
+
+.modern-sidebar.collapsed .sidebar-toggle i {
+    transform: rotate(180deg);
+}
+
+/* Navigation */
+.sidebar-nav {
+    flex: 1;
+    padding: 1rem 0;
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+
+.sidebar-nav::-webkit-scrollbar {
+    width: 4px;
+}
+
+.sidebar-nav::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.sidebar-nav::-webkit-scrollbar-thumb {
+    background: var(--border-color);
+    border-radius: 4px;
+}
+
+/* Menu Groups */
+.menu-group {
+    margin-bottom: 2rem;
+}
+
+.menu-group:last-child {
+    margin-bottom: 1rem;
+}
+
+.menu-label {
+    padding: 0 1.5rem 0.5rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-secondary);
+    white-space: nowrap;
+    opacity: 1;
+    transition: opacity var(--transition-duration) var(--transition-timing);
+}
+
+.modern-sidebar.collapsed .menu-label {
+    opacity: 0;
+}
+
+/* Menu Items */
+.menu-list {
+    list-style: none;
+    padding: 0;
+}
+
+.menu-item {
+    margin: 0.25rem 0;
+}
+
+.menu-link {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.75rem 1.5rem;
+    color: var(--text-primary);
+    text-decoration: none;
+    transition: all var(--transition-duration) var(--transition-timing);
+    border-radius: 0;
+    position: relative;
+    overflow: hidden;
+}
+
+/* Garante que o tooltip funcione corretamente no menu retraído */
+.modern-sidebar.collapsed .menu-link {
+    position: relative !important;
+    overflow: visible !important;
+    z-index: 20;
+}
+
+.modern-sidebar.collapsed .menu-link[data-tooltip]::after {
+    z-index: 99999 !important;
+    pointer-events: none;
+    display: block;
+}
+
+/* Remove qualquer display: none do .menu-link */
+.modern-sidebar.collapsed .menu-link[data-tooltip] {
+    display: flex !important;
+}
+
+.modern-sidebar.collapsed .menu-item,
+.modern-sidebar.collapsed .menu-link {
+    overflow: visible !important;
+    position: relative !important;
+    z-index: 20;
+}
+
+/* Corrige possíveis conflitos de overflow do container */
+.modern-sidebar.collapsed {
+    overflow: visible !important;
+}
+
+/* Corrige alinhamento dos itens com submenu no modo retraído */
+.modern-sidebar.collapsed .menu-dropdown .menu-link {
+    justify-content: center;
+    padding-left: 0;
+    padding-right: 0;
+}
+
+.modern-sidebar.collapsed .menu-dropdown .menu-icon {
+    margin: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 48px;
+    height: 48px;
+    font-size: 1.35rem;
+}
+
+.modern-sidebar.collapsed .dropdown-arrow {
+    display: none !important;
+}
+
+.menu-link:hover {
+    background: var(--hover-color);
+    color: var(--primary-color);
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+}
+
+/* Hover para sidebar retraída */
+.modern-sidebar.collapsed .menu-link:hover {
+    justify-content: center;
+    border-radius: 12px;
+    margin: 0.25rem;
+}
+
+.menu-link.active {
+    background: var(--active-color);
+    color: var(--primary-color);
+    border-right: 3px solid var(--primary-color);
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+}
+
+.menu-link.active::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 4px;
+    background: var(--primary-color);
+}
+
+/* Melhor centralização visual para links ativos */
+.menu-link.active .menu-icon {
+    background: rgba(36, 112, 220, 0.1);
+    border-radius: 8px;
+    transition: all var(--transition-duration) var(--transition-timing);
+}
+
+.menu-link.active .menu-text {
+    font-weight: 600;
+    letter-spacing: -0.025em;
+}
+
+/* Centralização específica para sidebar retraída */
+.modern-sidebar.collapsed .menu-link.active .menu-icon {
+    background: rgba(36, 112, 220, 0.15);
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    margin: 0 auto;
+}
+
+/* Animação suave para transições de estado ativo */
+.menu-link {
+    transition: all var(--transition-duration) var(--transition-timing);
+}
+
+.menu-link .menu-icon {
+    transition: all var(--transition-duration) var(--transition-timing);
+}
+
+.menu-link .menu-text {
+    transition: all var(--transition-duration) var(--transition-timing);
+}
+
+/* Centralização para sidebar retraída */
+.modern-sidebar.collapsed .menu-link.active {
+    justify-content: center;
+    border-right: none;
+    padding: 0.75rem 0;
+    margin: 0.25rem;
+    border-radius: 12px;
+    background: var(--active-color);
+}
+
+.modern-sidebar.collapsed .menu-link.active::before {
+    display: none;
+}
+
+/* Centralização visual melhorada para sidebar expandida */
+.menu-link.active {
+    position: relative;
+}
+
+.menu-link.active .menu-icon {
+    color: var(--primary-color);
+}
+
+.menu-link.active .menu-text {
+    color: var(--primary-color);
+}
+
+.menu-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 48px;
+    height: 48px;
+    min-width: 20px;
+    min-height: 20px;
+    margin: 0 auto;
+    font-size: 1.35rem;
+    flex-shrink: 0;
+}
+
+.menu-text {
+    flex: 1;
+    white-space: nowrap;
+    opacity: 1;
+    transition: opacity var(--transition-duration) var(--transition-timing);
+}
+
+.modern-sidebar.collapsed .menu-text {
+    opacity: 0;
+    width: 0;
+}
+
+.modern-sidebar.collapsed .menu-link {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+    padding: 0 !important;
+    margin: 0;
+    min-width: 48px;
+    min-height: 48px;
+    height: 48px;
+    width: 100%;
+}
+
+/* Dropdown Menu */
+.menu-dropdown {
+    position: relative;
+}
+
+.menu-dropdown>.menu-link {
+    cursor: pointer;
+    user-select: none;
+    display: flex;
+    align-items: center;
+    width: 100%;
+    justify-content: flex-start;
+}
+
+.menu-dropdown>.menu-link .dropdown-arrow {
+    margin-left: auto;
+    transition: transform var(--transition-duration) var(--transition-timing);
+}
+
+.menu-dropdown>.menu-link[aria-expanded="true"] .dropdown-arrow {
+    transform: rotate(180deg);
+}
+
+.submenu {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height var(--transition-duration) var(--transition-timing);
+    background: var(--surface-color);
+    margin: 0.25rem 0;
+}
+
+.submenu.show {
+    max-height: 500px;
+}
+
+.submenu .menu-link {
+    padding: 0.75rem 1.5rem; /* Match main menu-link */
+    font-size: 1rem; /* Match main menu-link */
+    background: none; /* Remove special background */
+    border: none; /* Remove special border */
+    color: var(--text-primary);
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 0.75rem;
+    transition: all var(--transition-duration) var(--transition-timing);
+}
+
+.submenu .menu-link:hover {
+    background: var(--hover-color);
+    color: var(--primary-color);
+}
+
+.submenu .menu-link.active {
+    background: var(--active-color);
+    color: var(--primary-color);
+    border-right: 3px solid var(--primary-color);
+}
+
+.submenu .menu-link .menu-icon {
+    width: 48px;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.35rem;
+    margin-right: 0.75rem;
+}
+
+.submenu .menu-link .menu-text {
+    flex: 1;
+    white-space: nowrap;
+    opacity: 1;
+}
+
+/* User Profile Section */
+.sidebar-footer {
+    padding: 1rem;
+    border-top: 1px solid var(--border-color);
+    background: var(--background-color);
+    position: relative; /* Importante para o posicionamento do popup */
+}
+
+.user-profile {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem;
+    border-radius: 12px;
+    background: var(--surface-color);
+    transition: all var(--transition-duration) var(--transition-timing);
+    cursor: pointer;
+    position: relative; /* Importante para o posicionamento do popup */
+}
+
+.user-profile:hover {
+    background: var(--hover-color);
+}
+
+.user-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--primary-color), #3b82f6);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: 600;
+    flex-shrink: 0;
+}
+
+.user-info {
+    flex: 1;
+    opacity: 1;
+    transition: opacity var(--transition-duration) var(--transition-timing);
+}
+
+.modern-sidebar.collapsed .user-info {
+    opacity: 0;
+    width: 0;
+}
+
+.user-name {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    white-space: nowrap;
+}
+
+.user-role {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    white-space: nowrap;
+}
+
+/* Theme toggle button in sidebar */
+.theme-toggle-btn {
+    background: none !important;
+    border: none !important;
+    width: 100% !important;
+    text-align: left !important;
+    cursor: pointer;
+    transition: all var(--transition-duration) var(--transition-timing);
+}
+
+.theme-toggle-btn:hover {
+    background: var(--hover-color) !important;
+    color: var(--primary-color) !important;
+}
+
+.theme-toggle-btn:focus {
+    outline: none;
+    box-shadow: 0 0 0 2px var(--primary-color);
+}
+
+/* User actions popup */
+.user-profile {
+    position: relative;
+}
+
+.user-menu-indicator {
+    opacity: 0;
+    transition: opacity var(--transition-duration) var(--transition-timing);
+    margin-left: auto;
+    color: var(--text-secondary);
+    font-size: 0.875rem;
+}
+
+.user-profile:hover .user-menu-indicator {
+    opacity: 1;
+}
+
+.modern-sidebar.collapsed .user-menu-indicator {
+    opacity: 1;
+    margin-left: 0;
+    position: absolute;
+    right: 8px;
+    top: 50%;
+    transform: translateY(-50%);
+}
+
+.user-actions-popup {
+    position: absolute;
+    bottom: 100%;
+    left: 0;
+    right: 0;
+    background: var(--background-color);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15), 0 4px 6px rgba(0, 0, 0, 0.1);
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(10px);
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    z-index: 3000;
+    margin-bottom: 12px;
+    min-width: 200px;
+    pointer-events: none; /* Importante para evitar problemas de hover */
+}
+
+.user-actions-popup.show {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+    pointer-events: auto; /* Reabilita eventos quando visível */
+}
+
+.popup-arrow {
+    position: absolute;
+    bottom: -8px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 16px;
+    height: 16px;
+    background: var(--background-color);
+    border: 1px solid var(--border-color);
+    border-top: none;
+    border-left: none;
+    transform: translateX(-50%) rotate(45deg);
+}
+
+.popup-content {
+    padding: 0.75rem 0;
+}
+
+.popup-item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem 1rem;
+    color: var(--text-primary);
+    text-decoration: none;
+    font-size: 0.875rem;
+    font-weight: 500;
+    transition: all 0.15s ease;
+}
+
+.popup-item:hover {
+    background: var(--hover-color);
+    color: var(--text-primary);
+    text-decoration: none;
+}
+
+.popup-item-danger {
+    color: #dc2626;
+}
+
+.popup-item-danger:hover {
+    background: #fef2f2;
+    color: #dc2626;
+}
+
+.popup-item i {
+    font-size: 1rem;
+    width: 16px;
+    text-align: center;
+}
+
+.popup-divider {
+    height: 1px;
+    background: var(--border-color);
+    margin: 0.5rem 0;
+}
+
+/* Collapsed sidebar popup adjustments */
+.modern-sidebar.collapsed .user-actions-popup {
+    left: 100%;
+    right: auto;
+    bottom: 50%;
+    transform: translateY(50%);
+    margin-bottom: 0;
+    margin-left: 12px;
+}
+
+.modern-sidebar.collapsed .user-actions-popup.show {
+    transform: translateY(50%);
+}
+
+.modern-sidebar.collapsed .popup-arrow {
+    left: -8px;
+    bottom: 50%;
+    transform: translateY(50%) rotate(-45deg);
+    border: 1px solid var(--border-color);
+    border-bottom: none;
+    border-right: none;
+}
+
+/* Dark mode adjustments for popup */
+[data-theme="dark"] .popup-item-danger:hover {
+    background: #450a0a;
+    color: #fca5a5;
+}
+
+/* Main Content Adjustment */
+.main-content {
+    margin-left: var(--sidebar-width);
+    transition: margin-left var(--transition-duration) var(--transition-timing);
+    min-height: 100vh;
+    padding: 1.5rem;
+    margin-top: 0; /* Remove top margin since no navbar */
+}
+
+.sidebar-collapsed + .main-content {
+    margin-left: var(--sidebar-collapsed-width);
+}
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+    .modern-sidebar {
+        transform: translateX(-100%);
+        width: var(--sidebar-width);
+        z-index: 2000;
+    }
+
+    .modern-sidebar.mobile-open {
+        transform: translateX(0);
+    }
+
+    .main-content {
+        margin-left: 0;
+    }
+
+    .sidebar-collapsed + .main-content {
+        margin-left: 0;
+    }
+
+    .mobile-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 1999;
+        opacity: 0;
+        visibility: hidden;
+        transition: all var(--transition-duration) var(--transition-timing);
+    }
+
+    .mobile-overlay.show {
+        opacity: 1;
+        visibility: visible;
+    }
+
+    .sidebar-toggle {
+        display: none;
+    }
+}
+
+/* Dark Mode Support */
+[data-theme="dark"] {
+    --background-color: #1e293b;
+    --surface-color: #0f172a;
+    --text-primary: #f1f5f9;
+    --text-secondary: #94a3b8;
+    --border-color: #334155;
+    --hover-color: #334155;
+    --active-color: #1e40af;
+}
+
+/* Tooltip funcional no menu retraído */
+.modern-sidebar.collapsed .menu-link[data-tooltip] .menu-text {
+    display: none !important;
+}
+
+.modern-sidebar.collapsed .menu-link[data-tooltip]::after {
+    content: attr(data-tooltip);
+    position: absolute;
+    left: 100%;
+    top: 50%;
+    transform: translateY(-50%);
+    background: var(--text-primary);
+    color: var(--background-color);
+    padding: 0.5rem 0.75rem;
+    border-radius: 6px;
+    font-size: 0.875rem;
+    white-space: nowrap;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.2s;
+    margin-left: 10px;
+    z-index: 3000;
+    pointer-events: none;
+}
+
+.modern-sidebar.collapsed .menu-link[data-tooltip]:hover::after,
+.modern-sidebar.collapsed .menu-link[data-tooltip]:focus::after {
+    opacity: 1;
+    visibility: visible;
+}
+
+/* Submenu flyout no menu retraído */
+.modern-sidebar.collapsed .menu-dropdown>.menu-link[aria-expanded]+.submenu {
+    display: none !important;
+}
+
+.modern-sidebar.collapsed .menu-dropdown:hover>.submenu {
+    display: block !important;
+    position: absolute;
+    left: 100%;
+    top: 0;
+    min-width: 180px;
+    max-width: 260px;
+    background: var(--background-color);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+    border-radius: 8px;
+    z-index: 3001;
+    padding: 0.5rem 0;
+    margin: 0;
+    max-height: none;
+    overflow: visible;
+}
+
+.modern-sidebar.collapsed .menu-dropdown:hover>.submenu .menu-link {
+    padding-left: 1.5rem;
+    justify-content: flex-start;
+    min-width: 0;
+    width: 100%;
+}
+
+.modern-sidebar.collapsed .menu-dropdown:hover>.submenu .menu-icon {
+    margin-right: 0.75rem;
+    width: 20px;
+    height: 20px;
+}
+
+/* Animations */
+/* Removido slideIn para evitar animação em cascata ao selecionar menu */
+.menu-item {
+    animation: none !important;
+}
+
+.menu-item:nth-child(1),
+.menu-item:nth-child(2),
+.menu-item:nth-child(3),
+.menu-item:nth-child(4),
+.menu-item:nth-child(5) {
+    animation-delay: 0s !important;
+}

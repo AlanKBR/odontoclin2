@@ -1,0 +1,34 @@
+<!-- Context menu popover for event actions -->
+<div id="eventContextMenu" class="popover bs-popover-auto show">
+    <div class="popover-arrow"></div>
+    <div class="popover-body p-2">
+        <div class="mb-2 small text-uppercase text-muted">Duplicar</div>
+        <div class="dup-group mb-2" role="group" aria-label="Duplicate">
+            <button id="dup1wBtn" class="btn btn-outline-secondary btn-sm btn-compact">+1s</button>
+            <button id="dup2wBtn" class="btn btn-outline-secondary btn-sm btn-compact">+2s</button>
+            <button id="dup3wBtn" class="btn btn-outline-secondary btn-sm btn-compact">+3s</button>
+            <button id="dup4wBtn" class="btn btn-outline-secondary btn-sm btn-compact">+4s</button>
+            <button id="dup1mBtn" class="btn btn-outline-secondary btn-sm btn-compact">+1m</button>
+        </div>
+        <div class="mb-1">Color:</div>
+        <div id="colorOptions">
+            <div class="d-flex gap-2 mb-1">
+                <span class="color-circle" data-color="#e11d48"></span> <!-- vermelho -->
+                <span class="color-circle" data-color="#f43f5e"></span> <!-- vermelho claro/rosa -->
+                <span class="color-circle" data-color="#f59e42"></span> <!-- laranja -->
+                <span class="color-circle" data-color="#fbbf24"></span> <!-- amarelo -->
+                <span class="color-circle" data-color="#22c55e"></span> <!-- verde -->
+                <span class="color-circle" data-color="#10b981"></span> <!-- verde água -->
+            </div>
+            <div class="d-flex gap-2">
+                <span class="color-circle" data-color="#0ea5e9"></span> <!-- azul claro -->
+                <span class="color-circle" data-color="#2563eb"></span> <!-- azul escuro -->
+                <span class="color-circle" data-color="#6366f1"></span> <!-- roxo -->
+                <span class="color-circle" data-color="#a21caf"></span> <!-- roxo escuro -->
+                <span class="color-circle" data-color="#f472b6"></span> <!-- rosa -->
+                <span class="color-circle" data-color="#64748b"></span> <!-- cinza -->
+            </div>
+        </div>
+        <button id="deleteEventBtn" class="btn btn-danger btn-sm w-100 mt-2">Delete</button>
+    </div>
+</div>

@@ -1,0 +1,199 @@
+{% extends "base.html" %}
+{% block title %}
+    Documentos | OdontoClinic
+{% endblock title %}
+{% block extra_css %}
+    <style nonce="{{ csp_nonce() }}">
+    .document-card {
+        transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+        border: 1px solid #dee2e6;
+        border-radius: 0.5rem;
+        height: 100%;
+    }
+    
+    .document-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        border-color: #007bff;
+    }
+    
+    .document-icon {
+        font-size: 3rem;
+        color: #007bff;
+        margin-bottom: 1rem;
+    }
+    
+    .document-title {
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: #333;
+        margin-bottom: 0.5rem;
+    }
+    
+    .document-description {
+        font-size: 0.9rem;
+        color: #6c757d;
+        line-height: 1.4;
+    }
+    
+    .btn-generate {
+        margin-top: auto;
+        width: 100%;
+    }
+    
+    .section-header {
+        border-bottom: 3px solid #007bff;
+        padding-bottom: 0.5rem;
+        margin-bottom: 2rem;
+    }
+    
+    .section-header h1 {
+        color: #333;
+        font-weight: 600;
+    }
+    
+    .stats-card {
+        background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+        color: white;
+        border-radius: 0.5rem;
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+    }
+    
+    .stats-number {
+        font-size: 2rem;
+        font-weight: bold;
+    }
+    
+    .stats-label {
+        font-size: 0.9rem;
+        opacity: 0.9;
+    }
+    </style>
+{% endblock extra_css %}
+{% block content %}
+    <div class="container-fluid py-4">
+        <!-- Cabeçalho da página -->
+        <div class="section-header">
+            <div class="row align-items-center">
+                <div class="col-md-8">
+                    <h1>
+                        <i class="fas fa-file-alt me-3"></i>Sistema de Documentos
+                    </h1>
+                    <p class="lead mb-0">Gere diversos tipos de documentos odontológicos de forma rápida e profissional</p>
+                </div>
+                <div class="col-md-4 text-end">
+                    <a href="{{ url_for("documentos.historico") }}"
+                       class="btn btn-outline-primary">
+                        <i class="fas fa-history me-2"></i>Ver Histórico
+                    </a>
+                </div>
+            </div>
+        </div>
+        <!-- Cards de estatísticas -->
+        <div class="row mb-4">
+            <div class="col-md-4">
+                <div class="stats-card text-center">
+                    <div class="stats-number">{{ tipos_documentos|length }}</div>
+                    <div class="stats-label">Tipos de Documentos Disponíveis</div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="stats-card text-center">
+                    <div class="stats-number">
+                        <i class="fas fa-clock"></i>
+                    </div>
+                    <div class="stats-label">Geração Instantânea de PDF</div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="stats-card text-center">
+                    <div class="stats-number">
+                        <i class="fas fa-shield-alt"></i>
+                    </div>
+                    <div class="stats-label">Templates Padronizados</div>
+                </div>
+            </div>
+        </div>
+        <!-- Grid de tipos de documentos -->
+        <div class="row">
+            {% for tipo_id, config in tipos_documentos.items() %}
+                <div class="col-lg-4 col-md-6 mb-4">
+                    <div class="card document-card h-100">
+                        <div class="card-body d-flex flex-column text-center">
+                            <!-- Ícone baseado no tipo -->
+                            {% if "autorizacao" in tipo_id %}
+                                <div class="document-icon">
+                                    <i class="fas fa-user-check"></i>
+                                </div>
+                            {% elif "interrupcao" in tipo_id %}
+                                <div class="document-icon">
+                                    <i class="fas fa-hand-paper"></i>
+                                </div>
+                            {% elif "exames" in tipo_id %}
+                                <div class="document-icon">
+                                    <i class="fas fa-microscope"></i>
+                                </div>
+                            {% elif "encaminhamento" in tipo_id %}
+                                <div class="document-icon">
+                                    <i class="fas fa-share"></i>
+                                </div>
+                            {% elif "instrucoes" in tipo_id %}
+                                <div class="document-icon">
+                                    <i class="fas fa-list-ul"></i>
+                                </div>
+                            {% elif "contrato" in tipo_id %}
+                                <div class="document-icon">
+                                    <i class="fas fa-handshake"></i>
+                                </div>
+                            {% else %}
+                                <div class="document-icon">
+                                    <i class="fas fa-file-alt"></i>
+                                </div>
+                            {% endif %}
+                            <div class="document-title">{{ config.titulo }}</div>
+                            <div class="document-description">{{ config.descricao }}</div>
+                            <a href="{{ url_for('documentos.gerar_documento', tipo_documento=tipo_id) }}"
+                               class="btn btn-primary btn-generate">
+                                <i class="fas fa-plus me-2"></i>Gerar Documento
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+        {% if not tipos_documentos %}
+            <div class="row">
+                <div class="col-12">
+                    <div class="alert alert-warning text-center">
+                        <i class="fas fa-exclamation-triangle fa-2x mb-3"></i>
+                        <h4>Nenhum tipo de documento configurado</h4>
+                        <p>Não foram encontrados tipos de documentos configurados no sistema.</p>
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+{% endblock content %}
+{% block extra_js %}
+    <script nonce="{{ csp_nonce() }}">
+    // Adicionar animação aos cards
+    document.addEventListener('DOMContentLoaded', function() {
+        const cards = document.querySelectorAll('.document-card');
+        
+        cards.forEach((card, index) => {
+            // Animação de entrada escalonada
+            setTimeout(() => {
+                card.style.opacity = '0';
+                card.style.transform = 'translateY(20px)';
+                card.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
+                
+                setTimeout(() => {
+                    card.style.opacity = '1';
+                    card.style.transform = 'translateY(0)';
+                }, 100);
+            }, index * 100);
+        });
+    });
+    </script>
+{% endblock extra_js %}

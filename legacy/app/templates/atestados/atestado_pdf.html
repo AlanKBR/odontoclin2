@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <meta name="description"
+              content="Atestado odontológico oficial para fins trabalhistas, escolares ou médicos">
+        <meta name="keywords"
+              content="atestado, odontológico, dentista, CID, afastamento, saúde bucal">
+        <title>Atestado Odontológico</title>
+        <style>
+        @page {
+            size: A4;
+            margin: 2cm;
+        }
+        
+        body {
+            font-family: "Times New Roman", Times, serif;
+            font-size: 12pt;
+            line-height: 1.6;
+            color: #000;
+            margin: 0;
+            padding: 0;
+        }
+        
+        .header {
+            text-align: center;
+            border-bottom: 2px solid #000;
+            padding-bottom: 20px;
+            margin-bottom: 40px;
+        }
+        
+        .header h1 {
+            font-size: 18pt;
+            font-weight: bold;
+            margin: 0;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+        
+        .header .subtitle {
+            font-size: 14pt;
+            margin: 10px 0 0 0;
+            font-style: italic;
+        }
+        
+        .content {
+            margin: 40px 0;
+            text-align: justify;
+            text-indent: 2cm;
+        }
+        
+        .content p {
+            margin: 20px 0;
+        }
+        
+        .cid-info {
+            margin: 30px 0;
+            padding: 15px;
+            border: 1px solid #ccc;
+            background-color: #f9f9f9;
+        }
+        
+        .cid-info strong {
+            font-weight: bold;
+        }
+        
+        .patient-info {
+            margin: 30px 0;
+        }
+        
+        .patient-info p {
+            margin: 5px 0;
+            text-indent: 0;
+        }
+        
+        .signature-section {
+            margin-top: 80px;
+            page-break-inside: avoid;
+        }
+        
+        .date-location {
+            text-align: right;
+            margin: 40px 0;
+        }
+        
+        .signature-line {
+            margin-top: 60px;
+            text-align: center;
+        }
+        
+        .signature-line .line {
+            border-top: 1px solid #000;
+            width: 300px;
+            margin: 0 auto;
+        }
+        
+        .signature-line .details {
+            margin-top: 10px;
+            font-size: 11pt;
+        }
+        
+        .footer {
+            position: fixed;
+            bottom: 1cm;
+            left: 0;
+            right: 0;
+            text-align: center;
+            font-size: 10pt;
+            color: #666;
+            border-top: 1px solid #ccc;
+            padding-top: 10px;
+        }
+        
+        .document-id {
+            position: fixed;
+            top: 1cm;
+            right: 1cm;
+            font-size: 9pt;
+            color: #999;
+        }
+        </style>
+    </head>
+    <body>
+        <div class="document-id">Documento ID: {{ atestado_id }} | {{ data_emissao.strftime("%d/%m/%Y %H:%M") }}</div>
+        <div class="header">
+            <h1>Atestado Odontológico</h1>
+            <div class="subtitle">Documento Oficial</div>
+        </div>
+        <div class="patient-info">
+            <p>
+                <strong>Paciente:</strong> {{ paciente.nome }}
+            </p>
+            {% if paciente.cpf %}
+                <p>
+                    <strong>CPF:</strong> {{ paciente.cpf }}
+                </p>
+            {% endif %}
+            {% if paciente.data_nascimento %}
+                <p>
+                    <strong>Data de Nascimento:</strong> {{ paciente.data_nascimento.strftime("%d/%m/%Y") }}
+                </p>
+            {% endif %}
+        </div>
+        <div class="content">
+            <p>{{ texto_atestado }}</p>
+        </div>
+        <div class="cid-info">
+            <p>
+                <strong>Classificação Internacional de Doenças (CID-10):</strong>
+            </p>
+            <p>{{ cid_codigo }} - {{ cid_descricao }}</p>
+        </div>
+        <div class="signature-section">
+            <div class="date-location">
+                {% if local_emissao %}
+                    <p>{{ local_emissao }}, {{ data_emissao_formatada }}</p>
+                {% else %}
+                    <p>{{ data_emissao_formatada }}</p>
+                {% endif %}
+            </div>
+            <div class="signature-line">
+                <div class="line"></div>
+                <div class="details">
+                    <p>
+                        <strong>{{ dentista.nome_completo }}</strong>
+                    </p>
+                    {% if dentista.cro %}<p>CRO: {{ dentista.cro }}</p>{% endif %}
+                    <p>Cirurgião-Dentista</p>
+                </div>
+            </div>
+        </div>
+        <div class="footer">
+            <p>Este documento foi gerado eletronicamente e possui validade legal.</p>
+        </div>
+        <script>
+        // JavaScript para formatação de datas em português
+        document.addEventListener('DOMContentLoaded', function() {
+            const meses = [
+                'janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho',
+                'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro'
+            ];
+            
+            // Esta formatação será feita pelo backend, mas mantemos para referência
+        });
+        </script>
+    </body>
+</html>

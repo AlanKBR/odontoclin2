@@ -1,0 +1,60 @@
+{% extends 'core/base.html' %}
+{% block title %}Plano #{{ plano.id }} - {{ paciente.nome }}{% endblock %}
+{% block content %}
+<h1>Plano #{{ plano.id }} - {{ paciente.nome }}</h1>
+<p>Status: {{ plano.status }} | Criado em: {{ plano.data_criacao.strftime('%d/%m/%Y') }}</p>
+<p>{{ plano.descricao }}</p>
+<p><strong>Observações:</strong> {{ plano.observacoes or '—' }}</p>
+<p>Orçamento Total: R$ {{ '%.2f'|format(plano.orcamento_total or 0) }}</p>
+{% if resumo_financeiro_plano %}
+<fieldset style="border:1px solid #ccc; padding:.5rem; margin-bottom:1rem;">
+    <legend>Resumo Financeiro do Plano</legend>
+    <p>Créditos: R$ {{ '%.2f'|format(resumo_financeiro_plano.total_creditos) }} | Débitos: R$ {{
+        '%.2f'|format(resumo_financeiro_plano.total_debitos) }} | Saldo: R$ {{
+        '%.2f'|format(resumo_financeiro_plano.saldo) }}</p>
+    <p>Créditos Pagos: R$ {{ '%.2f'|format(resumo_financeiro_plano.creditos_pagos) }}</p>
+    <p><a href="{{ url_for('pacientes.financeiro', paciente_id=paciente.id) }}">Ver lançamentos financeiros do
+            paciente</a></p>
+</fieldset>
+{% endif %}
+<p>
+    <a href="{{ url_for('pacientes.novo_procedimento', paciente_id=paciente.id, plano_id=plano.id) }}">Adicionar
+        Procedimento</a> |
+    <a href="{{ url_for('pacientes.planos', paciente_id=paciente.id) }}">Voltar</a>
+</p>
+<h2>Procedimentos</h2>
+{% if procedimentos %}
+<table>
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>Descrição</th>
+            <th>Dente</th>
+            <th>Valor</th>
+            <th>Status</th>
+            <th>Ações</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for p in procedimentos %}
+        <tr>
+            <td>{{ p.id }}</td>
+            <td>{{ p.descricao }}</td>
+            <td>{{ p.dente or '' }}</td>
+            <td>R$ {{ '%.2f'|format(p.valor or 0) }}</td>
+            <td>{{ p.status }}</td>
+            <td>
+                <form method="post"
+                    action="{{ url_for('pacientes.excluir_procedimento', paciente_id=paciente.id, plano_id=plano.id, proc_id=p.id) }}"
+                    style="display:inline">
+                    <button type="submit" onclick="return confirm('Remover?')">Excluir</button>
+                </form>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% else %}
+<p>Nenhum procedimento.</p>
+{% endif %}
+{% endblock %}

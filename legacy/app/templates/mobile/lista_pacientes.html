@@ -1,0 +1,235 @@
+{% extends "mobile/base.html" %}
+{% block title %}
+    Pacientes - OdontoClinic
+{% endblock title %}
+{% block header_title %}
+    Pacientes
+{% endblock header_title %}
+{% block content %}
+    <!-- Barra de busca -->
+    <div class="mobile-card card mb-3">
+        <div class="card-body">
+            <form method="get" class="mobile-form">
+                <div class="input-group">
+                    <input type="text"
+                           class="form-control"
+                           name="busca"
+                           placeholder="Buscar paciente..."
+                           value="{{ request.args.get('busca', '') }}">
+                    <button class="btn btn-primary" type="submit">
+                        <i class="bi bi-search"></i>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+    <!-- Botão Novo Paciente -->
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h5 class="mb-0">
+            Lista de Pacientes
+            {% if pacientes %}<span class="badge bg-secondary">{{ pacientes|length }}</span>{% endif %}
+        </h5>
+        <a href="{{ url_for("pacientes.formulario_paciente") }}"
+           class="btn btn-primary">
+            <i class="bi bi-plus"></i>
+        </a>
+    </div>
+    <!-- Lista de Pacientes -->
+    <div class="pacientes-list">
+        {% if pacientes %}
+            {% for paciente in pacientes %}
+                <div class="mobile-card card mb-2">
+                    <div class="card-body p-3">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div class="flex-grow-1">
+                                <h6 class="card-title mb-1">{{ paciente.nome }}</h6>
+                                <div class="text-muted small">
+                                    {% if paciente.telefone %}
+                                        <div>
+                                            <i class="bi bi-telephone me-1"></i>{{ paciente.telefone }}
+                                        </div>
+                                    {% endif %}
+                                    {% if paciente.email %}
+                                        <div>
+                                            <i class="bi bi-envelope me-1"></i>{{ paciente.email }}
+                                        </div>
+                                    {% endif %}
+                                    {% if paciente.data_nascimento %}
+                                        <div>
+                                            <i class="bi bi-calendar me-1"></i>{{ paciente.data_nascimento.strftime("%d/%m/%Y") }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="dropdown">
+                                <button class="btn btn-sm btn-outline-secondary"
+                                        type="button"
+                                        data-bs-toggle="dropdown">
+                                    <i class="bi bi-three-dots-vertical"></i>
+                                </button>
+                                <ul class="dropdown-menu dropdown-menu-end">
+                                    <li>
+                                        <a class="dropdown-item"
+                                           href="{{ url_for('pacientes.visualizar_paciente', paciente_id=paciente.id) }}">
+                                            <i class="bi bi-eye me-2"></i>Visualizar
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item"
+                                           href="{{ url_for('pacientes.formulario_paciente', paciente_id=paciente.id) }}">
+                                            <i class="bi bi-pencil me-2"></i>Editar
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item"
+                                           href="{{ url_for('pacientes.ficha', paciente_id=paciente.id) }}">
+                                            <i class="bi bi-file-person me-2"></i>Ficha
+                                        </a>
+                                    </li>
+                                    {% if paciente.telefone %}
+                                        <li>
+                                            <hr class="dropdown-divider">
+                                        </li>
+                                        <li>
+                                            <a class="dropdown-item" href="tel:{{ paciente.telefone }}">
+                                                <i class="bi bi-telephone me-2"></i>Ligar
+                                            </a>
+                                        </li>
+                                    {% endif %}
+                                    {% if paciente.email %}
+                                        <li>
+                                            <a class="dropdown-item" href="mailto:{{ paciente.email }}">
+                                                <i class="bi bi-envelope me-2"></i>Email
+                                            </a>
+                                        </li>
+                                    {% endif %}
+                                </ul>
+                            </div>
+                        </div>
+                        <!-- Status do último tratamento -->
+                        {% if paciente.ultimo_tratamento %}
+                            <div class="mt-2">
+                                <small class="text-muted">
+                                    Último tratamento: {{ paciente.ultimo_tratamento.data.strftime("%d/%m/%Y") if
+                                    paciente.ultimo_tratamento.data else 'N/A' }}
+                                </small>
+                            </div>
+                        {% endif %}
+                        <!-- Ações rápidas -->
+                        <div class="mt-2">
+                            <div class="btn-group btn-group-sm w-100" role="group">
+                                <a href="{{ url_for('pacientes.visualizar_paciente', paciente_id=paciente.id) }}"
+                                   class="btn btn-outline-primary">
+                                    <i class="bi bi-eye"></i>
+                                </a>
+                                <a href="{{ url_for('pacientes.ficha', paciente_id=paciente.id) }}"
+                                   class="btn btn-outline-info">
+                                    <i class="bi bi-file-person"></i>
+                                </a>
+                                <a href="{{ url_for('pacientes.anamnese', paciente_id=paciente.id) }}"
+                                   class="btn btn-outline-success">
+                                    <i class="bi bi-clipboard-heart"></i>
+                                </a>
+                                <a href="{{ url_for('pacientes.historico', paciente_id=paciente.id) }}"
+                                   class="btn btn-outline-warning">
+                                    <i class="bi bi-clock-history"></i>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+            <!-- Paginação -->
+            {% if pagination and pagination.pages > 1 %}
+                <nav aria-label="Navegação de páginas" class="mt-4">
+                    <ul class="pagination pagination-sm justify-content-center">
+                        {% if pagination.has_prev %}
+                            <li class="page-item">
+                                <a class="page-link"
+                                   href="{{ url_for('pacientes.lista_pacientes', page=pagination.prev_num, busca=request.args.get('busca', '') ) }}">
+                                    <i class="bi bi-chevron-left"></i>
+                                </a>
+                            </li>
+                        {% endif %}
+                        {% for page_num in pagination.iter_pages() %}
+                            {% if page_num %}
+                                {% if page_num != pagination.page %}
+                                    <li class="page-item">
+                                        <a class="page-link"
+                                           href="{{ url_for('pacientes.lista_pacientes', page=page_num, busca=request.args.get('busca', '') ) }}">
+                                            {{ page_num }}
+                                        </a>
+                                    </li>
+                                {% else %}
+                                    <li class="page-item active">
+                                        <span class="page-link">{{ page_num }}</span>
+                                    </li>
+                                {% endif %}
+                            {% else %}
+                                <li class="page-item disabled">
+                                    <span class="page-link">…</span>
+                                </li>
+                            {% endif %}
+                        {% endfor %}
+                        {% if pagination.has_next %}
+                            <li class="page-item">
+                                <a class="page-link"
+                                   href="{{ url_for('pacientes.lista_pacientes', page=pagination.next_num, busca=request.args.get('busca', '') ) }}">
+                                    <i class="bi bi-chevron-right"></i>
+                                </a>
+                            </li>
+                        {% endif %}
+                    </ul>
+                </nav>
+            {% endif %}
+        {% else %}
+            <!-- Estado vazio -->
+            <div class="text-center py-5">
+                <i class="bi bi-people icon-4rem text-muted-bg"></i>
+                <h5 class="mt-3 text-muted">Nenhum paciente encontrado</h5>
+                {% if request.args.get('busca') %}
+                    <p class="text-muted">Tente uma busca diferente ou</p>
+                    <a href="{{ url_for("pacientes.lista_pacientes") }}"
+                       class="btn btn-outline-secondary">Ver todos os pacientes</a>
+                {% else %}
+                    <p class="text-muted">Cadastre o primeiro paciente para começar</p>
+                    <a href="{{ url_for("pacientes.formulario_paciente") }}"
+                       class="btn btn-primary">
+                        <i class="bi bi-plus me-2"></i>Novo Paciente
+                    </a>
+                {% endif %}
+        <style>
+        .icon-4rem {
+            font-size: 4rem;
+        }
+        .text-muted-bg {
+            color: #dee2e6;
+        }
+        </style>
+            </div>
+        {% endif %}
+    </div>
+{% endblock content %}
+{% block scripts %}
+    <script nonce="{{ csp_nonce() }}">
+    document.addEventListener('DOMContentLoaded', function () {
+        // Auto-focus na busca se não há termo de busca
+        const searchInput = document.querySelector('input[name="busca"]');
+        if (searchInput && !searchInput.value) {
+            searchInput.focus();
+        }
+
+        // Animação de entrada para os cards
+        const cards = document.querySelectorAll('.pacientes-list .mobile-card');
+        cards.forEach((card, index) => {
+            card.style.opacity = '0';
+            card.style.transform = 'translateX(-20px)';
+            setTimeout(() => {
+                card.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
+                card.style.opacity = '1';
+                card.style.transform = 'translateX(0)';
+            }, index * 50);
+        });
+    });
+    </script>
+{% endblock scripts %}

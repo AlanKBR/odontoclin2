@@ -1,0 +1,8 @@
+# Runtime dependencies for the agenda module (for reuse in other projects)
+# Pin with compatible ranges to avoid conflicts while keeping stability.
+
+Flask>=3.0,<4.0
+Flask-SQLAlchemy>=3.1,<4.0
+SQLAlchemy>=2.0,<3.0
+python-dateutil>=2.9,<3.0
+requests>=2.31,<3.0  # required for holiday sync endpoints
