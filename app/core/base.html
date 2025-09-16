@@ -23,6 +23,8 @@
                 </li>
                 <li role="none"><a role="menuitem" href="{{ url_for('agenda.index') }}">Agenda</a></li>
                 <li role="none"><a role="menuitem" href="{{ url_for('receitas.index') }}">Receitas</a></li>
+                <li role="none"><a role="menuitem" href="{{ url_for('calc_anestesico.index') }}">Calc. Anestésico</a>
+                </li>
                 <li role="none"><a role="menuitem" href="{{ url_for('documentos.index') }}">Documentos</a></li>
                 <li role="none"><a role="menuitem" href="{{ url_for('atestados.gerar_atestado') }}">Atestados</a></li>
                 <li role="none"><a role="menuitem" href="{{ url_for('main.dashboard') }}">Dashboard</a></li>
@@ -53,6 +55,7 @@
             <p>&copy; {{ 2025 }} OdontoClin</p>
         </section>
     </footer>
+    <script src="https://unpkg.com/htmx.org@1.9.12"></script>
 </body>
 
 </html>

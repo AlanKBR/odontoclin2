@@ -43,6 +43,26 @@ def ensure_users_schema() -> None:
             add_col("failed_login_count", "INTEGER DEFAULT 0")
             add_col("locked_until", "TIMESTAMP")
             add_col("last_password_change", "TIMESTAMP")
+
+            # --- Ensure auxiliary table api_keys exists (for external service keys) ---
+            # Structure: id (PK), name (unique), key (text)
+            conn.exec_driver_sql(
+                """
+                CREATE TABLE IF NOT EXISTS api_keys (
+                    id   INTEGER PRIMARY KEY AUTOINCREMENT,
+                    name TEXT NOT NULL UNIQUE,
+                    "key" TEXT
+                )
+                """
+            )
+            # Seed default entry for consultacro.com.br if missing
+            # Using INSERT OR IGNORE to avoid duplicate based on UNIQUE(name)
+            conn.exec_driver_sql(
+                """
+                INSERT OR IGNORE INTO api_keys (name, "key")
+                VALUES ('consultacro.com.br', '1905229841')
+                """
+            )
     except OperationalError:
         # Best effort only; ignore if not SQLite or other unexpected engine errors
         pass

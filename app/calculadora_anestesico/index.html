@@ -1,0 +1,63 @@
+{% extends 'core/base.html' %}
+{% block title %}Calculadora de Anestésico{% endblock %}
+{% block content %}
+<h1>Calculadora de Anestésico</h1>
+<p>Calcula o número máximo de tubetes considerando anestésico local e vasoconstrictor.</p>
+
+<form id="calc-form" hx-post="{{ url_for('calc_anestesico.calcular_htmx') }}" hx-target="#resultado"
+    hx-swap="innerHTML">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <div>
+        <label>Peso (kg)</label>
+        <input type="number" step="0.1" min="0" name="peso" value="{{ defaults.peso }}">
+    </div>
+    <div>
+        <label>Anestésico</label>
+        <select name="anestesico" id="anestesico-select" hx-on:change="onAnestesicoChange(event)">
+            <option value="lidocaina" {% if defaults.anestesico=='lidocaina' %}selected{% endif %}>Lidocaína</option>
+            <option value="mepivacaina">Mepivacaína</option>
+            <option value="articaina">Articaína</option>
+            <option value="prilocaina">Prilocaína</option>
+            <option value="bupivacaina">Bupivacaína</option>
+        </select>
+    </div>
+    <div>
+        <label>Concentração do anestésico (%)</label>
+        <input type="number" step="0.1" min="0.1" name="concentracao" id="conc-anest"
+            value="{{ defaults.concentracao }}">
+    </div>
+    <div>
+        <label>Vasoconstrictor</label>
+        <select name="vaso" id="vaso-select" hx-get="{{ url_for('calc_anestesico.conc_vaso_options') }}"
+            hx-target="#conc-vaso" hx-include="#vaso-select" hx-vals='{"preview":1}' hx-trigger="change, load">
+            <option value="nenhum">Sem vasoconstrictor</option>
+            <option value="epinefrina" {% if defaults.vaso=='epinefrina' %}selected{% endif %}>Epinefrina / Adrenalina
+            </option>
+            <option value="norepinefrina">Norepinefrina / Noradrenalina</option>
+            <option value="fenilefrina">Fenilefrina</option>
+            <option value="felypressina">Felipressina</option>
+        </select>
+    </div>
+    <div>
+        <label>Concentração do vasoconstrictor</label>
+        <select name="conc_vaso" id="conc-vaso"></select>
+    </div>
+    <div>
+        <button type="submit">Calcular</button>
+    </div>
+</form>
+
+<div id="resultado"></div>
+
+<script>
+    function onAnestesicoChange(e) {
+        const val = e.target.value;
+        const conc = document.getElementById('conc-anest');
+        if (val === 'lidocaina') conc.value = 2;
+        else if (val === 'mepivacaina') conc.value = 2;
+        else if (val === 'articaina') conc.value = 4;
+        else if (val === 'prilocaina') conc.value = 3;
+        else if (val === 'bupivacaina') conc.value = 0.5;
+    }
+</script>
+{% endblock %}

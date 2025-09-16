@@ -2,25 +2,47 @@
 {% block title %}CRO{% endblock %}
 {% block content %}
 <h1>CRO</h1>
-<p>Consulta / registro profissional (placeholder).</p>
-<form method="post">
+<p>Consulta / registro profissional.</p>
+
+<section>
+    <h3>Chave de API</h3>
+    <form method="post" action="{{ url_for('cro.index', api_type=api_type, uf=uf) }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <div>
+            <input type="password" name="api_key" value="{{ current_api_key or '' }}"
+                placeholder="Insira sua chave de API" />
+            <button type="submit">Salvar chave</button>
+        </div>
+        {% if api_key_configured %}
+        <small style="color: green;">Chave configurada.</small>
+        {% else %}
+        <small style="color: #b58900;">Chave não configurada.</small>
+        {% endif %}
+    </form>
+</section>
+<form id="cro-search-form" hx-get="{{ url_for('cro.search_htmx') }}" action="{{ url_for('cro.search_htmx') }}"
+    hx-target="#cro-results" hx-swap="innerHTML" {% if search_term %}hx-trigger="load from:body" {% endif %}>
     <div>
-        <input type="text" name="search_term" value="{{ search_term }}" placeholder="Nome" />
+        <input type="text" name="q" value="{{ search_term }}" placeholder="Nome" />
+        <select name="api_type">
+            {# Use API_TYPES tuple provided by the view module when available #}
+            {% set api_types = API_TYPES if API_TYPES is defined else ["cro","crm","oab","crp","crea","cau","crn"] %}
+            {% for t in api_types %}
+            <option value="{{ t }}" {% if api_type==t %}selected{% endif %}>{{ t|upper }}</option>
+            {% endfor %}
+        </select>
         <select name="uf">
             <option value="todos" {% if uf=='todos' %}selected{% endif %}>Todos</option>
-            <option value="SP" {% if uf=='SP' %}selected{% endif %}>SP</option>
-            <option value="RJ" {% if uf=='RJ' %}selected{% endif %}>RJ</option>
+            {# Use server-side allowed list when available #}
+            {% set ufs = _ALLOWED_UFS|sort if _ALLOWED_UFS is defined else
+            ['AC','AL','AP','AM','BA','CE','DF','ES','GO','MA','MT','MS','MG','PA','PB','PR','PE','PI','RJ','RN','RS','RO','RR','SC','SP','SE','TO']
+            %}
+            {% for uf_opt in ufs %}
+            <option value="{{ uf_opt }}" {% if uf==uf_opt %}selected{% endif %}>{{ uf_opt }}</option>
+            {% endfor %}
         </select>
         <button type="submit">Buscar</button>
     </div>
 </form>
-{% if results %}
-<ul>
-    {% for r in results %}
-    <li>{{ r.nome }} - {{ r.registro }} / {{ r.uf }}</li>
-    {% endfor %}
-</ul>
-{% elif search_term %}
-<p>Nenhum resultado.</p>
-{% endif %}
+<div id="cro-results"></div>
 {% endblock %}

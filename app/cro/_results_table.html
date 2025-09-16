@@ -1,0 +1,26 @@
+{% if results|length > 0 %}
+<table>
+    <thead>
+        <tr>
+            <th>Nome</th>
+            <th>UF</th>
+            <th>Número</th>
+            <th>Situação</th>
+            <th>Profissão</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for r in results %}
+        <tr>
+            <td>{{ r.nome }}</td>
+            <td>{{ r.uf }}</td>
+            <td>{{ r.numero }}</td>
+            <td>{{ r.situacao }}</td>
+            <td>{{ r.profissao }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% else %}
+<pre>{{ raw | tojson(indent=2) }}</pre>
+{% endif %}

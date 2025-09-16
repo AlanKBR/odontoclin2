@@ -1,0 +1,5 @@
+{% if results %}
+<pre>{{ results | tojson(indent=2) }}</pre>
+{% else %}
+<pre>{{ raw | tojson(indent=2) }}</pre>
+{% endif %}

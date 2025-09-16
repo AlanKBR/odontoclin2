@@ -1,0 +1,7 @@
+{% if not options %}
+<option value="">-</option>
+{% else %}
+{% for val, label in options %}
+<option value="{{ val }}" {% if loop.first %}selected{% endif %}>{{ label }}</option>
+{% endfor %}
+{% endif %}

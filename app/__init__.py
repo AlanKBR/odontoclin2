@@ -135,6 +135,9 @@ def create_app(config_object=None):
     from .catalogo.catalogo import catalogo_bp  # noqa: WPS433
     from .core.core import core_bp  # noqa: WPS433
     from .cro.cro import cro_bp  # noqa: WPS433
+    from .calculadora_anestesico.calculadora_anestesico import (
+        calc_anestesico_bp,
+    )  # noqa: WPS433
     from .documentos.documentos import documentos_bp  # noqa: WPS433
     from .main.main import main_bp  # noqa: WPS433
     from .pacientes.pacientes import pacientes_bp  # noqa: WPS433
@@ -157,6 +160,7 @@ def create_app(config_object=None):
     app.register_blueprint(documentos_bp, url_prefix="/documentos")
     app.register_blueprint(main_bp, url_prefix="/dashboard")
     app.register_blueprint(cro_bp, url_prefix="/cro")
+    app.register_blueprint(calc_anestesico_bp, url_prefix="/calculadora-anestesico")
     app.register_blueprint(ai_assistant_bp, url_prefix="/ai")
     app.register_blueprint(reports_bp, url_prefix="/reports")
     app.register_blueprint(users_bp, url_prefix="/users")

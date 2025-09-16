@@ -1,0 +1,26 @@
+{% if erro %}
+<div role="alert">{{ erro }}</div>
+{% else %}
+<div>
+    <p><strong>Número máximo de tubetes:</strong> {{ (tubetes_final + 0.5)|int }}</p>
+    <p>
+        Máximo pelo vasoconstrictor: {{ '%.2f' % tubetes_max_vaso if tubetes_max_vaso is not none else '-' }}<br>
+        Máximo pelo anestésico: {{ '%.2f' % tubetes_max_anest }}
+    </p>
+    <details>
+        <summary>Explicação</summary>
+        <ul>
+            <li>Peso: {{ '%.1f' % peso }} kg</li>
+            <li>Volume por tubete: 1,8 ml</li>
+            <li>Concentração do anestésico: {{ '%.1f' % concentracao }}% ({{ '%.1f' % (concentracao*10) }} mg/ml)</li>
+            <li>Dose máxima do anestésico: {{ '%.1f' % dose_max_mg }} mg</li>
+            <li>Quantidade de anestésico por tubete: {{ '%.1f' % mg_por_tubete_anest }} mg/tubete</li>
+            <li>Número máximo pelo anestésico: {{ '%.2f' % tubetes_max_anest }}</li>
+            {% if tubetes_max_vaso is not none %}
+            <li>Número máximo pelo vasoconstrictor: {{ '%.2f' % tubetes_max_vaso }}</li>
+            {% endif %}
+            <li>Critério limitante: {{ criterio }}</li>
+        </ul>
+    </details>
+</div>
+{% endif %}
