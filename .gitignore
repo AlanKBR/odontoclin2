@@ -69,16 +69,23 @@ dmypy.json
 .ipynb_checkpoints/
 
 # Flask instance data and local SQLite databases
-instance/*.db
-instance/*.sqlite
-instance/*.sqlite3
-instance/*.db-*
-instance/*.bak*
-instance/*.log
-instance/*.json
-instance/*.cfg
-instance/*.ini
-instance/*-journal
+# (By default these are ignored for privacy; project requested to include instance DBs)
+# Commented out the broad ignores and add negations for specific files we want to track
+#instance/*.db
+#instance/*.sqlite
+#instance/*.sqlite3
+#instance/*.db-*
+#instance/*.bak*
+#instance/*.log
+#instance/*.json
+#instance/*.cfg
+#instance/*.ini
+#instance/*-journal
+
+# Explicitly allow committing sqlite DB files from instance/ (per maintainer request)
+!instance/*.db
+!instance/*.db-*
+!instance/*.bak*
 
 # Alembic cache/compiled files
 alembic/*/cache/
