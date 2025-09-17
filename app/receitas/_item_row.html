@@ -1,0 +1,24 @@
+<div id="item-row-{{ row_id }}" class="item-row mb-2 border rounded p-2">
+    <div class="row g-2">
+        <div class="col-md-6">
+            <label class="form-label">Medicamento</label>
+            <!-- input de busca: envia apenas este campo via HTMX -->
+            <input name="q" class="form-control form-control-sm medicamento-search"
+                hx-get="{{ url_for('receitas.buscar_medicamentos_htmx') }}"
+                hx-trigger="keyup changed delay:300ms"
+                hx-target="#med-search-{{ row_id }}"
+                hx-include="this"
+                autocomplete="off"
+            />
+            <input type="hidden" name="medicamento_id" class="medicamento-id" />
+            <div id="med-search-{{ row_id }}" class="mt-1"></div>
+        </div>
+        <div class="col-md-6">
+            <label class="form-label">Posologia</label>
+            <input name="posologia" class="form-control form-control-sm posologia-field" />
+        </div>
+    </div>
+    <div class="mt-2 text-end">
+        <button class="btn btn-sm btn-outline-danger remove-item">Remover</button>
+    </div>
+</div>

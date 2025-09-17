@@ -1,0 +1,19 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>Receita #{{ receita.id }}</title>
+  </head>
+  <body>
+    <div>
+      <h2>Receita #{{ receita.id }}</h2>
+      <p><strong>Paciente:</strong> {{ receita.paciente_nome }}</p>
+      <p><strong>Dentista:</strong> {{ receita.dentista_nome }}</p>
+      <p><strong>Emitida em:</strong> {{ receita.criado_em }}</p>
+      <hr />
+      <div>
+        {{ receita.texto_gerado|safe }}
+      </div>
+    </div>
+  </body>
+  </html>

@@ -1,0 +1,34 @@
+{% if medicamentos %}
+<table class="table table-sm table-hover">
+    <thead>
+        <tr>
+            <th></th>
+            <th>Princípio Ativo</th>
+            <th>Nome referência</th>
+            <th>Apresentação</th>
+            <th>Uso</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for m in medicamentos %}
+        <tr>
+            <td>
+                <button class="btn btn-sm btn-outline-secondary"
+                    hx-get="{{ url_for('receitas.visualizar_medicamento_htmx', med_id=m.id) }}"
+                    hx-target="#med-detail-global" hx-swap="innerHTML">Detalhes</button>
+            </td>
+            <td>
+                     <a href="#" role="button" class="med-select" 
+                         data-med-id="{{ m.id }}"
+                         hx-vals='{"med_id":{{ m.id }}}'>{{ m.principio_ativo }}</a>
+            </td>
+            <td>{{ m.nome_referencia or '' }}</td>
+            <td>{{ m.apresentacao or '' }}</td>
+            <td>{{ m.uso or '' }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% else %}
+<div class="text-muted small">Nenhum medicamento encontrado.</div>
+{% endif %}

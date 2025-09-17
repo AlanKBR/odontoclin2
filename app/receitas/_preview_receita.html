@@ -1,0 +1,23 @@
+{% if error %}
+<div class="alert alert-danger">{{ error }}</div>
+{% else %}
+<div class="card p-3">
+    <div class="text-center">
+        <h3>{{ clinica.nome if clinica is defined else '' }}</h3>
+        <p>{{ clinica.endereco if clinica is defined else '' }}</p>
+    </div>
+    <hr />
+    <p><strong>Paciente:</strong> {{ paciente.nome }}</p>
+    <p><strong>Dentista:</strong> {{ dentista.nome_completo }}</p>
+    <hr />
+    <ul>
+        {% for it in itens %}
+        <li><strong>{{ it.get('medicamento_nome') or it.get('medicamento_id') }}</strong> — {{ it.get('posologia') }}</li>
+        {% endfor %}
+    </ul>
+    {% if notas %}
+    <hr />
+    <p><strong>Notas:</strong><br>{{ notas }}</p>
+    {% endif %}
+</div>
+{% endif %}

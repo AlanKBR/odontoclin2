@@ -1,0 +1,25 @@
+<div id="med-detail-global" class="card p-2">
+    <div class="d-flex justify-content-between align-items-start">
+        <h5>{{ medicamento.principio_ativo }}</h5>
+        <div>
+        <button type="button" class="btn btn-sm btn-primary med-select" data-med-id="{{ medicamento.id }}" hx-vals='{"med_id":{{ medicamento.id }}}'>Selecionar</button>
+            <button type="button" class="btn btn-sm btn-outline-secondary" onclick="document.getElementById('med-detail-global').innerHTML = ''">Fechar</button>
+        </div>
+    </div>
+    <p><strong>ID:</strong> {{ medicamento.id }}</p>
+    <p><strong>Categoria:</strong> {{ medicamento.categoria or '' }}</p>
+    <p><strong>Nome referência:</strong> {{ medicamento.nome_referencia or '' }}</p>
+    <p><strong>Apresentação:</strong> {{ medicamento.apresentacao or '' }}</p>
+    <p><strong>Uso:</strong> {{ medicamento.uso or '' }}</p>
+    <p><strong>Posologia:</strong><br/>{{ medicamento.posologia|replace('\n','<br>')|safe }}</p>
+    <p><strong>Indicações:</strong><br/>{{ medicamento.indicacoes|replace('\n','<br>')|safe }}</p>
+    <p><strong>Mecanismo de ação:</strong><br/>{{ medicamento.mecanismo_acao|replace('\n','<br>')|safe }}</p>
+    <p><strong>Contraindicações:</strong><br/>{{ medicamento.contraindicacoes|replace('\n','<br>')|safe }}</p>
+    <p><strong>Efeitos colaterais:</strong><br/>{{ medicamento.efeitos_colaterais|replace('\n','<br>')|safe }}</p>
+    <p><strong>Interações medicamentosas:</strong><br/>{{ medicamento.interacoes_medicamentosas|replace('\n','<br>')|safe }}</p>
+    <p><strong>Risco na gravidez:</strong> {{ medicamento.risco_gravidez or '' }}</p>
+    <p><strong>Tipo de receita:</strong> {{ medicamento.tipo_receita or '' }}</p>
+    <p><strong>Alerta principal:</strong><br/>{{ medicamento.alerta_principal|replace('\n','<br>')|safe }}</p>
+    <p><strong>Instrução de compra:</strong><br/>{{ medicamento.instrucao_compra|replace('\n','<br>')|safe }}</p>
+    <p><strong>Observação:</strong><br/>{{ medicamento.observacao|replace('\n','<br>')|safe }}</p>
+</div>

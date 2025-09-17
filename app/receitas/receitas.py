@@ -3,9 +3,28 @@ from flask import Blueprint, flash, jsonify, redirect, render_template, request,
 from .. import db
 from ..auth.models import User  # type: ignore
 from ..core.models import Clinica
+from datetime import datetime
 from ..pacientes.models import Paciente  # type: ignore
 from ..utils_db import get_or_404
 from .models import Medicamento, ModeloReceita
+from .models import ReceitaEmitida
+import json
+
+
+def _get_current_user():
+    """Tenta obter current_user de flask_login, com fallback neutro em testes."""
+    try:
+        from flask_login import current_user as _cu
+
+        return _cu
+    except Exception:
+
+        class _Anon:
+            cargo = None
+            id = None
+
+        return _Anon()
+
 
 receitas_bp = Blueprint(
     "receitas",
@@ -97,11 +116,218 @@ def nova_receita():
     pacientes = Paciente.query.order_by(Paciente.nome).all()
     dentistas = User.query.filter_by(cargo="dentista").order_by(User.nome_completo).all()
     clinica = Clinica.get_instance()
+    # provide a small initial medicamento list so the table is visible
+    meds = Medicamento.query.order_by(Medicamento.principio_ativo).limit(10).all()
     return render_template(
-        "receitas/formulario_receita.html",
+        "receitas/nova_receita.html",
         pacientes=pacientes,
         dentistas=dentistas,
         clinica=clinica,
+        medicamentos=meds,
+        now=datetime.utcnow(),
+    )
+
+
+@receitas_bp.route("/preview", methods=["POST"])
+def preview_receita():
+    # Recebe form data e retorna um fragmento HTML com o preview pronto para
+    # impressão. Validação mínima.
+    data = request.form or request.get_json() or {}
+    paciente_id = data.get("paciente_id")
+    dentista_id = data.get("dentista_id")
+    itens = data.get("itens")
+    texto = data.get("texto")
+    if isinstance(itens, str):
+        try:
+            itens = json.loads(itens)
+        except Exception:
+            itens = []
+    # allow either structured itens or a free-form texto
+    if not paciente_id or not dentista_id or (not itens and not texto):
+        # retorno 422 com fragmento para HTMX substituir a área do form
+        return (
+            render_template("receitas/_preview_receita.html", error="Dados incompletos"),
+            422,
+        )
+    # use session.get to avoid SQLAlchemy legacy Query.get() warnings
+    paciente = db.session.get(Paciente, int(paciente_id))
+    dentista = db.session.get(User, int(dentista_id))
+    if not paciente or not dentista:
+        return (
+            render_template(
+                "receitas/_preview_receita.html",
+                error="Paciente ou dentista não encontrado",
+            ),
+            422,
+        )
+    # If texto provided, render preview using it; otherwise use itens
+    if texto:
+        return render_template(
+            "receitas/_preview_receita.html",
+            paciente=paciente,
+            dentista=dentista,
+            texto=texto,
+        )
+    texto_render = render_template(
+        "receitas/_preview_receita.html",
+        paciente=paciente,
+        dentista=dentista,
+        itens=itens,
+    )
+    return texto_render
+
+
+@receitas_bp.route("/emitir", methods=["POST"])
+def emitir_receita():
+    # Salva a receita e retorna JSON com link de impressão. Regras de permissão:
+    # - se current_user.cargo == 'dentista', só pode emitir no nome dele
+    # - se secretaria/admin, pode emitir em nome de qualquer dentista
+    data = request.form or request.get_json() or {}
+    paciente_id = data.get("paciente_id")
+    dentista_id = data.get("dentista_id")
+    itens = data.get("itens")
+    texto = data.get("texto")
+    notas = data.get("notas") or ""
+    if isinstance(itens, str):
+        try:
+            itens = json.loads(itens)
+        except Exception:
+            itens = []
+    # require paciente, dentista and either itens or texto
+    if not paciente_id or not dentista_id or (not itens and not texto):
+        return jsonify({"error": "Campos obrigatórios faltando"}), 422
+    # permissões
+    current_user = _get_current_user()
+    if hasattr(current_user, "cargo") and current_user.cargo == "dentista":
+        if int(dentista_id) != int(getattr(current_user, "id", 0)):
+            return (
+                jsonify({"error": "Dentista logado só pode emitir no próprio nome"}),
+                403,
+            )
+    paciente = db.session.get(Paciente, int(paciente_id))
+    dentista = db.session.get(User, int(dentista_id))
+    if not paciente or not dentista:
+        return jsonify({"error": "Paciente ou dentista não encontrado"}), 404
+    # gerar texto simples
+    if texto:
+        texto_render = render_template(
+            "receitas/_preview_receita.html",
+            paciente=paciente,
+            dentista=dentista,
+            texto=texto,
+            notas=notas,
+        )
+    else:
+        texto_render = render_template(
+            "receitas/_preview_receita.html",
+            paciente=paciente,
+            dentista=dentista,
+            itens=itens,
+            notas=notas,
+        )
+    rec = ReceitaEmitida()
+    rec.paciente_id = int(paciente_id)
+    rec.paciente_nome = getattr(paciente, "nome", "")
+    rec.dentista_id = int(dentista_id)
+    rec.dentista_nome = getattr(dentista, "nome_completo", "")
+    # store itens JSON if present, else store empty list
+    try:
+        rec.itens_json = json.dumps(itens or [], ensure_ascii=False)
+    except Exception:
+        rec.itens_json = "[]"
+    rec.texto_gerado = texto_render
+    rec.usuario_id = getattr(current_user, "id", None)
+    db.session.add(rec)
+    db.session.commit()
+    return jsonify({"id": rec.id, "print_url": url_for("receitas.ver_receita_imprimir", id=rec.id)})
+
+
+@receitas_bp.route("/<int:id>/imprimir")
+def ver_receita_imprimir(id: int):
+    rec = get_or_404(ReceitaEmitida, id)
+    # retorna página simples para impressão
+    return render_template("receitas/visualizar_receita.html", receita=rec)
+
+
+@receitas_bp.route("/item-row")
+def item_row():
+    # Retorna um novo item row com row_id único (timestamp ms)
+    # kept for compatibility but unused in the new single-textarea UI
+    row_id = int(datetime.utcnow().timestamp() * 1000)
+    return render_template("receitas/_item_row.html", row_id=row_id)
+
+
+@receitas_bp.route("/medicamentos/buscar-htmx")
+def buscar_medicamentos_htmx():
+    termo = request.args.get("q", "").strip()
+    # row_id not used in the new UI but kept for compatibility
+    row_id = request.args.get("row_id") or "0"
+    medicamentos = []
+    if termo:
+        like = f"%{termo}%"
+        medicamentos = (
+            Medicamento.query.filter(
+                (Medicamento.categoria.ilike(like))
+                | (Medicamento.principio_ativo.ilike(like))
+                | (Medicamento.nome_referencia.ilike(like))
+            )
+            .order_by(Medicamento.principio_ativo)
+            .limit(50)
+            .all()
+        )
+    return render_template(
+        "receitas/_med_search_results.html", medicamentos=medicamentos, row_id=row_id
+    )
+
+
+@receitas_bp.route("/medicamentos/<int:med_id>/detail")
+def visualizar_medicamento_htmx(med_id: int):
+    med = get_or_404(Medicamento, med_id)
+    # show detail in a global container in the new UI
+    row_id = request.args.get("row_id") or "0"
+    return render_template("receitas/_med_detail.html", medicamento=med, row_id=row_id)
+
+
+@receitas_bp.route("/medicamentos/selecionar", methods=["POST"])
+def selecionar_medicamento():
+    # aceita JSON ou form
+    data = request.get_json(silent=True)
+    if not data:
+        # try form or values (covers querystring and form-encoded)
+        data = request.form or request.values or {}
+    med_id = None
+    if isinstance(data, dict):
+        med_id = data.get("med_id")
+    else:
+        # data may be a raw string; attempt to parse
+        try:
+            parsed = json.loads(data)
+            if isinstance(parsed, dict):
+                med_id = parsed.get("med_id")
+        except Exception:
+            med_id = None
+    # fallback to query param or custom header
+    if not med_id:
+        med_id = request.args.get("med_id")
+    if not med_id:
+        med_id = request.headers.get("X-MED-ID")
+    if not med_id:
+        return (jsonify({"error": "med_id missing"}), 400)
+    try:
+        med = db.session.get(Medicamento, int(med_id))
+    except Exception:
+        return (jsonify({"error": "invalid med_id"}), 400)
+    if not med:
+        return (jsonify({"error": "medicamento not found"}), 404)
+    primeira = f"{med.principio_ativo} ___________ {med.instrucao_compra or ''}"
+    posologia = med.posologia or ""
+    return jsonify(
+        {
+            "medicamento_id": med.id,
+            "medicamento_text": primeira,
+            "apresentacao": med.apresentacao or "",
+            "posologia": posologia,
+        }
     )
 
 

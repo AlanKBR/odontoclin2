@@ -71,5 +71,25 @@ class Atestado(db.Model):
     data_emissao = db.Column(db.DateTime, default=datetime.utcnow)
 
 
+class ReceitaEmitida(db.Model):
+    """Registro simples de receitas emitidas.
+
+    Armazenamos itens como JSON para simplicidade neste protótipo. Bind em
+    'receitas' (mesmo banco dos modelos/medicamentos).
+    """
+
+    __bind_key__ = "receitas"
+    __tablename__ = "receitas_emitidas"
+    id = db.Column(db.Integer, primary_key=True)
+    paciente_id = db.Column(db.Integer, nullable=False)
+    paciente_nome = db.Column(db.String(200))
+    dentista_id = db.Column(db.Integer, nullable=False)
+    dentista_nome = db.Column(db.String(200))
+    criado_em = db.Column(db.DateTime, default=datetime.utcnow)
+    itens_json = db.Column(db.Text, nullable=False)
+    texto_gerado = db.Column(db.Text)
+    usuario_id = db.Column(db.Integer)
+
+
 # Alias retro-compatível com versão inicial simplificada
 # Alias removido: ReceitaModelo
