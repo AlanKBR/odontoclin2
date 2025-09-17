@@ -59,8 +59,15 @@ class Atestado(db.Model):
     __bind_key__ = "pacientes"
     __tablename__ = "atestados"
     id = db.Column(db.Integer, primary_key=True)
-    paciente = db.Column(db.String(150), nullable=False)
+    # Backwards-compatible free-text patient name (kept for older records)
+    paciente = db.Column(db.String(150))
+    # Prefer storing a foreign key to the pacientes DB when available
+    paciente_id = db.Column(db.Integer)
     dias = db.Column(db.Integer, nullable=False, default=1)
+    motivo = db.Column(db.String(200))
+    cid_codigo = db.Column(db.String(20))
+    cid_descricao = db.Column(db.String(300))
+    local_emissao = db.Column(db.String(200))
     data_emissao = db.Column(db.DateTime, default=datetime.utcnow)
 
 

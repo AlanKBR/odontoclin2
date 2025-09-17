@@ -6,7 +6,7 @@ import logging
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from flask_wtf import CSRFProtect
-from sqlalchemy import event
+from sqlalchemy import event, text
 from sqlalchemy.engine import Engine
 from sqlalchemy.exc import OperationalError
 from flask_sqlalchemy.session import Session as FsaSession
@@ -190,6 +190,42 @@ def create_app(config_object=None):
                 alembic_command.upgrade(alembic_cfg, "head")
             except Exception:
                 pass
+
+    # Best-effort compatibility: ensure older DB files have expected columns.
+    # Some installations may have an older/smaller schema; try to add missing
+    # columns that our code expects to avoid 500s in development. This runs
+    # only when not testing and if the DB file exists (safe best-effort).
+    try:
+        if not app.config.get("TESTING"):
+            with app.app_context():
+                # Try to use the 'pacientes' bind engine first (Atestado uses that bind)
+                try:
+                    engine = db.get_engine(app=app, bind="pacientes")
+                except Exception:
+                    engine = db.get_engine(app=app)
+
+                insp = None
+                try:
+                    from sqlalchemy import inspect
+
+                    insp = inspect(engine)
+                except Exception:
+                    insp = None
+
+                if insp is not None and "atestados" in insp.get_table_names():
+                    cols = [c.get("name") for c in insp.get_columns("atestados")]
+                    # older schema may miss 'paciente' human-friendly name column
+                    if "paciente" not in cols:
+                        try:
+                            with engine.connect() as conn:
+                                conn.execute(
+                                    text("ALTER TABLE atestados ADD COLUMN paciente VARCHAR(150)")
+                                )
+                        except Exception:
+                            # If alter fails, don't crash app startup; it's best-effort
+                            pass
+    except Exception:
+        pass
 
     # Em testes mantemos create_all direto (isolado por diretório temp)
     if app.config.get("TESTING"):

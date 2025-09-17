@@ -2,6 +2,10 @@
 {% block title %}Gerar Atestado{% endblock %}
 {% block content %}
 <h1>Gerar Atestado</h1>
+<style>
+/* small helper to keep suggestion lists above other elements */
+#paciente-suggestions, #cid-suggestions { z-index: 2000; position: relative; }
+</style>
 {% if lista %}
 <h2 class="h6 mt-3">Últimos Atestados</h2>
 <table class="table table-sm">
@@ -28,21 +32,84 @@
 <form method="post" class="mb-3">
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
     <div>
-        <label>Paciente</label>
-        <input name="paciente" class="form-control" />
+        <label for="paciente-autocomplete">Paciente</label>
+        <input id="paciente-autocomplete" name="paciente" class="form-control" placeholder="Digite nome ou CPF..." autocomplete="off" />
+        <input type="hidden" name="paciente_id" id="paciente-id-hidden" value="">
+        <input type="hidden" name="paciente_cpf" id="paciente-cpf-hidden" value="">
+    <div id="paciente-suggestions" class="list-group position-relative"></div>
+    </div>
+    <div class="mt-2">
+        <label>Tipo de atestado</label>
+        <select name="tipo" id="tipo-atestado" class="form-control">
+            <option value="repouso">Atestado de repouso</option>
+            <option value="comparecimento">Atestado de comparecimento</option>
+        </select>
     </div>
     <div class="mt-2">
         <label>Dias de repouso</label>
         <input name="dias" type="number" value="1" class="form-control" />
     </div>
-    <button class="btn btn-primary btn-sm mt-3">Gerar</button>
+    <div class="mt-2">
+        <label>Fins</label>
+        <select name="fins" class="form-control">
+            <option value="">-- selecione --</option>
+            <option value="trabalhistas">Fins trabalhistas</option>
+            <option value="escolares">Fins escolares</option>
+            <option value="bancarios">Fins bancários</option>
+            <option value="outros">Outros</option>
+        </select>
+    </div>
+    <div class="mt-2 d-none" id="fins-outros-block">
+        <label>Especificar (outros)</label>
+        <input id="fins-outros" name="fins_outros" class="form-control" placeholder="Descreva o fim..." />
+    </div>
+    <!-- tipo moved above, see patient block -->
+    <!-- CID inputs (populated by the CID search widget below) -->
+    <div class="mt-3 d-flex gap-2">
+        <button type="submit" class="btn btn-primary btn-sm">Gerar</button>
+        <button type="button" id="btn-fill-template" class="btn btn-outline-secondary btn-sm">Preencher template</button>
+        <button type="reset" class="btn btn-secondary btn-sm">Limpar</button>
+    </div>
 </form>
+
+<!-- CID search + editable template -->
+<div class="card mt-4 p-3">
+    <div class="row">
+        <div class="col-md-6 mb-2">
+            <label for="cid-search">Buscar CID-10</label>
+            <input id="cid-search" class="form-control" placeholder="Código ou descrição do CID..." autocomplete="off" />
+            <div id="cid-suggestions" class="list-group position-relative"></div>
+            <input type="hidden" name="cid_codigo" id="cid-codigo-hidden" value="">
+            <input type="hidden" name="cid_descricao" id="cid-desc-hidden" value="">
+        </div>
+        
+    </div>
+    <div class="mt-2">
+    <label>Texto do atestado (editável)</label>
+    <textarea id="texto-atestado" name="texto_atestado" class="form-control" rows="6" placeholder="Texto do atestado...">{% if contexto.paciente %}{% set dias_text = contexto.dias ~ ' dia' if contexto.dias == 1 else contexto.dias ~ ' dias' %}{% set paciente_text = contexto.paciente ~ (' portador(a) do CPF ' ~ contexto.cpf) if contexto.cpf else contexto.paciente %}{% if contexto.fins %}Atesto para fins {{ contexto.fins }} que o(a) paciente {{ paciente_text }} necessita de {{ dias_text }} de repouso{% if contexto.cid_codigo %} (CID {{ contexto.cid_codigo }}){% endif %}.{% else %}Atesto para os devidos fins que o(a) paciente {{ paciente_text }} necessita de {{ dias_text }} de repouso{% if contexto.cid_codigo %} (CID {{ contexto.cid_codigo }}){% endif %}.{% endif %}{% endif %}</textarea>
+    </div>
+</div>
+
+{% block extra_js %}
+<script src="{{ url_for('atestados.gerar_js') }}"></script>
+{% endblock %}
 {% if contexto.paciente %}
 <div class="card p-3">
     <h5>Pré-visualização</h5>
-    <p>Atesto para os devidos fins que o(a) paciente <strong>{{ contexto.paciente }}</strong>
-        necessita de <strong>{{ contexto.dias }}</strong> dia(s) de repouso a contar de {{ contexto.data }}.</p>
+    {% if contexto.tipo == 'comparecimento' %}
+    <p>Atesto que o(a) paciente <strong>{{ contexto.paciente }}</strong> esteve sob tratamento odontológico das <strong>{{ contexto.start_time }}</strong> às <strong>{{ contexto.end_time }}</strong> do dia <strong>{{ contexto.data }}</strong>, sendo assim necessitou afastamento de suas atividades normais nesse período.</p>
+    {% else %}
+    {% set dias_text = contexto.dias ~ ' dia' if contexto.dias == 1 else contexto.dias ~ ' dias' %}
+    {% if contexto.fins %}
+    <p>Atesto para fins <strong>{{ contexto.fins }}</strong> que o(a) paciente <strong>{{ contexto.paciente }}</strong> necessita de <strong>{{ dias_text }}</strong> de repouso a contar de {{ contexto.data }}{% if contexto.cid_codigo %} (CID {{ contexto.cid_codigo }}){% endif %}.</p>
+    {% else %}
+    <p>Atesto para os devidos fins que o(a) paciente <strong>{{ contexto.paciente }}</strong> necessita de <strong>{{ dias_text }}</strong> de repouso a contar de {{ contexto.data }}{% if contexto.cid_codigo %} (CID {{ contexto.cid_codigo }}){% endif %}.</p>
+    {% endif %}
+    {% endif %}
     <p>Assinatura / Carimbo</p>
+    {% if contexto.fins %}
+        <small class="text-muted">Fins salvo no registro.</small>
+    {% endif %}
 </div>
 {% endif %}
 {% endblock %}

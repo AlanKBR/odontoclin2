@@ -1,0 +1,16 @@
+{# Partial fragment returned by /atestados/buscar_pacientes - only the list items #}
+{% if resultados %}
+<div class="list-group">
+    {% for p in resultados %}
+    <label class="list-group-item d-flex align-items-center" data-paciente-id="{{ p.id }}">
+        <input type="checkbox" name="paciente_ids" value="{{ p.id }}" class="me-2" />
+        <div>
+            <div><strong>{{ p.nome }}</strong></div>
+            <div class="small text-muted">{{ p.cpf or 'CPF não informado' }}</div>
+        </div>
+    </label>
+    {% endfor %}
+</div>
+{% else %}
+<div class="alert alert-warning">Nenhum paciente encontrado.</div>
+{% endif %}

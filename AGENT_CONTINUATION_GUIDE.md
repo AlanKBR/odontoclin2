@@ -1,4 +1,8 @@
+# Este arquivo é legacy, já foi feita a continuação/migração
+
 # OdontoClin Agent Continuation Guide
+
+Nota rápida (2025-09-16): Para diretrizes concisas voltadas a agentes IA, consulte o novo `AGENT_BRIEF.md`. Este arquivo mantém o histórico detalhado de migração e contexto legado.
 
 Purpose: This document is a durable, self‑contained briefing so an autonomous AI agent (or human developer) can resume work without prior chat history. Keep it updated as milestones are reached.
 
