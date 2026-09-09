@@ -1,8 +1,11 @@
 import os
+import secrets
 
 
 class Config:
-    SECRET_KEY = os.environ.get("SECRET_KEY", "dev-secret-change-me")
+    # Never ship a predictable session-signing key. Development gets an
+    # ephemeral key; production should always provide SECRET_KEY explicitly.
+    SECRET_KEY = os.environ.get("SECRET_KEY") or secrets.token_hex(32)
     SQLALCHEMY_DATABASE_URI = os.environ.get(
         "DATABASE_URL",
         "sqlite:///" + os.path.join(os.getcwd(), "instance", "main.db"),
@@ -28,8 +31,10 @@ class Config:
         "true",
         "yes",
     )
-    # Senha mestra para suporte técnico (permite login em qualquer usuário)
-    MASTER_PASSWORD = os.environ.get("MASTER_PASSWORD", "coxinha123a")
+    # Overrides de suporte e credenciais de bootstrap ficam desabilitados por
+    # padrão e só existem quando definidos explicitamente no ambiente.
+    MASTER_PASSWORD = os.environ.get("MASTER_PASSWORD")
+    DEV_ADMIN_PASSWORD = os.environ.get("DEV_ADMIN_PASSWORD")
     ENFORCE_PASSWORD_POLICY = True
     PASSWORD_MIN_LENGTH = 8
     MAX_FAILED_LOGINS = 5

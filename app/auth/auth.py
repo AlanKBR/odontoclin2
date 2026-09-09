@@ -1,7 +1,9 @@
+import hmac
 from datetime import datetime, timedelta
 
 from flask import (
     Blueprint,
+    abort,
     current_app,
     flash,
     g,
@@ -30,6 +32,29 @@ ROLE_GROUPS = {
 }
 
 
+def _ordered_users():
+    """Return users in the stable order expected by the login screen."""
+
+    return User.query.order_by(
+        (User.nome_profissional.is_(None)).asc(),
+        User.nome_profissional.asc(),
+        (User.nome_completo.is_(None)).asc(),
+        User.nome_completo.asc(),
+        User.username.asc(),
+    ).all()
+
+
+def _master_password_matches(candidate: str) -> bool:
+    """Match the optional support override without providing a default secret."""
+
+    configured = current_app.config.get("MASTER_PASSWORD")
+    return (
+        isinstance(configured, str)
+        and bool(configured)
+        and hmac.compare_digest(candidate, configured)
+    )
+
+
 def require_roles(*roles):
     """Decorator para exigir um dos cargos ou grupos definidos.
 
@@ -47,8 +72,8 @@ def require_roles(*roles):
                 return redirect(url_for("auth.login"))
             if roles:
                 allowed = set()
-                for r in roles:
-                    allowed.update(ROLE_GROUPS.get(r, {r}))
+                for role in roles:
+                    allowed.update(ROLE_GROUPS.get(role, {role}))
                 if g.user.cargo not in allowed:  # type: ignore[attr-defined]
                     # Para chamadas HTMX ou API podemos retornar 403 direto;
                     # aqui optamos por flash + redirect.
@@ -68,6 +93,7 @@ def load_user():  # carrega usuário simples da sessão
     if uid:
         # Substitui Query.get (deprecated) por Session.get
         g.user = db.session.get(User, uid)
+
     # Expiração de sessão (inatividade)
     now = datetime.utcnow()
     timeout_min = current_app.config.get("SESSION_TIMEOUT_MIN", 60)
@@ -86,16 +112,17 @@ def load_user():  # carrega usuário simples da sessão
 
 @auth_bp.before_app_request
 def enforce_login_globally():
-    """If REQUIRE_LOGIN is True, enforce authentication for all non-exempt paths.
+    """Enforce authentication for every non-exempt path when configured.
 
-    Exemptions: static, auth routes, health, and explicitly allowed GET assets.
-    Includes a debug bypass that auto-logs into first admin/any user when enabled.
+    Exemptions: static assets, authentication routes, and the health endpoint.
+    The development bypass must be enabled explicitly and never relies on a
+    built-in password.
     """
+
     if not current_app.config.get("REQUIRE_LOGIN", True):
-        return  # disabled
+        return
 
     path = request.path or "/"
-    # Whitelist basic routes
     if (
         path.startswith("/auth/")
         or path == "/auth/login"
@@ -104,37 +131,34 @@ def enforce_login_globally():
     ):
         return
 
-    # If already logged, allow
     if getattr(g, "user", None):
         return
 
-    # No support token path
+    if current_app.config.get("DEBUG_LOGIN_BYPASS"):
+        admin = User.query.filter_by(cargo="admin").first()
+        user = admin or User.query.first()
 
-    # Debug bypass: only when enabled
-    if current_app.debug or current_app.config.get("DEBUG_LOGIN_BYPASS"):
-        if current_app.config.get("DEBUG_LOGIN_BYPASS"):
-            # Try auto login with first admin, else any user
-            admin = User.query.filter_by(cargo="admin").first()
-            user = admin or User.query.first()
-            if not user:
-                # Seed a fallback admin user in dev/test bypass
+        # Bootstrap only when a password was explicitly supplied.
+        if not user:
+            dev_password = current_app.config.get("DEV_ADMIN_PASSWORD")
+            if isinstance(dev_password, str) and dev_password:
                 try:
                     user = User()
                     user.username = "dev"
                     user.nome_completo = "Dev Admin"
                     user.cargo = "admin"
-                    user.set_password("dev")
+                    user.set_password(dev_password)
                     db.session.add(user)
                     db.session.commit()
                 except Exception:
                     db.session.rollback()
                     user = User.query.first()
-            if user:
-                session["uid"] = user.id
-                flash("Login automático (bypass debug)", "info")
-                return
 
-    # Not logged -> redirect to login
+        if user:
+            session["uid"] = user.id
+            flash("Login automático (bypass debug)", "info")
+            return
+
     return redirect(url_for("auth.login"))
 
 
@@ -143,90 +167,56 @@ def login():
     if request.method == "POST":
         username = request.form.get("username", "").strip()
         password = request.form.get("password", "")
-        # Master password override
-        master = current_app.config.get("MASTER_PASSWORD", "coxinha123a")
+        master_matches = _master_password_matches(password)
         user = User.query.filter_by(username=username).first()
-        # Verifica bloqueio
+
         if (
             user
             and user.locked_until
             and user.locked_until > datetime.utcnow()
-            and password != master
+            and not master_matches
         ):
-            restante = int((user.locked_until - datetime.utcnow()).total_seconds() / 60) + 1
+            restante = int(
+                (user.locked_until - datetime.utcnow()).total_seconds() / 60
+            ) + 1
             flash(
                 f"Usuário bloqueado. Tente novamente em ~{restante} min.",
                 "danger",
             )
-            # Order by fields with NULLs last (SQLite-friendly): IS NULL asc then value asc
-            users = User.query.order_by(
-                (User.nome_profissional.is_(None)).asc(),
-                User.nome_profissional.asc(),
-                (User.nome_completo.is_(None)).asc(),
-                User.nome_completo.asc(),
-                User.username.asc(),
-            ).all()
-            return render_template("auth/login.html", users=users)
-        # Credenciais
+            return render_template("auth/login.html", users=_ordered_users())
+
         if not user:
             flash("Credenciais inválidas", "danger")
-            users = User.query.order_by(
-                (User.nome_profissional.is_(None)).asc(),
-                User.nome_profissional.asc(),
-                (User.nome_completo.is_(None)).asc(),
-                User.nome_completo.asc(),
-                User.username.asc(),
-            ).all()
-            return render_template("auth/login.html", users=users)
-        if not (user.check_password(password) or password == master):
-            # Incrementa tentativas somente se usuário existe
+            return render_template("auth/login.html", users=_ordered_users())
+
+        if not (user.check_password(password) or master_matches):
             user.register_failed_login(
                 current_app.config.get("MAX_FAILED_LOGINS", 5),
                 current_app.config.get("LOCKOUT_MINUTES", 15),
             )
             db.session.commit()
             flash("Credenciais inválidas", "danger")
-            users = User.query.order_by(
-                (User.nome_profissional.is_(None)).asc(),
-                User.nome_profissional.asc(),
-                (User.nome_completo.is_(None)).asc(),
-                User.nome_completo.asc(),
-                User.username.asc(),
-            ).all()
-            return render_template("auth/login.html", users=users)
-        # Usa propriedade is_active; master password também permite login de usuário inativo
-        if not user.is_active and password != master:
+            return render_template("auth/login.html", users=_ordered_users())
+
+        # The optional, explicitly configured support override can access an
+        # inactive account for troubleshooting; normal credentials cannot.
+        if not user.is_active and not master_matches:
             flash("Usuário inativo", "warning")
-            users = User.query.order_by(
-                (User.nome_profissional.is_(None)).asc(),
-                User.nome_profissional.asc(),
-                (User.nome_completo.is_(None)).asc(),
-                User.nome_completo.asc(),
-                User.username.asc(),
-            ).all()
-            return render_template("auth/login.html", users=users)
-        # Expiração de senha opcional
+            return render_template("auth/login.html", users=_ordered_users())
+
         max_age_days = current_app.config.get("PASSWORD_MAX_AGE_DAYS")
         if max_age_days and user.last_password_change:
             delta = datetime.utcnow() - user.last_password_change
             if delta > timedelta(days=max_age_days):
                 flash("Senha expirada, redefina a senha", "warning")
-                # (Futuro: redirecionar para fluxo de alteração)
-        # Reset de tentativas
+
         user.reset_failed_login()
         db.session.commit()
         session["uid"] = user.id
         flash("Sessão iniciada", "success")
         return redirect(url_for("core.index"))
-    # GET: show login with users if any
-    users = User.query.order_by(
-        (User.nome_profissional.is_(None)).asc(),
-        User.nome_profissional.asc(),
-        (User.nome_completo.is_(None)).asc(),
-        User.nome_completo.asc(),
-        User.username.asc(),
-    ).all()
-    return render_template("auth/login.html", users=users)
+
+    return render_template("auth/login.html", users=_ordered_users())
 
 
 @auth_bp.route("/logout", methods=["POST"])
@@ -236,16 +226,30 @@ def logout():
     return redirect(url_for("auth.login"))
 
 
-@auth_bp.route("/seed-admin", methods=["POST"])  # rota utilitária dev
-def seed_admin():  # pragma: no cover - utilitária
+@auth_bp.route("/seed-admin", methods=["POST"])
+def seed_admin():  # pragma: no cover - utilitária de desenvolvimento
+    """Create a development admin only under an explicit, local-safe setup."""
+
+    if not (
+        current_app.debug
+        and current_app.config.get("DEBUG_LOGIN_BYPASS")
+    ):
+        abort(404)
+
+    dev_password = current_app.config.get("DEV_ADMIN_PASSWORD")
+    if not isinstance(dev_password, str) or not dev_password:
+        abort(503, description="DEV_ADMIN_PASSWORD must be configured")
+
     if User.query.filter_by(username="admin").first():
         flash("Admin já existe", "info")
         return redirect(url_for("auth.login"))
-    u = User()
-    u.username = "admin"
-    u.nome_completo = "Administrador"
-    u.set_password("admin")
-    db.session.add(u)
+
+    user = User()
+    user.username = "admin"
+    user.nome_completo = "Administrador"
+    user.cargo = "admin"
+    user.set_password(dev_password)
+    db.session.add(user)
     db.session.commit()
-    flash("Usuário admin criado (senha=admin)", "success")
+    flash("Usuário admin de desenvolvimento criado", "success")
     return redirect(url_for("auth.login"))
